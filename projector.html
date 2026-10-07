@@ -1,0 +1,2237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mochi Bingo!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1033;--bg2:#120a26;--panel:#261a4d;--panel2:#31245f;--line:#45378a;
+  --text:#fff8ee;--dim:#bfb5df;--dim2:#8a7fb3;
+  --pink:#ff5d8f;--yellow:#ffd23f;--green:#3ddc97;--blue:#4cc9f0;--red:#ff4d6d;--purple:#9b5de5;--orange:#ff9f1c;
+  --disp:'Baloo 2','Arial Rounded MT Bold',sans-serif;--body:'M PLUS Rounded 1c','Baloo 2',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--body);
+  background-image:radial-gradient(circle at 12% 18%,rgba(255,93,143,.13) 0 120px,transparent 121px),radial-gradient(circle at 88% 80%,rgba(76,201,240,.12) 0 160px,transparent 161px),radial-gradient(circle at 80% 12%,rgba(255,210,63,.09) 0 90px,transparent 91px);}
+button{font-family:inherit;cursor:pointer;border:none;color:inherit}
+.screen{position:fixed;inset:0;display:none;flex-direction:column}
+.screen.on{display:flex}
+.mascot{display:block;width:100%;height:100%;overflow:visible}
+.gr{color:var(--yellow);font-weight:800}
+.blank i{font-style:normal;display:inline-block;border-bottom:3px solid var(--yellow);line-height:1;margin:0 2px}
+.jp{font-family:var(--body);color:var(--dim)}
+
+/* ── splash ── */
+#splash{align-items:center;justify-content:center;gap:18px;cursor:pointer;text-align:center}
+.logo{font-family:var(--disp);font-weight:800;line-height:.9;letter-spacing:1px;text-shadow:0 6px 0 rgba(0,0,0,.35)}
+.logo .m{color:var(--pink)}.logo .b{color:var(--yellow)}
+#splash .logo{font-size:clamp(60px,11vw,150px)}
+.parade{display:flex;gap:10px;height:clamp(70px,11vh,120px)}
+.parade>div{width:clamp(60px,9vh,100px);animation:hop 1.2s ease-in-out infinite;transform-origin:50% 100%}
+.parade>div:nth-child(2n){animation-delay:.3s}.parade>div:nth-child(3n){animation-delay:.6s}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1.12,.88)}15%{transform:translateY(0) scale(.92,1.08)}45%{transform:translateY(-18px) scale(.96,1.04) rotate(-4deg)}75%{transform:translateY(0) scale(1.1,.9)}}
+.tap{font-size:20px;color:var(--dim);animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.35}}
+.sub{font-size:clamp(14px,1.8vw,22px);color:var(--dim);letter-spacing:.2em;font-weight:800}
+
+/* ── setup ── */
+#setup{overflow:hidden}
+.top{display:flex;align-items:center;gap:14px;padding:12px 22px;background:rgba(0,0,0,.25);border-bottom:2px solid var(--line);flex-shrink:0}
+.top .logo{font-size:34px}
+.pill{background:var(--panel2);border:2px solid var(--line);border-radius:999px;padding:7px 16px;font-weight:800;font-size:15px}
+.pill:hover{border-color:var(--yellow)}
+.spacer{flex:1}
+.stabs{display:flex;gap:8px;padding:10px 22px 0;flex-shrink:0}
+.stab{font-family:var(--disp);font-weight:800;font-size:20px;padding:8px 22px;border-radius:14px 14px 0 0;background:var(--panel);color:var(--dim);border:2px solid var(--line);border-bottom:none}
+.stab.on{background:var(--yellow);color:#2b2140;border-color:var(--yellow)}
+.stab .badge{font-family:var(--body);font-size:13px;background:rgba(0,0,0,.25);border-radius:99px;padding:2px 8px;margin-left:4px}
+.stab.on .badge{background:rgba(0,0,0,.12)}
+.tabpane{display:none}
+.tabpane.on{display:grid}
+.tabpane.full.on{display:flex;flex-direction:column;flex:1;min-height:0;overflow-y:auto;padding:16px 22px;gap:12px;border-top:3px solid var(--yellow)}
+#tab-setup.on{border-top:3px solid var(--yellow)}
+#setup .tabpane:not(.on){display:none!important}
+.ghdr{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.ghdr>div:first-child{flex:1;min-width:300px}
+.ghdr h2{font-family:var(--disp);font-size:28px;margin-bottom:4px}
+.ghdr h2 small{font-family:var(--body);font-size:14px;color:var(--dim);font-weight:500}
+.ghdr .myq{flex:1;min-width:420px;margin:0}
+.packgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:10px;align-items:start}
+.packgrid .pack{margin:0}
+.gsum{margin-top:14px;padding:12px;border-radius:14px;background:rgba(0,0,0,.2);border:2px dashed var(--line);cursor:pointer;font-weight:800;line-height:1.5}
+.gsum:hover{border-color:var(--yellow)}
+.tinput{width:90px;background:var(--bg);border:2px solid var(--line);border-radius:10px;color:var(--text);font-family:var(--disp);font-weight:800;font-size:20px;padding:4px 10px;text-align:center}
+.tinput:disabled{opacity:.35}
+/* rules page */
+.rp{max-width:1400px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:14px}
+.rp h2{font-family:var(--disp);font-size:clamp(30px,3.4vw,52px);text-align:center;line-height:1}
+.rp h2 .jp{font-size:.55em;margin-left:10px}
+.rpgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.rstep{background:var(--panel);border:2px solid var(--line);border-radius:20px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start}
+.rstep .ic{font-size:clamp(34px,3.4vw,54px);line-height:1}
+.rstep .n{font-family:var(--disp);font-weight:800;color:var(--yellow);font-size:clamp(14px,1.2vw,18px)}
+.rstep .en{font-weight:800;font-size:clamp(17px,1.7vw,26px);line-height:1.3}
+.rstep .jpl{font-size:clamp(13px,1.25vw,19px);color:var(--dim);margin-top:4px;line-height:1.4}
+.rban{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.rban div{background:rgba(255,93,143,.14);border:2px solid var(--pink);border-radius:16px;padding:10px 18px;font-weight:800;font-size:clamp(15px,1.4vw,22px)}
+.cols{flex:1;display:grid;grid-template-columns:minmax(380px,1.1fr) 1fr;gap:18px;padding:18px 22px;min-height:0}
+.col{display:flex;flex-direction:column;gap:14px;overflow-y:auto;min-height:0;padding-right:4px}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:14px 16px}
+.card h3{font-family:var(--disp);font-size:21px;font-weight:800;display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.card h3 small{font-family:var(--body);font-size:13px;color:var(--dim);font-weight:500}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.opt{background:var(--panel2);border:2px solid var(--line);border-radius:12px;padding:8px 14px;font-weight:800;font-size:15px;color:var(--dim)}
+.opt.on{background:var(--yellow);border-color:var(--yellow);color:#2b2140}
+.opt small{display:block;font-size:11px;font-weight:500;opacity:.8}
+.pack{border:2px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px;background:rgba(0,0,0,.15)}
+.pack-h{display:flex;align-items:center;gap:10px}
+.pack-h .t{font-family:var(--disp);font-size:19px;font-weight:800;flex:1}
+.pack-h .t small{font-family:var(--body);font-size:13px;color:var(--dim);margin-left:6px}
+.pack .row{margin-top:8px}
+.chip{background:var(--panel2);border:2px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:800;color:var(--dim2)}
+.chip.on{background:rgba(61,220,151,.18);border-color:var(--green);color:var(--text)}
+.lbl{font-size:14px;color:var(--dim);font-weight:800;min-width:150px}
+.toggle{display:flex;align-items:center;gap:10px;font-weight:800;font-size:15px;cursor:pointer;padding:4px 0}
+.sw{width:46px;height:26px;border-radius:99px;background:var(--line);position:relative;flex-shrink:0;transition:.2s}
+.sw:after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+.toggle.on .sw{background:var(--green)}.toggle.on .sw:after{left:23px}
+.toggle small{display:block;font-weight:500;color:var(--dim);font-size:12px}
+#lobbyGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.lob{position:relative;background:var(--panel2);border-radius:14px;padding:6px 4px 4px;text-align:center;animation:popIn .35s cubic-bezier(.3,1.6,.5,1)}
+.lob .mw{width:56px;height:62px;margin:0 auto}
+.lob.off{opacity:.38}
+.lob .x{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.4);font-size:12px;color:var(--dim);display:none}
+.lob:hover .x{display:block}
+@keyframes popIn{from{transform:scale(.3);opacity:0}}
+.big-btn{font-family:var(--disp);font-weight:800;font-size:28px;padding:12px 26px;border-radius:18px;background:var(--pink);color:#fff;box-shadow:0 6px 0 #b8325f;transition:transform .1s}
+.big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b8325f}
+.big-btn:disabled{opacity:.4;cursor:default}
+.big-btn.y{background:var(--yellow);color:#2b2140;box-shadow:0 6px 0 #b38f12}
+.big-btn.g{background:var(--green);color:#10331f;box-shadow:0 6px 0 #22915f}
+.note{font-size:13px;color:var(--dim);line-height:1.5}
+.resume{background:var(--green);color:#10331f;border-color:var(--green)}
+
+/* ── game ── */
+#game .top{padding:8px 20px}
+#game .top .logo{font-size:28px}
+#phaseTitle{font-family:var(--disp);font-size:24px;font-weight:800}
+#timer{font-family:var(--disp);font-weight:800;font-size:44px;line-height:1;min-width:130px;text-align:center;background:rgba(0,0,0,.3);border-radius:14px;padding:4px 14px}
+#timer.low{color:var(--red);animation:pulseT 1s infinite}
+@keyframes pulseT{50%{transform:scale(1.08)}}
+#mmCount{font-weight:800;font-size:15px;color:var(--dim);margin-right:14px;white-space:nowrap}
+#alerts{position:fixed;right:14px;top:74px;z-index:30;display:flex;flex-direction:column;gap:8px;max-width:440px}
+.alert{display:flex;align-items:center;gap:8px;background:#3a1530;border:3px solid var(--pink);border-radius:16px;padding:6px 10px;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:popIn .35s cubic-bezier(.3,1.6,.5,1)}
+.alert .am{width:40px;height:46px;flex-shrink:0}
+.alert .at{flex:1;font-weight:800;font-size:16px;line-height:1.15}
+.alert .at b{color:var(--yellow)}
+.alert .at small{display:block;font-weight:500;font-size:12px;color:var(--dim)}
+.alert .cbtn{font-size:14px;padding:6px 10px}
+.mrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;grid-column:1/-1;max-height:62vh;overflow-y:auto}
+.mcard{display:flex;align-items:center;gap:8px;background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:6px 8px}
+.mcard.off{opacity:.45}
+.mcard .mw{width:44px;height:50px;flex-shrink:0}
+.mcard .ms{flex:1;min-width:0;font-weight:800;font-size:14px;line-height:1.2}
+.mcard .ms small{display:block;font-weight:500;font-size:12px;color:var(--dim)}
+.mcard button{background:rgba(0,0,0,.3);border:2px solid var(--line);border-radius:10px;padding:4px 7px;font-size:13px;font-weight:800}
+.mcard button:hover{border-color:var(--yellow)}
+.mcard.alertc{border-color:var(--pink)}
+#slam .roll{font-size:min(30vw,260px);animation:shake .12s infinite}
+@keyframes shake{0%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}100%{transform:rotate(-4deg)}}
+#bingoCount{font-family:var(--disp);font-weight:800;font-size:22px;color:var(--yellow)}
+#stage{flex:1;min-height:0;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.ctrl{display:flex;gap:10px;align-items:center;justify-content:center;padding:10px;background:rgba(0,0,0,.25);border-top:2px solid var(--line);flex-shrink:0}
+.cbtn{background:var(--panel2);border:2px solid var(--line);border-radius:12px;padding:8px 16px;font-weight:800;font-size:16px}
+.cbtn:hover{border-color:var(--yellow)}
+.cbtn.main{background:var(--pink);border-color:var(--pink);color:#fff;font-family:var(--disp);font-size:20px;padding:6px 22px}
+
+/* rules / today's questions */
+.rules{flex:1;display:flex;flex-direction:column;gap:12px;padding:14px 22px;min-height:0}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.step{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start}
+.step .n{font-family:var(--disp);font-weight:800;font-size:24px;width:38px;height:38px;border-radius:50%;background:var(--yellow);color:#2b2140;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step .en{font-weight:800;font-size:clamp(13px,1.15vw,18px);line-height:1.3}
+.step .jp{font-size:clamp(11px,.95vw,14px);margin-top:3px}
+.qhead{font-family:var(--disp);font-size:clamp(22px,2.4vw,34px);font-weight:800;text-align:center}
+.qhead .jp{font-size:.6em;margin-left:10px}
+.qgrid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--qc,3),1fr);gap:10px;align-content:start;overflow:hidden}
+.qcard{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:10px 14px;display:flex;gap:12px;align-items:center}
+.qcard .e{font-size:clamp(26px,2.6vw,40px)}
+.qcard .q{font-weight:800;font-size:var(--qf,20px);line-height:1.25}
+.qcard .a{font-size:calc(var(--qf,20px)*.78);color:var(--dim);margin-top:3px}
+.ask-num{background:rgba(255,93,143,.15);border-color:var(--pink)}
+
+/* board */
+.board{flex:1;min-height:0;display:grid;gap:8px;padding:12px 16px;align-content:center;justify-content:center;grid-template-columns:repeat(var(--bc,8),calc(var(--th,70px)*2.1));grid-auto-rows:var(--th,70px)}
+.tile{position:relative;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:4px 8px;display:flex;align-items:center;justify-content:center;gap:8%;min-width:0;transition:border-color .3s}
+.tile .mw{width:var(--mw,48px);height:calc(var(--mw,48px)*1.15);flex-shrink:0}
+.tile.bingo .mini i.on{background:var(--green)}
+.tile .info{display:flex;align-items:center}
+.mini{display:grid;gap:2px;width:var(--mini,56px)}
+.mini i{aspect-ratio:1;border-radius:3px;background:rgba(255,255,255,.12)}
+.mini i.on{background:var(--green)}.mini i.ln{background:var(--yellow)}.mini i.fr{background:rgba(255,210,63,.4)}
+.tile .ln{font-family:var(--disp);font-weight:800;font-size:15px;color:var(--yellow);line-height:1}
+.tile.rank1{border-color:var(--yellow);box-shadow:0 0 18px rgba(255,210,63,.35)}
+.tile.rank2,.tile.rank3{border-color:#c9c3e6}
+.tile.hot{animation:hot 1s infinite}
+@keyframes hot{50%{border-color:var(--pink);box-shadow:0 0 14px rgba(255,93,143,.6)}}
+.tile .tag{position:absolute;top:-9px;right:6px;background:var(--pink);color:#fff;font-size:10px;font-weight:800;border-radius:99px;padding:1px 7px;white-space:nowrap}
+.tile.bingo .tag{background:var(--yellow);color:#2b2140}
+.tile.off{opacity:.45}
+.tile.flash{animation:flash .6s}
+@keyframes flash{30%{background:rgba(61,220,151,.4)}}
+
+/* hidden board */
+.askview{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:20px}
+.askview .big{font-family:var(--disp);font-weight:800;font-size:clamp(50px,8vw,110px);line-height:1;color:var(--pink);text-shadow:0 6px 0 rgba(0,0,0,.35)}
+.askcard{background:var(--panel);border:3px solid var(--yellow);border-radius:24px;padding:20px 34px;display:flex;align-items:center;gap:22px;max-width:90%;animation:popIn .4s cubic-bezier(.3,1.6,.5,1)}
+.packtag{font-weight:800;font-size:clamp(20px,2.4vw,32px);color:var(--dim);display:flex;align-items:center;gap:12px}
+.dots3{display:inline-flex;gap:6px}.dots3 i{width:12px;height:12px;border-radius:50%;background:var(--line)}.dots3 i.on{background:var(--yellow)}
+.askcard{animation-duration:.9s!important}.askcard.still{animation:none!important}
+.askcard .e{font-size:clamp(50px,6vw,90px)}
+.askcard .q{font-weight:800;font-size:clamp(26px,3.6vw,52px);line-height:1.2}
+.askcard .a{font-size:clamp(18px,2.2vw,30px);color:var(--dim);margin-top:6px}
+.parade.small{height:70px}
+
+/* popups */
+#pop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;background:rgba(18,10,38,.72);z-index:50;pointer-events:none}
+#pop.on{display:flex}
+.bingo-word{display:flex;gap:6px;font-family:var(--disp);font-weight:800;font-size:clamp(80px,14vw,190px);line-height:1}
+.bingo-word span{display:inline-block;animation:letter .6s cubic-bezier(.3,1.8,.5,1) both;text-shadow:0 8px 0 rgba(0,0,0,.4)}
+@keyframes letter{from{transform:translateY(-120px) scale(.2);opacity:0}}
+.pop-m{width:clamp(140px,22vh,230px);height:clamp(160px,25vh,265px);animation:popIn .6s .25s cubic-bezier(.3,1.6,.5,1) both}
+.pop-sub{font-family:var(--disp);font-weight:800;font-size:clamp(26px,3.4vw,46px);color:var(--yellow);animation:popIn .5s .45s both}
+.confetti{position:fixed;top:-20px;width:12px;height:18px;border-radius:3px;z-index:49;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+#cd{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60;background:rgba(18,10,38,.85);font-family:var(--disp);font-weight:800;font-size:clamp(140px,26vw,340px);color:var(--yellow)}
+#cd.on{display:flex}
+#cd span{animation:cdz .8s ease-out both;text-shadow:0 10px 0 rgba(0,0,0,.4)}
+@keyframes cdz{from{transform:scale(2.4);opacity:0}30%{opacity:1}to{transform:scale(.9)}}
+#slam{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60;background:rgba(18,10,38,.85)}
+#slam.on{display:flex}
+#slam div{font-family:var(--disp);font-weight:800;font-size:clamp(70px,12vw,170px);color:var(--pink);animation:slam .5s cubic-bezier(.3,1.6,.5,1) both;text-shadow:0 8px 0 rgba(0,0,0,.4);text-align:center;line-height:1}
+#slam small{display:block;font-size:.4em;color:var(--dim)}
+@keyframes slam{from{transform:scale(3);opacity:0}}
+
+/* results */
+.results{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:10px 20px;gap:12px}
+.vhead{font-family:var(--disp);font-weight:800;font-size:clamp(30px,4vw,58px);color:var(--yellow);text-shadow:0 5px 0 rgba(0,0,0,.35);animation:popIn .6s cubic-bezier(.3,1.6,.5,1) both;line-height:1}
+.vhead span{font-size:.5em;color:var(--dim);margin-left:10px}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:clamp(14px,3vw,46px);flex:1;min-height:0;max-height:60vh;padding-top:30px}
+.pod{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px}
+.pod .ped{width:clamp(130px,17vw,240px);border-radius:18px 18px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:10px;font-family:var(--disp);font-weight:800;transform-origin:bottom;animation:pedUp .7s var(--d) cubic-bezier(.3,1.4,.5,1) both;box-shadow:0 -6px 0 rgba(255,255,255,.18) inset}
+.pod .mw{position:relative;width:clamp(80px,13vh,160px);height:clamp(92px,15vh,184px);animation:mochiDrop .8s calc(var(--d) + .45s) cubic-bezier(.3,1.5,.5,1) both}
+.pod .crown{position:absolute;left:50%;top:-22%;transform:translateX(-50%) rotate(-8deg);font-size:clamp(34px,6vh,64px);animation:crownIn .7s calc(var(--d) + 1.1s) cubic-bezier(.3,1.8,.5,1) both;z-index:2}
+.pod .ped .r{font-size:clamp(26px,3.2vw,46px);line-height:1}
+.pod .ped .pn{font-size:clamp(22px,2.6vw,38px);line-height:1.1}
+.pod .ped .s{font-size:clamp(13px,1.3vw,19px);color:rgba(0,0,0,.6)}
+.pod.p1 .ped{height:clamp(170px,26vh,260px);background:linear-gradient(var(--yellow),#f4b400);color:#2b2140}
+.pod.p2 .ped{height:clamp(140px,20vh,200px);background:linear-gradient(#ece8fb,#c9c2ea);color:#2b2140}
+.pod.p3 .ped{height:clamp(118px,16vh,160px);background:linear-gradient(#eeb27a,#cf8a4c);color:#2b2140}
+.pod .rays{position:absolute;left:50%;top:-10%;width:clamp(260px,34vh,420px);height:clamp(260px,34vh,420px);transform:translateX(-50%);background:repeating-conic-gradient(rgba(255,210,63,.22) 0 10deg,transparent 10deg 20deg);border-radius:50%;-webkit-mask:radial-gradient(circle,#000 30%,transparent 70%);mask:radial-gradient(circle,#000 30%,transparent 70%);animation:raysIn 1s calc(var(--d) + .9s) both,spin 14s linear infinite;z-index:-1;pointer-events:none}
+@keyframes pedUp{from{transform:scaleY(0);opacity:0}}
+@keyframes mochiDrop{from{transform:translateY(-70vh) scale(.8);opacity:0}70%{transform:translateY(0) scale(1.12,.86)}}
+@keyframes crownIn{from{transform:translateX(-50%) translateY(-120px) rotate(-40deg);opacity:0}}
+@keyframes raysIn{from{opacity:0}}
+@keyframes spin{to{rotate:360deg}}
+.closest{display:flex;gap:24px;justify-content:center}
+.cl{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:12px 18px;font-weight:800;animation:popIn .5s both}
+.cl .mw{width:90px;height:104px}.cl b{font-family:var(--disp);font-size:26px}.cl span{color:var(--dim)}
+.awards,.rest{animation:popIn .5s var(--d,0s) both}
+.awards{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.award{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:8px 14px;display:flex;align-items:center;gap:10px}
+.award .mw{width:44px;height:50px}
+.award .t{font-weight:800;font-size:16px}.award .d{font-size:13px;color:var(--dim)}
+.rest{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;max-width:95%}
+.rest b{font-size:14px;color:var(--dim);margin-right:4px}
+.rest span{background:var(--panel2);border-radius:10px;padding:3px 9px;font-size:13px;font-weight:800;color:var(--dim)}
+.rest span.bg{background:rgba(255,210,63,.18);color:var(--yellow)}
+
+/* my questions editor */
+.myq{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 10px;padding:10px;border:2px dashed var(--line);border-radius:14px}
+.myq .t{font-family:var(--disp);font-weight:800;font-size:18px;flex:1;min-width:160px}
+.myq .t small{display:block;font-family:var(--body);font-size:12px;color:var(--dim);font-weight:500}
+.chip .ed{margin-left:6px;opacity:.75;padding:0 2px}
+.chip .ed:hover{opacity:1}
+.chip.mine{border-style:dashed}
+.modal{position:fixed;inset:0;background:rgba(10,6,24,.8);display:none;align-items:center;justify-content:center;z-index:70;padding:16px}
+.modal.on{display:flex}
+.mbox{background:var(--panel);border:2px solid var(--line);border-radius:20px;width:min(1100px,100%);max-height:100%;overflow-y:auto;padding:16px 20px;display:grid;grid-template-columns:1.15fr .85fr;gap:14px 20px}
+.mbox h2{grid-column:1/-1;font-family:var(--disp);font-size:26px;display:flex;align-items:center;gap:10px}
+.mbox h2 .x{margin-left:auto;width:40px;height:40px;border-radius:50%;background:var(--panel2);font-size:18px}
+.fld{margin-bottom:10px}
+.fld label{display:block;font-size:13px;font-weight:800;color:var(--dim);margin-bottom:4px}
+.fld label small{font-weight:500;color:var(--dim2)}
+.fld input,.fld select,.fld textarea{width:100%;background:var(--bg);border:2px solid var(--line);border-radius:10px;color:var(--text);font-family:var(--body);font-size:15px;padding:8px 10px;outline:none}
+.fld input:focus,.fld textarea:focus,.fld select:focus{border-color:var(--yellow)}
+.fld textarea{min-height:170px;resize:vertical;line-height:1.5}
+.fld .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fld .three{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px}
+.prev-box{background:rgba(0,0,0,.25);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;position:sticky;top:0}
+.prev-box .h{font-size:12px;font-weight:800;color:var(--pink);letter-spacing:.08em}
+.pv{background:var(--panel2);border-radius:12px;padding:8px 10px}
+.pv .l{font-size:11px;color:var(--dim);font-weight:800}
+.pv .v{font-weight:800;font-size:17px;line-height:1.3}
+.errs{color:var(--red);font-size:13px;font-weight:800;line-height:1.5}
+.oks{color:var(--green);font-size:13px;font-weight:800}
+.mrow{display:flex;gap:10px;grid-column:1/-1;justify-content:flex-end;align-items:center}
+.danger{background:transparent;border:2px solid var(--red);color:var(--red);border-radius:12px;padding:8px 14px;font-weight:800}
+#mgrGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;grid-column:1/-1}
+#mgrGrid .lob .x{display:block}
+
+/* ── HOW TO PLAY demo (big screen only) ── */
+.demo-btn{font-size:18px;padding:8px 18px;line-height:1.1;text-align:center}.demo-btn small{display:block;font-size:12px;color:var(--dim);font-weight:600}
+#demo{position:fixed;inset:0;z-index:60;background:radial-gradient(circle at 50% 30%,#2b1d5a,#120a26 70%);display:none;flex-direction:column;align-items:center;padding:18px 24px 14px;overflow:hidden}
+#demo.on{display:flex}
+#demo .cap{text-align:center;min-height:118px;display:flex;flex-direction:column;justify-content:center;animation:capIn .5s ease-out}
+#demo .cap .en{font-family:var(--disp);font-weight:800;font-size:clamp(28px,3.4vw,52px);line-height:1.1}
+#demo .cap .en b{color:var(--yellow)}
+#demo .cap .jp{font-size:clamp(17px,1.8vw,26px);color:var(--dim);margin-top:6px}
+@keyframes capIn{from{opacity:0;transform:translateY(-14px)}}
+#demo .stage2{flex:1;width:100%;max-width:1500px;position:relative;display:flex;align-items:center;justify-content:center;gap:6vw}
+.dm{display:flex;flex-direction:column;align-items:center;gap:8px;transition:transform 1.2s cubic-bezier(.4,1.3,.5,1)}
+.dm .who{width:clamp(80px,9vw,130px);height:clamp(92px,10.5vw,150px)}
+.dm .lbl{font-weight:800;font-size:18px;color:var(--dim)}
+.tab2{width:clamp(280px,27vw,440px);height:clamp(210px,21vw,330px);background:#0e0820;border:6px solid #3d3170;border-radius:22px;box-shadow:0 14px 40px rgba(0,0,0,.5);padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;position:relative;overflow:hidden}
+.tab2 .t1{font-family:var(--disp);font-weight:800;font-size:clamp(20px,2.2vw,34px);line-height:1.05}
+.tab2 .t1 b{color:var(--yellow)}
+.tab2 .t2{font-size:clamp(13px,1.2vw,17px);color:var(--dim)}
+.tab2 .mm{width:clamp(56px,5vw,80px);height:clamp(64px,5.8vw,92px)}
+.tab2 .fb2{font-family:var(--disp);font-weight:800;font-size:clamp(18px,1.9vw,28px);background:var(--green);color:#10331f;border-radius:14px;padding:6px 18px;box-shadow:0 4px 0 #1f8a5a}
+.tab2 .fb2.press{transform:translateY(4px);box-shadow:0 0 0 #1f8a5a;outline:4px solid #fff}
+.tab2 .qbox{background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:8px 10px;font-weight:800;font-size:clamp(16px,1.7vw,24px);width:100%}
+.tab2 .abox{border:3px solid var(--green);background:rgba(61,220,151,.12);border-radius:12px;padding:6px 10px;width:100%}
+.tab2 .abox .l{font-size:12px;color:var(--dim);font-weight:800;text-align:left}
+.tab2 .abox .s{font-family:var(--disp);font-weight:800;font-size:clamp(24px,2.6vw,40px)}
+.tab2 .yn{display:flex;gap:8px;width:100%}
+.tab2 .yn div{flex:1;border-radius:12px;padding:8px;font-family:var(--disp);font-weight:800;font-size:clamp(16px,1.7vw,24px);background:var(--panel2);border:2px solid var(--line)}
+.tab2 .yn .y{flex:2;background:var(--pink);border-color:var(--pink)}
+.tab2 .yn .y.press{outline:4px solid #fff;transform:translateY(3px)}
+.mini3{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;width:100%;flex:1}
+.mini3 div{background:var(--panel);border:2px solid var(--line);border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:clamp(10px,.95vw,14px);font-weight:800;line-height:1.1;padding:2px;position:relative}
+.mini3 div .e{font-size:clamp(18px,1.9vw,28px)}
+.mini3 div.pick{border-color:var(--yellow);box-shadow:0 0 0 4px rgba(255,210,63,.4);animation:pulse2 .8s infinite alternate}
+.mini3 div.got{background:rgba(61,220,151,.25);border-color:var(--green)}
+.mini3 div.ln{background:rgba(255,210,63,.3);border-color:var(--yellow)}
+.mini3 div .st{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-size:clamp(16px,1.6vw,24px);color:var(--green);background:rgba(18,10,38,.55);border-radius:7px}
+@keyframes pulse2{to{transform:scale(1.07)}}
+.hand{position:absolute;font-size:clamp(34px,3.4vw,52px);pointer-events:none;animation:tap 1s ease-in-out infinite;z-index:3}
+@keyframes tap{50%{transform:translate(4px,8px) scale(.9)}}
+.bub{position:absolute;top:-14px;background:#fff;color:#2b2140;border-radius:18px;padding:10px 16px;font-weight:800;font-size:clamp(17px,1.8vw,27px);box-shadow:0 8px 20px rgba(0,0,0,.4);white-space:nowrap;animation:bub .4s cubic-bezier(.3,1.6,.5,1);z-index:4}
+.bub b{color:#d6336c}
+@keyframes bub{from{transform:scale(.3);opacity:0}}
+.bigline{font-family:var(--disp);font-weight:800;font-size:clamp(70px,10vw,150px);line-height:1;letter-spacing:4px;animation:popIn .5s cubic-bezier(.3,1.6,.5,1)}
+#demo .dctrl{display:flex;gap:10px;align-items:center;margin-top:8px}
+#demo .dots{display:flex;gap:7px}#demo .dots i{width:12px;height:12px;border-radius:50%;background:var(--line)}#demo .dots i.on{background:var(--yellow)}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div class="screen on" id="splash" onclick="leaveSplash()">
+  <div class="parade" id="splashParade"></div>
+  <div class="logo"><span class="m">MOCHI</span><br><span class="b">BINGO!</span></div>
+  <div class="sub">FIND · ASK · BINGO!　探して・聞いて・ビンゴ！</div>
+  <div class="tap">TAP ANYWHERE TO START</div>
+</div>
+
+<!-- SETUP -->
+<div class="screen" id="setup">
+  <div class="top">
+    <div class="logo"><span class="m">MOCHI</span> <span class="b">BINGO!</span></div>
+    <div class="spacer"></div>
+    <button class="pill resume" id="resumeBtn" style="display:none" onclick="resumeGame()"></button>
+    <button class="pill" id="musicBtn" onclick="toggleMusic()">🔊 Music: ON</button>
+  </div>
+  <div class="stabs">
+    <button class="stab on" data-tab="setup" onclick="setupTab('setup')">⚙️ Setup</button>
+    <button class="stab" data-tab="grammar" onclick="setupTab('grammar')">📚 Grammar <span class="badge" id="gramBadge"></span></button>
+    <button class="stab" data-tab="rules" onclick="setupTab('rules')">📋 Rules</button>
+  </div>
+  <div class="cols tabpane on" id="tab-setup">
+    <div class="col">
+      <div class="card">
+        <h3>🎯 Bingo card <small>ビンゴカード</small></h3>
+        <div class="row" style="margin-bottom:10px"><span class="lbl">Card size</span><span id="sizeBtns" class="row"></span></div>
+        <div class="row" style="margin-bottom:10px"><span class="lbl">Question help<br><small class="jp">質問のヒント</small></span><span id="helpBtns" class="row"></span></div>
+        <div class="row" style="margin-bottom:10px"><span class="lbl">Answer help<br><small class="jp">答えのヒント</small></span><span id="ansBtns" class="row"></span></div>
+        <div class="row" style="margin-bottom:10px"><span class="lbl">How to win<br><small class="jp">勝ち方</small></span><span id="winBtns" class="row"></span></div>
+        <div class="row" style="margin-bottom:6px"><span class="lbl">Timer<br><small class="jp">タイマー</small></span><span id="timerBox" class="row"></span></div>
+        <div id="toggles"></div>
+        <div class="gsum" id="gramSummary" onclick="setupTab('grammar')"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" style="flex:1;display:flex;flex-direction:column">
+        <h3>🍡 Mochis <small id="lobbyCount">0 joined · 参加中</small></h3>
+        <div class="note" style="margin-bottom:10px">Students open <b>mochi_bingo_terminal.html</b> on their tablets and tap to get a mochi. Numbers are random — not class numbers.<br>生徒はタブレットで端末ページを開いてキャラクターをもらいます。</div>
+        <div id="lobbyGrid"></div>
+        <div style="flex:1"></div>
+        <div class="row" style="justify-content:space-between;margin-top:12px">
+          <span class="note" id="startNote"></span>
+          <span class="row" style="gap:10px"><button class="pill demo-btn" onclick="openDemo()">▶ How to play<small>遊び方デモ</small></button>
+          <button class="big-btn" id="startBtn" onclick="startGame()">START ▶</button></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="tabpane full" id="tab-grammar">
+    <div class="ghdr">
+      <div><h2>📚 Grammar <small>文法 · up to 3 grammar points, then pick the questions</small></h2><div class="note" id="attrCount" style="font-size:15px"></div></div>
+      <div class="myq">
+        <div class="t">✏️ My questions<small>Make your own, or import a list · 自分で作る・読み込む</small></div>
+        <button class="opt on" onclick="openEditor()">＋ New question</button>
+        <button class="opt" onclick="exportCustom()">⬇ Export</button>
+        <label class="opt" style="cursor:pointer">⬆ Import<input type="file" accept=".json,application/json" style="display:none" onchange="importCustom(this)"></label>
+        <div class="note" id="myqMsg" style="width:100%;display:none"></div>
+      </div>
+    </div>
+    <div id="packList" class="packgrid"></div>
+  </div>
+  <div class="tabpane full" id="tab-rules"><div id="rulesPage"></div></div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="game">
+  <div class="top">
+    <div class="logo"><span class="m">MOCHI</span> <span class="b">BINGO!</span></div>
+    <div id="phaseTitle"></div>
+    <div class="spacer"></div>
+    <div id="mmCount"></div>
+    <div id="bingoCount"></div>
+    <div id="timer"></div>
+  </div>
+  <div id="stage"></div>
+  <div id="alerts"></div>
+  <div class="ctrl" id="ctrl"></div>
+</div>
+
+<div class="modal" id="qed" onclick="if(event.target===this)closeEditor()"><div class="mbox" id="qedBox"></div></div>
+<div class="modal" id="mgr" onclick="if(event.target===this)closeMgr()"><div class="mbox" id="mgrBox" style="grid-template-columns:1fr"></div></div>
+<div id="demo"></div>
+<div id="pop"></div>
+<div id="cd"></div>
+<div id="slam"></div>
+
+<script>
+// ── SHARED: mascots, sound, Ably helpers (same block in projector + terminal) ──
+var ABLY_KEY='4ZBykA.Tuugsg:cgyxBZXHQyC7_2do0olX7UKSMSJi56RhILeV4mZOJCE';
+var ABLY_CHANNEL='bingo-room1';
+var MASCOT_COLORS=['#ff5d8f','#ffb703','#3ddc97','#4cc9f0','#9b5de5','#ff7b29','#2ec4b6','#f15bb5','#4895ef','#a7c957','#e63946','#b5838d'];
+function shadeHex(hex,amt){
+  var c=parseInt(hex.slice(1),16),r=c>>16,g=(c>>8)&255,b=c&255,f=amt<0?0:255,p=Math.abs(amt);
+  r=Math.round((f-r)*p+r);g=Math.round((f-g)*p+g);b=Math.round((f-b)*p+b);
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function mascotLook(n){
+  var h=Math.imul(n+7,2654435761)>>>0;
+  return {col:MASCOT_COLORS[n%12],eyes:(h>>>5)%4,mouth:(h>>>9)%3,acc:(h>>>13)%9};
+}
+function mascotColor(n){return mascotLook(n).col}
+function mascotSVG(n,opt){
+  opt=opt||{};
+  var L=mascotLook(n),c=L.col,d=shadeHex(c,-0.38),li=shadeHex(c,0.5),ink='#2b2140';
+  var s='<svg class="mascot'+(opt.cls?' '+opt.cls:'')+'" viewBox="0 -8 100 120" xmlns="http://www.w3.org/2000/svg" aria-label="#'+n+'">';
+  s+='<ellipse cx="50" cy="106" rx="30" ry="5" fill="rgba(0,0,0,.28)"/>';
+  // accessory behind (headphones band)
+  if(L.acc===5)s+='<path d="M13 52 Q13 6 50 6 Q87 6 87 52" fill="none" stroke="#3a3354" stroke-width="6" stroke-linecap="round"/>';
+  s+='<ellipse cx="34" cy="99" rx="11" ry="7" fill="'+d+'"/><ellipse cx="66" cy="99" rx="11" ry="7" fill="'+d+'"/>';
+  s+='<path d="M50 18C79 18 93 42 93 67C93 92 75 101 50 101C25 101 7 92 7 67C7 42 21 18 50 18Z" fill="'+c+'" stroke="'+d+'" stroke-width="3"/>';
+  s+='<ellipse cx="31" cy="36" rx="10" ry="5.5" fill="#fff" opacity=".35" transform="rotate(-32 31 36)"/>';
+  s+='<ellipse cx="50" cy="82" rx="23" ry="15" fill="'+li+'"/>';
+  if(opt.num!==false)s+='<text x="50" y="'+(n>=100?88:90)+'" text-anchor="middle" font-size="'+(n>=100?17:n>=10?22:24)+'" font-weight="800" font-family="Baloo 2,Arial Rounded MT Bold,Arial,sans-serif" fill="'+d+'">'+n+'</text>';
+  s+='<ellipse cx="24" cy="62" rx="6" ry="4" fill="#ff8fab" opacity=".75"/><ellipse cx="76" cy="62" rx="6" ry="4" fill="#ff8fab" opacity=".75"/>';
+  // eyes
+  [37,63].forEach(function(x){
+    if(L.eyes===0)s+='<circle cx="'+x+'" cy="52" r="6" fill="'+ink+'"/><circle cx="'+(x+2)+'" cy="50" r="2" fill="#fff"/>';
+    else if(L.eyes===1)s+='<path d="M'+(x-6)+' 54 Q'+x+' 45 '+(x+6)+' 54" fill="none" stroke="'+ink+'" stroke-width="3.6" stroke-linecap="round"/>';
+    else if(L.eyes===2)s+='<circle cx="'+x+'" cy="51" r="8.5" fill="#fff" stroke="'+ink+'" stroke-width="2"/><circle cx="'+(x+1)+'" cy="52" r="5" fill="'+ink+'"/><circle cx="'+(x+3)+'" cy="50" r="1.8" fill="#fff"/>';
+    else s+='<path d="M'+(x-6)+' 51 a6 6 0 0 0 12 0 z" fill="'+ink+'"/><path d="M'+(x-7)+' 50.5 h14" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>';
+  });
+  if(L.mouth===0)s+='<path d="M43 63 Q50 70 57 63" fill="none" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>';
+  else if(L.mouth===1)s+='<path d="M43.5 62 Q50 73 56.5 62 Z" fill="#7a1f3d" stroke="'+ink+'" stroke-width="2" stroke-linejoin="round"/>';
+  else s+='<path d="M42 63 q4 4.5 8 0 q4 4.5 8 0" fill="none" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>';
+  // accessories on top
+  switch(L.acc){
+    case 1: s+='<path d="M50 19 V6" stroke="#2d6a4f" stroke-width="3"/><ellipse cx="42" cy="7" rx="8" ry="4.5" fill="#52b788" transform="rotate(-25 42 7)"/><ellipse cx="58" cy="5" rx="8" ry="4.5" fill="#74c69d" transform="rotate(25 58 5)"/>';break;
+    case 2: s+='<path d="M38 22 L52 -4 L64 21 Z" fill="#ffd166" stroke="#2b2140" stroke-width="2" stroke-linejoin="round"/><path d="M42 15 L58 13 M46 7 L56 6" stroke="#ef476f" stroke-width="3"/><circle cx="52" cy="-4" r="4" fill="#ef476f"/>';break;
+    case 3: s+='<path d="M66 24 L56 15 L57 30 Z M66 24 L76 15 L75 30 Z" fill="#ff4d8d" stroke="#2b2140" stroke-width="1.5" stroke-linejoin="round"/><circle cx="66" cy="23" r="3.5" fill="#ff85b3" stroke="#2b2140" stroke-width="1.5"/>';break;
+    case 4: s+='<path d="M50 19 V3" stroke="#2b2140" stroke-width="2.5"/><circle cx="50" cy="1" r="5.5" fill="#ffd60a" stroke="#2b2140" stroke-width="2"/>';break;
+    case 5: s+='<rect x="4" y="42" width="12" height="20" rx="5" fill="#3a3354"/><rect x="84" y="42" width="12" height="20" rx="5" fill="#3a3354"/>';break;
+    case 6: s+='<path d="M34 22 L34 6 L42 14 L50 2 L58 14 L66 6 L66 22 Z" fill="#ffd60a" stroke="#b8860b" stroke-width="2" stroke-linejoin="round"/><circle cx="50" cy="16" r="2.6" fill="#e63946"/>';break;
+    case 7: s+='<path d="M22 32 Q50 -2 78 32 Z" fill="'+shadeHex(c,-0.15)+'" stroke="#2b2140" stroke-width="2"/><rect x="20" y="27" width="60" height="8" rx="4" fill="#fff" stroke="#2b2140" stroke-width="2"/><circle cx="50" cy="8" r="6" fill="#fff" stroke="#2b2140" stroke-width="2"/>';break;
+    case 8: s+='<path d="M28 27 Q22 12 30 6 Q32 18 38 22 Z M72 27 Q78 12 70 6 Q68 18 62 22 Z" fill="#fff1d6" stroke="#2b2140" stroke-width="2" stroke-linejoin="round"/>';break;
+  }
+  return s+'</svg>';
+}
+// grammar frame: [bracketed] parts are the target grammar
+function frameHTML(q,help){
+  if(!q)return '';
+  if(help==='blank')return q.replace(/\[([^\]]+)\]/g,function(m,w){return '<span class="blank">'+w.split(/\s+/).map(function(x){return '<i style="width:'+(0.62*x.length+0.4).toFixed(2)+'em">&nbsp;</i>'}).join(' ')+'</span>'});
+  return q.replace(/\[([^\]]+)\]/g,'<b class="gr">$1</b>');
+}
+function framePlain(q){return (q||'').replace(/\[|\]/g,'')}
+function escHTML(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+// ── sound ──
+var _ac=null,_sfxGain=null,_soundOn=true;
+function audio(){
+  if(!_ac){try{_ac=new (window.AudioContext||window.webkitAudioContext)();_sfxGain=_ac.createGain();_sfxGain.gain.value=0.9;_sfxGain.connect(_ac.destination)}catch(e){_ac=null}}
+  if(_ac&&_ac.state==='suspended')try{_ac.resume()}catch(e){}
+  return _ac;
+}
+function tone(f,t0,dur,type,vol,dest){
+  var a=audio();if(!a||!_soundOn)return;
+  try{var o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.value=f;
+  var t=a.currentTime+t0;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol||0.3,t+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g);g.connect(dest||_sfxGain);o.start(t);o.stop(t+dur+0.05)}catch(e){}
+}
+function sfxPop(){tone(660,0,.12,'triangle',.35);tone(990,.06,.14,'triangle',.3)}
+function sfxDing(){tone(1046,0,.25,'sine',.4);tone(1568,.08,.35,'sine',.32)}
+function sfxBuzz(){tone(150,0,.32,'square',.18);tone(110,.05,.32,'square',.14)}
+function sfxTick(){tone(1200,0,.05,'square',.12)}
+function sfxBingo(){[523,659,784,1046,784,1046,1318].forEach(function(f,i){tone(f,i*.09,.28,'triangle',.38)});tone(262,0,.7,'sine',.35)}
+function sfxGo(){tone(523,0,.15,'square',.2);tone(784,0,.5,'triangle',.4);tone(1046,.05,.5,'triangle',.3)}
+function sfxCount(){tone(440,0,.18,'square',.2)}
+function sfxEnd(){[784,659,523,392].forEach(function(f,i){tone(f,i*.16,.35,'triangle',.4)});tone(196,.6,.9,'sine',.4)}
+// ── END SHARED ──
+
+// ── GRAMMAR PACKS (projector only) ──
+// types: set = has some of the items (yes/no); setNum = has some items, each with a number (info square: ask the follow-up)
+//        one = exactly one value
+// q = yes/no question for a square ([..] = target grammar); q2 = follow-up (info squares); open = open question
+var PACKS=[
+  {id:'basic',en:'Basics',jp:'基本',emoji:'🌱'},
+  {id:'past',en:'Past tense',jp:'過去形',emoji:'⏪'},
+  {id:'future',en:'Future',jp:'未来',emoji:'⏩'},
+  {id:'perfect',en:'Present perfect',jp:'現在完了',emoji:'🧭'}
+];
+function brk1(phrase){var p=phrase.split(' ');return '['+p[0]+']'+(p.length>1?' '+p.slice(1).join(' '):'')}
+function nplural(n,one,many){return n===1?one:many}
+var ATTRS=[
+  // ── BASICS ──
+  {id:'like',pack:'basic',type:'set',rate:.33,emoji:'😋',title:'Do you like ___?',
+   items:[['pizza','ピザ','🍕'],['sushi','寿司','🍣'],['natto','納豆','🥢'],['curry','カレー','🍛'],['ramen','ラーメン','🍜'],['chocolate','チョコレート','🍫'],['tomatoes','トマト','🍅'],['coffee','コーヒー','☕'],['spicy food','辛い食べ物','🌶️']],
+   cond:function(it){return 'likes '+it[0]},condJp:function(it){return it[1]+'が好き'},
+   q:function(it){return '[Do] you [like] '+it[0]+'?'},yes:'Yes, I do.',no:"No, I don't.",
+   me:function(it){return 'I like '+it[0]+'.'}},
+  {id:'can',pack:'basic',type:'set',rate:.33,emoji:'💪',title:'Can you ___?',
+   items:[['swim','泳げる','🏊'],['play the piano','ピアノが弾ける','🎹'],['cook','料理ができる','🍳'],['ski','スキーができる','⛷️'],['speak Chinese','中国語が話せる','🀄'],['play the guitar','ギターが弾ける','🎸'],['dance','ダンスができる','💃'],['do a handstand','逆立ちができる','🤸']],
+   cond:function(it){return 'can '+it[0]},condJp:function(it){return it[1]},
+   q:function(it){return '[Can] you '+it[0]+'?'},yes:'Yes, I can.',no:"No, I can't.",
+   me:function(it){return 'I can '+it[0]+'.'}},
+  {id:'height',pack:'basic',type:'one',emoji:'📏',title:'How tall are you?',
+   items:[['150','150','📏'],['155','155','📏'],['160','160','📏'],['165','165','📏'],['170','170','📏'],['175','175','📏'],['180','180','📏']],
+   cond:function(it){return 'is '+it[0]+' cm tall'},condJp:function(it){return '身長'+it[1]+'cm'},
+   q:function(){return '[How tall] [are] you?'},
+   me:function(it){return "I'm "+it[0]+' cm tall.'}},
+  {id:'birthday',pack:'basic',type:'one',emoji:'🎂',title:'When is your birthday?',
+   items:[['January','1月','🎂'],['February','2月','🎂'],['March','3月','🎂'],['April','4月','🎂'],['May','5月','🎂'],['June','6月','🎂'],['July','7月','🎂'],['August','8月','🎂'],['September','9月','🎂'],['October','10月','🎂'],['November','11月','🎂'],['December','12月','🎂']],
+   cond:function(it){return 'has a birthday in '+it[0]},condJp:function(it){return it[1]+'生まれ'},
+   q:function(){return '[When] [is] your birthday?'},
+   me:function(it){return 'My birthday is in '+it[0]+'.'}},
+  {id:'from',pack:'basic',type:'one',emoji:'✈️',title:'Where are you from?',
+   items:[['Canada','カナダ','🍁'],['Australia','オーストラリア','🦘'],['the U.K.','イギリス','💂'],['the U.S.','アメリカ','🗽'],['Korea','韓国','🥘'],['China','中国','🐼'],['Brazil','ブラジル','⚽'],['France','フランス','🥐']],
+   cond:function(it){return 'is from '+it[0]},condJp:function(it){return it[1]+'出身'},
+   q:function(){return '[Where] [are] you from?'},
+   me:function(it){return "I'm from "+it[0]+'.'}},
+  {id:'sport',pack:'basic',type:'one',emoji:'🏅',title:'What is your favorite sport?',
+   items:[['soccer','サッカー','⚽'],['baseball','野球','⚾'],['tennis','テニス','🎾'],['basketball','バスケ','🏀'],['volleyball','バレー','🏐'],['table tennis','卓球','🏓'],['badminton','バドミントン','🏸']],
+   cond:function(it){return 'likes '+it[0]+' best'},condJp:function(it){return '一番好きなスポーツは'+it[1]},
+   q:function(){return '[What] [is] your favorite sport?'},
+   me:function(it){return 'My favorite sport is '+it[0]+'.'}},
+  {id:'pets',pack:'basic',type:'setNum',rate:.25,min:1,max:4,emoji:'🐾',title:'Do you have a ___?',
+   items:[['dog','犬','🐶','dogs'],['cat','猫','🐱','cats'],['fish','魚','🐟','fish'],['hamster','ハムスター','🐹','hamsters'],['rabbit','うさぎ','🐰','rabbits'],['bird','鳥','🐦','birds']],
+   cond:function(it){return 'has a '+it[0]},condJp:function(it){return it[1]+'を飼っている'},
+   q:function(it){return '[Do] you [have] a '+it[0]+'?'},q2:function(it){return '[How many] '+it[3]+' [do] you [have]?'},
+   unit:function(it){return it[3]},yes:'Yes, I do.',no:"No, I don't.",
+   me:function(it,n){return 'I have '+n+' '+(n===1?it[0]:it[3])+'.'}},
+  {id:'color',pack:'basic',type:'one',emoji:'🎨',title:'What is your favorite color?',
+   items:[['red','赤','🍎'],['blue','青','💙'],['green','緑','🍀'],['yellow','黄色','🌻'],['pink','ピンク','🌸'],['purple','紫','🍇'],['black','黒','🎩'],['white','白','⛄']],
+   cond:function(it){return 'likes '+it[0]+' best'},condJp:function(it){return '一番好きな色は'+it[1]},
+   q:function(){return '[What] [is] your favorite color?'},
+   me:function(it){return 'My favorite color is '+it[0]+'.'}},
+  {id:'family',pack:'basic',type:'setNum',rate:.45,min:1,max:3,emoji:'👪',title:'Do you have a brother / sister?',
+   items:[['brother','兄弟','👦','brothers'],['sister','姉妹','👧','sisters']],
+   cond:function(it){return 'has a '+it[0]},condJp:function(it){return it[1]+'がいる'},
+   q:function(it){return '[Do] you [have] a '+it[0]+'?'},q2:function(it){return '[How many] '+it[3]+' [do] you [have]?'},
+   unit:function(it){return it[3]},yes:'Yes, I do.',no:"No, I don't.",
+   me:function(it,n){return 'I have '+n+' '+(n===1?it[0]:it[3])+'.'}},
+  {id:'club',pack:'basic',type:'one',emoji:'🏫',title:'What club are you in?',
+   items:[['the soccer club','サッカー部','⚽'],['the brass band','吹奏楽部','🎺'],['the tennis club','テニス部','🎾'],['the art club','美術部','🎨'],['the baseball club','野球部','⚾'],['the dance club','ダンス部','💃'],['the kendo club','剣道部','🥋'],['the cooking club','料理部','🍳']],
+   cond:function(it){return 'is in '+it[0]},condJp:function(it){return it[1]+'に入っている'},
+   q:function(){return '[What] club [are] you in?'},
+   me:function(it){return "I'm in "+it[0]+'.'}},
+  {id:'commute',pack:'basic',type:'one',emoji:'🚲',title:'How do you come to school?',
+   items:[['by bike','自転車で','🚲'],['by bus','バスで','🚌'],['by train','電車で','🚃'],['on foot','歩いて','🚶'],['by car','車で','🚗'],['by scooter','スクーターで','🛵']],
+   cond:function(it){return 'comes to school '+it[0]},condJp:function(it){return it[1]+'学校に来る'},
+   q:function(it){return '[Do] you [come] to school '+it[0]+'?'},open:'[How] [do] you [come] to school?',yes:'Yes, I do.',no:"No, I don't.",
+   me:function(it){return 'I come to school '+it[0]+'.'}},
+  // ── PAST ──
+  {id:'yesterday',pack:'past',type:'one',emoji:'📅',title:'What did you do yesterday?',
+   items:[['played soccer','サッカーをした','⚽','play soccer'],['watched a movie','映画を見た','🎬','watch a movie'],['went shopping','買い物に行った','🛍️','go shopping'],['studied English','英語を勉強した','📚','study English'],['cooked dinner','夕食を作った','🍳','cook dinner'],['played video games','ゲームをした','🎮','play video games'],['read a book','本を読んだ','📖','read a book'],['went to karaoke','カラオケに行った','🎤','go to karaoke']],
+   cond:function(it){return it[0]+' yesterday'},condJp:function(it){return '昨日'+it[1]},
+   q:function(it){return '[Did] you '+brk1(it[3])+' yesterday?'},open:'[What] [did] you [do] yesterday?',yes:'Yes, I did.',no:"No, I didn't.",
+   me:function(it){return 'I '+it[0]+' yesterday.'}},
+  {id:'weekend',pack:'past',type:'one',emoji:'🗺️',title:'Where did you go last weekend?',
+   items:[['the beach','海','🏖️'],['the zoo','動物園','🦁'],['the library','図書館','📚'],['the mountains','山','⛰️'],['an amusement park','遊園地','🎡'],['the aquarium','水族館','🐠'],['a concert','コンサート','🎵'],['a festival','お祭り','🏮']],
+   cond:function(it){return 'went to '+it[0]+' last weekend'},condJp:function(it){return '先週末'+it[1]+'に行った'},
+   q:function(it){return '[Did] you [go] to '+it[0]+' last weekend?'},open:'[Where] [did] you [go] last weekend?',yes:'Yes, I did.',no:"No, I didn't.",
+   me:function(it){return 'I went to '+it[0]+' last weekend.'}},
+  {id:'breakfast',pack:'past',type:'one',emoji:'🍽️',title:'What did you eat for breakfast?',
+   items:[['rice','ごはん','🍚'],['bread','パン','🍞'],['cereal','シリアル','🥣'],['eggs','卵','🍳'],['pancakes','パンケーキ','🥞'],['noodles','麺','🍜'],['fruit','果物','🍎'],['yogurt','ヨーグルト','🥛']],
+   cond:function(it){return 'ate '+it[0]+' for breakfast'},condJp:function(it){return '朝ごはんに'+it[1]+'を食べた'},
+   q:function(it){return '[Did] you [eat] '+it[0]+' for breakfast?'},open:'[What] [did] you [eat] for breakfast?',yes:'Yes, I did.',no:"No, I didn't.",
+   me:function(it){return 'I ate '+it[0]+' for breakfast.'}},
+  {id:'getup',pack:'past',type:'one',emoji:'⏰',title:'What time did you get up?',
+   items:[['5:30 AM','5:30','⏰'],['6:00 AM','6:00','⏰'],['6:30 AM','6:30','⏰'],['7:00 AM','7:00','⏰'],['7:30 AM','7:30','⏰'],['8:00 AM','8:00','⏰']],
+   cond:function(it){return 'got up at '+it[0]+' this morning'},condJp:function(it){return '今朝'+it[1]+'に起きた'},
+   q:function(){return '[What time] [did] you [get up] this morning?'},
+   me:function(it){return 'I got up at '+it[0]+' this morning.'}},
+  {id:'bedtime',pack:'past',type:'one',emoji:'🛏️',title:'What time did you go to bed?',
+   items:[['9:00 PM','9:00','🛏️'],['9:30 PM','9:30','🛏️'],['10:00 PM','10:00','🛏️'],['10:30 PM','10:30','🛏️'],['11:00 PM','11:00','🛏️'],['11:30 PM','11:30','🛏️']],
+   cond:function(it){return 'went to bed at '+it[0]+' last night'},condJp:function(it){return '昨夜'+it[1]+'に寝た'},
+   q:function(){return '[What time] [did] you [go] to bed last night?'},
+   me:function(it){return 'I went to bed at '+it[0]+' last night.'}},
+  {id:'lastsummer',pack:'past',type:'one',emoji:'🌞',title:'Where did you go last summer?',
+   items:[['Tokyo','東京','🗼'],['Nara','奈良','🦌'],['Nagano','長野','🏔️'],['Shikoku','四国','🍊'],['Kanazawa','金沢','🏯'],['Guam','グアム','🏝️'],['Kamakura','鎌倉','⛩️'],['Bali','バリ','🌴']],
+   cond:function(it){return 'went to '+it[0]+' last summer'},condJp:function(it){return '去年の夏'+it[1]+'に行った'},
+   q:function(it){return '[Did] you [go] to '+it[0]+' last summer?'},open:'[Where] [did] you [go] last summer?',yes:'Yes, I did.',no:"No, I didn't.",
+   me:function(it){return 'I went to '+it[0]+' last summer.'}},
+  {id:'bought',pack:'past',type:'one',emoji:'🛒',title:'What did you buy last week?',
+   items:[['a T-shirt','Tシャツ','👕'],['a book','本','📕'],['a video game','ゲーム','🎮'],['new shoes','新しい靴','👟'],['headphones','ヘッドホン','🎧'],['a bag','かばん','👜'],['a hat','帽子','🧢'],['a manga','漫画','📗']],
+   cond:function(it){return 'bought '+it[0]+' last week'},condJp:function(it){return '先週'+it[1]+'を買った'},
+   q:function(it){return '[Did] you [buy] '+it[0]+' last week?'},open:'[What] [did] you [buy] last week?',yes:'Yes, I did.',no:"No, I didn't.",
+   me:function(it){return 'I bought '+it[0]+' last week.'}},
+  {id:'watched',pack:'past',type:'one',emoji:'📺',title:'What did you watch last night?',
+   items:[['anime','アニメ','📺'],['a baseball game','野球の試合','⚾'],['a drama','ドラマ','🎭'],['the news','ニュース','📰'],['a music show','音楽番組','🎵'],['a cooking show','料理番組','🍳'],['a quiz show','クイズ番組','❓'],['YouTube','YouTube','▶️']],
+   cond:function(it){return 'watched '+it[0]+' last night'},condJp:function(it){return '昨夜'+it[1]+'を見た'},
+   q:function(it){return '[Did] you [watch] '+it[0]+' last night?'},open:'[What] [did] you [watch] last night?',yes:'Yes, I did.',no:"No, I didn't.",
+   me:function(it){return 'I watched '+it[0]+' last night.'}},
+  {id:'vacation',pack:'past',type:'set',rate:.35,emoji:'🎆',title:'Did you ___ in summer vacation?',
+   items:[['swam in the sea','海で泳いだ','🌊','swim','in the sea'],['saw fireworks','花火を見た','🎆','see','fireworks'],['ate shaved ice','かき氷を食べた','🍧','eat','shaved ice'],['visited grandparents','祖父母を訪ねた','👵','visit','grandparents'],['caught bugs','虫を捕った','🐞','catch','bugs'],['wore a yukata','浴衣を着た','👘','wear','a yukata'],['got a sunburn','日焼けした','☀️','get','a sunburn'],['did homework every day','毎日宿題をした','📝','do','homework every day']],
+   cond:function(it){return it[0]+' in summer vacation'},condJp:function(it){return '夏休みに'+it[1]},
+   q:function(it){return '[Did] you ['+it[3]+'] '+it[4]+' in summer vacation?'},yes:'Yes, I did.',no:"No, I didn't.",
+   me:function(it){return 'I '+it[0]+' in summer vacation.'}},
+  {id:'where7',pack:'past',type:'one',emoji:'🕖',title:'Where were you at 7 PM last night?',
+   items:[['at home','家','🏠'],['at juku','塾','✏️'],['at school','学校','🏫'],['at the gym','ジム','🏋️'],['at a restaurant','レストラン','🍽️'],['at the station','駅','🚉'],["at a friend's house",'友達の家','🏡'],['at the park','公園','🌳']],
+   cond:function(it){return 'was '+it[0]+' at 7 PM last night'},condJp:function(it){return '昨夜7時に'+it[1]+'にいた'},
+   q:function(it){return '[Were] you '+it[0]+' at 7 PM last night?'},open:'[Where] [were] you at 7 PM last night?',yes:'Yes, I was.',no:"No, I wasn't.",
+   me:function(it){return 'I was '+it[0]+' at 7 PM last night.'}},
+  // ── FUTURE ──
+  {id:'plan',pack:'future',type:'one',emoji:'🗓️',title:'What are you going to do this weekend?',
+   items:[['go camping','キャンプに行く','⛺'],['see a movie','映画を見る','🎬'],['go fishing','釣りに行く','🎣'],['bake cookies','クッキーを焼く','🍪'],['study for a test','テスト勉強をする','📝'],['go to a festival','お祭りに行く','🏮'],['play basketball','バスケをする','🏀'],['sleep all day','一日中寝る','😴']],
+   cond:function(it){return 'is going to '+it[0]+' this weekend'},condJp:function(it){return '今週末'+it[1]+'予定'},
+   q:function(it){return '[Are] you [going to] '+it[0]+' this weekend?'},open:'[What] [are] you [going to] do this weekend?',yes:'Yes, I am.',no:"No, I'm not.",
+   me:function(it){return "I'm going to "+it[0]+' this weekend.'}},
+  {id:'summer',pack:'future',type:'one',emoji:'🏖️',title:'Where will you go next summer?',
+   items:[['Hokkaido','北海道','🐻'],['Canada','カナダ','🍁'],['Italy','イタリア','🍕'],['Thailand','タイ','🐘'],['Egypt','エジプト','🐫'],['New York','ニューヨーク','🗽'],['Kyushu','九州','♨️'],['Singapore','シンガポール','🦁']],
+   cond:function(it){return 'will go to '+it[0]+' next summer'},condJp:function(it){return '来年の夏'+it[1]+'に行く'},
+   q:function(it){return '[Will] you [go] to '+it[0]+' next summer?'},open:'[Where] [will] you [go] next summer?',yes:'Yes, I will.',no:"No, I won't.",
+   me:function(it){return "I'll go to "+it[0]+' next summer.'}},
+  {id:'dinner',pack:'future',type:'one',emoji:'🍴',title:'What will you eat tonight?',
+   items:[['curry','カレー','🍛'],['sushi','寿司','🍣'],['hamburgers','ハンバーガー','🍔'],['spaghetti','スパゲッティ','🍝'],['tempura','天ぷら','🍤'],['sukiyaki','すき焼き','🍲'],['pizza','ピザ','🍕'],['fried chicken','フライドチキン','🍗']],
+   cond:function(it){return 'will eat '+it[0]+' tonight'},condJp:function(it){return '今夜'+it[1]+'を食べる'},
+   q:function(it){return '[Will] you [eat] '+it[0]+' for dinner tonight?'},open:'[What] [will] you [eat] for dinner tonight?',yes:'Yes, I will.',no:"No, I won't.",
+   me:function(it){return "I'll eat "+it[0]+' for dinner tonight.'}},
+  {id:'job',pack:'future',type:'one',emoji:'💼',title:'What are you going to be in the future?',
+   items:[['a doctor','医者','💉'],['a teacher','先生','👩‍🏫'],['a pilot','パイロット','✈️'],['a cook','料理人','👨‍🍳'],['a nurse','看護師','🏥'],['a YouTuber','YouTuber','📹'],['a soccer player','サッカー選手','⚽'],['an engineer','エンジニア','🔧']],
+   cond:function(it){return 'is going to be '+it[0]},condJp:function(it){return '将来'+it[1]+'になる予定'},
+   q:function(it){return '[Are] you [going to] be '+it[0]+'?'},open:'[What] [are] you [going to] be in the future?',yes:'Yes, I am.',no:"No, I'm not.",
+   me:function(it){return "I'm going to be "+it[0]+'.'}},
+  {id:'buy',pack:'future',type:'one',emoji:'🛍️',title:'What will you buy tomorrow?',
+   items:[['a new phone','新しいスマホ','📱'],['a bike','自転車','🚲'],['a cake','ケーキ','🍰'],['flowers','花','💐'],['a watch','腕時計','⌚'],['a jacket','ジャケット','🧥'],['a comic book','漫画','📗'],['snacks','お菓子','🍬']],
+   cond:function(it){return 'will buy '+it[0]+' tomorrow'},condJp:function(it){return '明日'+it[1]+'を買う'},
+   q:function(it){return '[Will] you [buy] '+it[0]+' tomorrow?'},open:'[What] [will] you [buy] tomorrow?',yes:'Yes, I will.',no:"No, I won't.",
+   me:function(it){return "I'll buy "+it[0]+' tomorrow.'}},
+  {id:'wakeup',pack:'future',type:'one',emoji:'⏰',title:'What time will you get up tomorrow?',
+   items:[['5:30 AM','5:30','⏰'],['6:00 AM','6:00','⏰'],['6:30 AM','6:30','⏰'],['7:00 AM','7:00','⏰'],['7:30 AM','7:30','⏰'],['9:00 AM','9:00','⏰']],
+   cond:function(it){return 'will get up at '+it[0]+' tomorrow'},condJp:function(it){return '明日'+it[1]+'に起きる'},
+   q:function(){return '[What time] [will] you [get up] tomorrow?'},
+   me:function(it){return "I'll get up at "+it[0]+' tomorrow.'}},
+  {id:'tomorrow',pack:'future',type:'set',rate:.35,emoji:'📆',title:'Will you ___ tomorrow?',
+   items:[['go to juku','塾に行く','✏️'],['go to the dentist','歯医者に行く','🦷'],['meet friends','友達に会う','👫'],['do homework','宿題をする','📝'],['go to club practice','部活に行く','🏃'],['eat out','外食する','🍽️'],['go to bed early','早く寝る','🛌'],['take a test','テストを受ける','💯']],
+   cond:function(it){return 'will '+it[0]+' tomorrow'},condJp:function(it){return '明日'+it[1]},
+   q:function(it){return '[Will] you '+brk1(it[0])+' tomorrow?'},yes:'Yes, I will.',no:"No, I won't.",
+   me:function(it){return "I'll "+it[0]+' tomorrow.'}},
+  {id:'afterschool',pack:'future',type:'one',emoji:'🎒',title:'Where are you going to go after school?',
+   items:[['home','家','🏠'],['the library','図書館','📚'],['the park','公園','🌳'],['juku','塾','✏️'],['a convenience store','コンビニ','🏪'],['the gym','ジム','🏋️'],['a café','カフェ','☕'],['the station','駅','🚉']],
+   cond:function(it){return it[0]==='home'?'is going to go home after school':'is going to go to '+it[0]+' after school'},condJp:function(it){return '放課後'+it[1]+'に行く予定'},
+   q:function(it){return '[Are] you [going to] go '+(it[0]==='home'?'home':'to '+it[0])+' after school?'},open:'[Where] [are] you [going to] go after school?',yes:'Yes, I am.',no:"No, I'm not.",
+   me:function(it){return "I'm going to go "+(it[0]==='home'?'home':'to '+it[0])+' after school.'}},
+  {id:'trip',pack:'future',type:'setNum',single:true,min:2,max:7,emoji:'🧳',title:'How long are you going to stay?',
+   items:[['Niigata','新潟','⛷️'],['Nagano','長野','🏔️'],['Seoul','ソウル','🥘'],['Taipei','台北','🍵'],['Vietnam','ベトナム','🍜'],['London','ロンドン','💂'],['Hong Kong','香港','🌃'],['Nara','奈良','🦌']],
+   cond:function(it){return 'is going to go to '+it[0]+' this winter'},condJp:function(it){return 'この冬'+it[1]+'に行く予定'},
+   q:function(){return '[Where] [are] you [going to] go this winter?'},q2:function(){return '[How long] [are] you [going to] stay there?'},
+   unit:function(){return 'days'},
+   me:function(it,n){return "I'm going to go to "+it[0]+" this winter. I'm going to stay for "+n+' days.'}},
+  // ── PRESENT PERFECT ──
+  {id:'been',pack:'perfect',type:'setNum',rate:.3,min:1,max:6,emoji:'🧳',title:'Have you ever been to ___?',
+   items:[['Okinawa','沖縄','🏝️'],['Hawaii','ハワイ','🌺'],['Korea','韓国','🥘'],['Taiwan','台湾','🍵'],['Australia','オーストラリア','🦘'],['Tokyo Disneyland','東京ディズニーランド','🏰'],['USJ','USJ','🎢'],['Kyoto','京都','⛩️']],
+   cond:function(it){return 'has been to '+it[0]},condJp:function(it){return it[1]+'に行ったことがある'},
+   q:function(it){return '[Have] you ever [been] to '+it[0]+'?'},q2:function(){return '[How many times] [have] you [been] there?'},
+   unit:function(){return 'times'},yes:'Yes, I have.',no:"No, I haven't.",
+   me:function(it,n){return "I've been to "+it[0]+' '+(n===1?'once':n===2?'twice':n+' times')+'.'}},
+  {id:'ever',pack:'perfect',type:'set',rate:.28,emoji:'✨',title:'Have you ever ___?',
+   items:[['climbed Mt. Fuji','富士山に登った','🗻','climbed','Mt. Fuji'],['seen a ghost','おばけを見た','👻','seen','a ghost'],['ridden a horse','馬に乗った','🐴','ridden','a horse'],['been on TV','テレビに出た','📺','been','on TV'],['lost a phone','スマホをなくした','📱','lost','a phone'],['met a famous person','有名人に会った','⭐','met','a famous person'],['made a cake','ケーキを作った','🎂','made','a cake'],['broken a bone','骨折した','🦴','broken','a bone']],
+   cond:function(it){return 'has '+it[0]},condJp:function(it){return it[1]+'ことがある'},
+   q:function(it){return '[Have] you ever ['+it[3]+'] '+it[4]+'?'},yes:'Yes, I have.',no:"No, I haven't.",
+   me:function(it){return "I've "+it[0]+'.'}},
+  {id:'live',pack:'perfect',type:'setNum',single:true,min:1,max:15,emoji:'🏠',title:'How long have you lived in ___?',
+   items:[['Osaka','大阪','🏯'],['Nagoya','名古屋','🏯'],['Sapporo','札幌','⛄'],['Fukuoka','福岡','🍜'],['Sendai','仙台','🌳'],['Kobe','神戸','⚓'],['Hiroshima','広島','🍁'],['Yokohama','横浜','🎡']],
+   cond:function(it){return 'lives in '+it[0]},condJp:function(it){return it[1]+'に住んでいる'},
+   q:function(it){return '[Where] [do] you live?'},q2:function(it){return '[How long] [have] you [lived] in '+it[0]+'?'},
+   unit:function(){return 'years'},
+   me:function(it,n){return "I live in "+it[0]+". I've lived here for "+n+' '+(n===1?'year':'years')+'.'}},
+  {id:'played',pack:'perfect',type:'setNum',rate:.25,min:1,max:10,emoji:'🎼',title:'How long have you played ___?',
+   items:[['soccer','サッカー','⚽'],['baseball','野球','⚾'],['tennis','テニス','🎾'],['basketball','バスケ','🏀'],['the violin','バイオリン','🎻'],['the drums','ドラム','🥁'],['the trumpet','トランペット','🎺']],
+   cond:function(it){return 'plays '+it[0]},condJp:function(it){return it[1]+'をやっている'},
+   q:function(it){return '[Do] you [play] '+it[0]+'?'},q2:function(it){return '[How long] [have] you [played] '+it[0]+'?'},
+   unit:function(){return 'years'},yes:'Yes, I do.',no:"No, I don't.",
+   me:function(it,n){return "I've played "+it[0]+' for '+n+' '+(n===1?'year':'years')+'.'}},
+  {id:'had',pack:'perfect',type:'setNum',rate:.35,min:1,max:6,emoji:'📱',title:'How long have you had your ___?',
+   items:[['phone','スマホ','📱'],['bike','自転車','🚲'],['watch','腕時計','⌚'],['camera','カメラ','📷'],['skateboard','スケボー','🛹'],['tablet','タブレット','💻']],
+   cond:function(it){return 'has a '+it[0]},condJp:function(it){return it[1]+'を持っている'},
+   q:function(it){return '[Do] you [have] a '+it[0]+'?'},q2:function(it){return '[How long] [have] you [had] it?'},
+   unit:function(){return 'years'},yes:'Yes, I do.',no:"No, I don't.",
+   me:function(it,n){return "I've had my "+it[0]+' for '+n+' '+(n===1?'year':'years')+'.'}},
+  {id:'eaten',pack:'perfect',type:'set',rate:.3,emoji:'🍽️',title:'Have you ever eaten ___?',
+   items:[['durian','ドリアン','🍈'],['snails','カタツムリ','🐌'],['crocodile','ワニ','🐊'],['insects','虫','🦗'],['shark','サメ','🦈'],['horse meat','馬肉','🐴'],['kangaroo','カンガルー','🦘'],['frog legs','カエルの足','🐸']],
+   cond:function(it){return 'has eaten '+it[0]},condJp:function(it){return it[1]+'を食べたことがある'},
+   q:function(it){return '[Have] you ever [eaten] '+it[0]+'?'},yes:'Yes, I have.',no:"No, I haven't.",
+   me:function(it){return "I've eaten "+it[0]+'.'}},
+  {id:'seen',pack:'perfect',type:'set',rate:.3,emoji:'👀',title:'Have you ever seen ___?',
+   items:[['a shooting star','流れ星','🌠'],['a UFO','UFO','🛸'],['a wild bear','野生の熊','🐻'],['a whale','クジラ','🐋'],['the northern lights','オーロラ','🌌'],['a panda','パンダ','🐼'],['a sumo match','相撲の試合','🤼'],['a tornado','竜巻','🌪️']],
+   cond:function(it){return 'has seen '+it[0]},condJp:function(it){return it[1]+'を見たことがある'},
+   q:function(it){return '[Have] you ever [seen] '+it[0]+'?'},yes:'Yes, I have.',no:"No, I haven't.",
+   me:function(it){return "I've seen "+it[0]+'.'}},
+  {id:'learned',pack:'perfect',type:'setNum',rate:.25,min:1,max:8,emoji:'📖',title:'How long have you learned ___?',
+   items:[['Korean','韓国語','🗣️'],['French','フランス語','🥐'],['Spanish','スペイン語','🌮'],['calligraphy','書道','🖌️'],['programming','プログラミング','💻'],['karate','空手','🥋'],['ballet','バレエ','💃'],['soroban','そろばん','🧮']],
+   cond:function(it){return 'learns '+it[0]},condJp:function(it){return it[1]+'を習っている'},
+   q:function(it){return '[Do] you [learn] '+it[0]+'?'},q2:function(it){return '[How long] [have] you [learned] '+it[0]+'?'},
+   unit:function(){return 'years'},yes:'Yes, I do.',no:"No, I don't.",
+   me:function(it,n){return "I've learned "+it[0]+' for '+n+' '+(n===1?'year':'years')+'.'}},
+  {id:'tried',pack:'perfect',type:'set',rate:.3,emoji:'🏄',title:'Have you ever tried ___?',
+   items:[['surfing','サーフィン','🏄'],['bungee jumping','バンジージャンプ','🎢'],['scuba diving','スキューバダイビング','🐠'],['rock climbing','ロッククライミング','🧗'],['snowboarding','スノーボード','🏂'],['ice skating','アイススケート','⛸️'],['archery','アーチェリー','🏹'],['yoga','ヨガ','🧘']],
+   cond:function(it){return 'has tried '+it[0]},condJp:function(it){return it[1]+'をやったことがある'},
+   q:function(it){return '[Have] you ever [tried] '+it[0]+'?'},yes:'Yes, I have.',no:"No, I haven't.",
+   me:function(it){return "I've tried "+it[0]+'.'}}
+];
+var ATTR_BY_ID={};ATTRS.forEach(function(a){ATTR_BY_ID[a.id]=a});
+// ── END GRAMMAR ──
+
+// ── MY QUESTIONS (teacher-made question types; projector only) ──
+// A custom question type is stored as plain data (no functions) so it can be saved, exported and imported.
+// Patterns use ___ for the item and {n} for the number (number kind only). [brackets] = highlighted grammar.
+var BUILTIN_ATTRS=ATTRS.slice(), BUILTIN_PACKS=PACKS.slice();
+var customQs=[], customPacks=[];
+function loadCustom(){
+  try{customQs=JSON.parse(localStorage.getItem('mb_custom')||'[]')||[]}catch(e){customQs=[]}
+  try{customPacks=JSON.parse(localStorage.getItem('mb_custom_packs')||'[]')||[]}catch(e){customPacks=[]}
+  customQs=customQs.filter(function(d){return validateQ(d).length===0});
+}
+function saveCustom(){try{localStorage.setItem('mb_custom',JSON.stringify(customQs));localStorage.setItem('mb_custom_packs',JSON.stringify(customPacks))}catch(e){}}
+function fillP(p,it,n){if(n==null)n=2;return String(p||'').replace(/_{2,}/g,it[0]).replace(/\{n\}\s+([A-Za-z]+?)s\b/g,function(m,w){return n===1?'1 '+w:n+' '+w+'s'}).replace(/\{n\}/g,n)}
+function hasBlank(p){return /_{2,}/.test(p||'')}
+function parseItems(text){
+  return String(text||'').split(/\r?\n/).map(function(l){
+    var c=l.split('|').map(function(x){return x.trim()});
+    return c[0]?[c[0],c[1]||'',c[2]||'']:null;
+  }).filter(Boolean);
+}
+function itemsText(items){return (items||[]).map(function(it){return it[0]+(it[1]||it[2]?' | '+(it[1]||''):'')+(it[2]?' | '+it[2]:'')}).join('\n')}
+// ── ANSWER POOLS: every question gets its answers ONLY from the pool it belongs to ──
+// en = what goes in ___ ; jp = Japanese for the same answer
+var ANSWER_POOLS={
+  freq:{en:'How often',jp:'頻度',emoji:'🔁',items:[['every day','毎日'],['three times a week','週3回'],['twice a week','週2回'],['once a week','週1回'],['twice a month','月2回'],['once a month','月1回']]},
+  duration:{en:'How long (for …)',jp:'期間',emoji:'⏳',items:[['for 1 year','1年間'],['for 2 years','2年間'],['for 3 years','3年間'],['for 4 years','4年間'],['for 5 years','5年間'],['for 6 years','6年間'],['for 8 years','8年間'],['for 10 years','10年間']]},
+  times:{en:'How many times',jp:'回数',emoji:'🔢',items:[['once','1回'],['twice','2回'],['three times','3回'],['four times','4回'],['five times','5回']]},
+  clock:{en:'What time',jp:'時刻',emoji:'⏰',items:[['6:00 AM','午前6:00'],['6:30 AM','午前6:30'],['7:00 AM','午前7:00'],['7:30 AM','午前7:30'],['8:00 AM','午前8:00'],['12:00 PM','午後12:00'],['6:00 PM','午後6:00'],['7:00 PM','午後7:00'],['8:00 PM','午後8:00'],['9:00 PM','午後9:00'],['10:00 PM','午後10:00'],['11:00 PM','午後11:00']]},
+  day:{en:'What day',jp:'曜日',emoji:'📅',items:[['Monday','月曜日'],['Tuesday','火曜日'],['Wednesday','水曜日'],['Thursday','木曜日'],['Friday','金曜日'],['Saturday','土曜日'],['Sunday','日曜日']]},
+  month:{en:'What month',jp:'月',emoji:'🗓️',items:[['January','1月'],['February','2月'],['March','3月'],['April','4月'],['May','5月'],['June','6月'],['July','7月'],['August','8月'],['September','9月'],['October','10月'],['November','11月'],['December','12月']]},
+  season:{en:'What season',jp:'季節',emoji:'🌸',items:[['spring','春'],['summer','夏'],['fall','秋'],['winter','冬']]},
+  count:{en:'How many',jp:'数',emoji:'#️⃣',items:[['1','1'],['2','2'],['3','3'],['4','4'],['5','5']]},
+  height:{en:'How tall',jp:'身長',emoji:'📏',items:[['150 cm','150cm'],['155 cm','155cm'],['160 cm','160cm'],['165 cm','165cm'],['170 cm','170cm'],['175 cm','175cm'],['180 cm','180cm']]}
+};
+// numbers for "Yes / No + number" questions (the student types the number they hear)
+var NUM_POOLS={
+  times:{en:'times',min:1,max:6},years:{en:'years',min:1,max:10},months:{en:'months',min:1,max:11},
+  days:{en:'days',min:1,max:14},hours:{en:'hours',min:1,max:10},people:{en:'people',min:1,max:6}
+};
+function poolItems(d){
+  if(d.kind!=='one'||!d.pool||d.pool==='list')return d.items||[];
+  var P=ANSWER_POOLS[d.pool];if(!P)return [];
+  var on=d.poolOn&&d.poolOn.length?d.poolOn:P.items.map(function(x,i){return i});
+  return on.filter(function(i){return P.items[i]}).map(function(i){var it=P.items[i];return [it[0],d.cardJp&&hasBlank(d.cardJp)?d.cardJp.replace(/_{2,}/g,it[1]):'',d.emoji||P.emoji]});
+}
+function answerKind(d){ // what the editor calls it
+  if(d.kind==='set')return 'yesno';
+  if(d.kind==='setNum')return 'yesnum';
+  return d.pool&&d.pool!=='list'?d.pool:'list';
+}
+function validateQ(d){
+  var e=[];
+  if(!d||typeof d!=='object')return ['bad data'];
+  if(['set','one','setNum'].indexOf(d.kind)<0)return ['Pick an answer type'];
+  if(d.kind==='one'&&d.pool&&d.pool!=='list'&&!ANSWER_POOLS[d.pool])return ['Unknown answer type: '+d.pool];
+  var its=poolItems(d),single=d.kind==='set'&&!hasBlank(d.q);
+  if(d.kind==='one'){
+    if(!(d.open||'').trim()&&!(d.q||'').trim())e.push('Write the question');
+  }else if(!d.q||!d.q.trim())e.push('Write the question');
+  else if(d.kind==='setNum'&&!hasBlank(d.q))e.push('The question needs ___ where the item goes');
+  if(single){if(!(d.card||'').trim())e.push('Write the card text (e.g. "can swim")');if(!(d.me||'').trim())e.push('Write the mochi sentence (e.g. "I can swim.")')}
+  else{
+    if(!hasBlank(d.card))e.push('Card text needs ___ where the '+(d.kind==='one'?'answer':'item')+' goes');
+    if(!hasBlank(d.me))e.push('Mochi sentence needs ___ where the '+(d.kind==='one'?'answer':'item')+' goes');
+    if(its.length<2)e.push(d.kind==='one'&&d.pool&&d.pool!=='list'?'Keep at least 2 answers switched on':'Add at least 2 '+(d.kind==='one'?'answers':'items')+' (one per line)');
+  }
+  var seen={};its.forEach(function(it){var k=String(it[0]).toLowerCase();if(seen[k])e.push('"'+it[0]+'" is listed twice');seen[k]=1});
+  if(d.kind!=='one'&&(!d.yes||!d.no))e.push('Write the Yes and No answers');
+  if(d.kind==='setNum'){
+    if(!d.q2||!d.q2.trim())e.push('Write the follow-up question (How many / How long…)');
+    if(!d.unit)e.push('Pick the number type');
+    if(!(d.min>=0)||!(d.max>=d.min)||d.max-d.min>29)e.push('Number range: min ≤ max, at most 30 numbers');
+    if(!/\{n\}/.test(d.me||''))e.push('Mochi sentence needs {n} for the number');
+  }
+  return e;
+}
+function customToAttr(d){
+  var single=d.kind==='set'&&!hasBlank(d.q);
+  var its=single?[['',d.cardJp||'',d.emoji||'⭐']]:poolItems(d);
+  var fixOne=d.pool==='count'?function(s){return s.replace(/\b1 ([A-Za-z]+)s\b/g,'1 $1')}:function(s){return s};
+  var a={id:d.id,pack:d.pack,custom:true,type:d.kind,emoji:d.emoji||(d.pool&&ANSWER_POOLS[d.pool]?ANSWER_POOLS[d.pool].emoji:'⭐'),
+    title:d.title||framePlain(d.kind==='one'&&d.open?d.open:d.q).replace(/_{2,}/g,'___'),
+    pool:d.kind==='one'?(d.pool||'list'):null,
+    rate:d.kind==='one'?null:(d.rate||0.33),min:d.min,max:d.max,
+    items:its.map(function(it){return [it[0],it[1]||'',it[2]||d.emoji||'⭐']}),
+    cond:function(it){return fixOne(single?d.card:fillP(d.card,it))},
+    condJp:function(it){return it[1]||''},
+    q:function(it){return hasBlank(d.q)?fillP(d.q,it):(d.q||d.open)},
+    me:function(it,n){return fixOne(single?d.me:fillP(d.me,it,n))}};
+  if(d.kind!=='one'){a.yes=d.yes;a.no=d.no}
+  if(d.kind==='one'){if(d.open)a.open=d.open;if(d.yes&&hasBlank(d.q)){a.yes=d.yes;a.no=d.no}}
+  if(d.kind==='setNum'){a.q2=function(it){return fillP(d.q2,it)};a.unit=function(){return d.unit}}
+  return a;
+}
+function rebuildAttrs(){
+  ATTRS=BUILTIN_ATTRS.concat(customQs.map(customToAttr));
+  PACKS=BUILTIN_PACKS.concat(customPacks);
+  ATTR_BY_ID={};ATTRS.forEach(function(a){ATTR_BY_ID[a.id]=a});
+}
+function packName(id){var p=PACKS.filter(function(x){return x.id===id})[0];return p?p.en:id}
+loadCustom();rebuildAttrs();
+// ── END MY QUESTIONS ──
+
+
+// ── STATE (var = inspectable from devtools/tests) ──
+var DEFAULT_SETTINGS={ver:2,tabSfx:true,ansHelp:'full',win:'first',attrs:['like','can','height','birthday','from','sport','pets','color','family','club','commute','yesterday','weekend','breakfast','getup','bedtime','lastsummer','bought','watched','vacation','where7'],size:4,free:false,cardJp:false,timerOn:true,help:'full',timerMin:10,unique:true,board:true};
+var settings=loadSettings();
+var MAX_PACKS=3; // grammar points per game
+var players={};        // did -> player
+var phase='setup';     // setup | rules | play | end
+var gameId=0;
+var endsAt=0, pausedLeft=null;
+var bingoOrder=[];     // character numbers in order of first BINGO
+var foundCount={};     // character number -> times claimed as a match
+var results=null;
+var _ch=null,_ablyReady=false,_musicOn=true;
+var LOCK_MS=12000;
+var _pausedAt=0,_autoEndT=null,AUTO_END_MS=3200;
+var NO_UNLOCK=3,TRIES_PER_TALK=3; // NOs needed on a dead square before "ask again" (or everyone they have left)
+var allReuse=false;
+var STALE_MS=45000,BREAK_MS=60000; // offline after 45 s without a ping; a pair is split after 60 s
+
+function loadSettings(){
+  var s=null;try{s=JSON.parse(localStorage.getItem('mb_settings')||'null')}catch(e){}
+  var o=JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+  if(s)for(var k in o)if(s[k]!==undefined)o[k]=s[k];
+  o.attrs=(o.attrs||[]).filter(function(id){return ATTR_BY_ID[id]});
+  if(!o.attrs.length)o.attrs=DEFAULT_SETTINGS.attrs.slice();
+  // older saved settings may have more than 3 grammar points on — keep the first 3
+  var keep=[];o.attrs=o.attrs.filter(function(id){var pk=ATTR_BY_ID[id].pack;if(keep.indexOf(pk)<0){if(keep.length>=3)return false;keep.push(pk)}return true});
+  if(o.cardJp==null)o.cardJp=false;
+  if(['first','most'].indexOf(o.win)<0)o.win='first';if(['slow','normal','fast'].indexOf(o.pace)<0)o.pace='normal';
+  if(s&&!(s.ver>=2)){o.ver=2;o.size=4;o.free=false} // 5 Oct: 4×4 became the default
+  if(s&&s.timerOn==null&&s.timerMin===0){o.timerOn=false;o.timerMin=10} // old "∞" button
+  if(!(o.timerMin>=1))o.timerMin=10;
+  return o;
+}
+function saveSettings(){try{localStorage.setItem('mb_settings',JSON.stringify(settings))}catch(e){}}
+
+// ── helpers ──
+function $(id){return document.getElementById(id)}
+function rnd(n){return Math.floor(Math.random()*n)}
+function rint(a,b){return a+rnd(b-a+1)}
+function shuffle(a){for(var i=a.length-1;i>0;i--){var j=rnd(i+1),t=a[i];a[i]=a[j];a[j]=t}return a}
+function playerList(){return Object.keys(players).map(function(k){return players[k]})}
+function byNum(n){var r=null;playerList().forEach(function(p){if(p.n===n)r=p});return r}
+function enabledAttrs(){var seen={};return settings.attrs.filter(function(id){if(seen[id])return false;seen[id]=1;return true}).map(function(id){return ATTR_BY_ID[id]}).filter(Boolean)}
+function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('on',s.id===id)})}
+
+// ── STATS ──
+function genStats(){
+  var st={};
+  ATTRS.forEach(function(a){
+    if(a.type==='set'){st[a.id]=[];a.items.forEach(function(it,i){if(Math.random()<a.rate)st[a.id].push(i)})}
+    else if(a.type==='setNum'){var m={};
+      if(a.single)m[rnd(a.items.length)]=rint(a.min,a.max);
+      else a.items.forEach(function(it,i){if(Math.random()<a.rate)m[i]=rint(a.min,a.max)});
+      st[a.id]=m}
+    else st[a.id]=rnd(a.items.length);
+  });
+  return st;
+}
+function matches(st,aid,i){
+  var a=ATTR_BY_ID[aid],v=st[aid];
+  if(a.type==='set')return v.indexOf(i)>=0;
+  if(a.type==='setNum')return v[i]!=null;
+  return v===i;
+}
+function answerOf(st,aid,i){var v=st[aid];return v&&v[i]!=null?v[i]:null}
+
+// profile shown on the student's ME tab (only the grammar in use)
+function buildProfile(st){
+  return enabledAttrs().map(function(a){
+    var pk=PACKS.filter(function(x){return x.id===a.pack})[0]||{en:a.pack,jp:'',emoji:'📝'};
+    var o={id:a.id,emoji:a.emoji,title:a.title,pack:a.pack,packEn:pk.en,packJp:pk.jp||'',packEmoji:pk.emoji||'📝'};
+    var v=st[a.id];
+    if(a.type==='one'){var it=a.items[v];o.sentence=a.me(it);o.e=it[2]}
+    else if(a.type==='setNum'&&a.single){var k=+Object.keys(v)[0];o.sentence=a.me(a.items[k],v[k]);o.e=a.items[k][2]}
+    else if(a.type==='set'&&a.items.length===1&&a.items[0][0]===''){var on1=v.indexOf(0)>=0;o.sentence=on1?a.yes+' '+a.me(a.items[0]):a.no;o.e=on1?'✅':'❌'}
+    else{
+      o.yes=a.yes;o.no=a.no;
+      o.chips=a.items.map(function(it,i){
+        var on=a.type==='set'?v.indexOf(i)>=0:v[i]!=null;
+        return {e:it[2],t:it[0],on:on,n:a.type==='setNum'&&on?v[i]:null,u:a.type==='setNum'&&a.unit(it)==='years'?' yrs':'',s:on?(a.type==='setNum'?a.me(it,v[i]):a.me(it)):null};
+      }).sort(function(x,y){return (y.on?1:0)-(x.on?1:0)});
+    }
+    return o;
+  });
+}
+
+function numUnit(n,u){u=String(u);if(n===1)return u==='times'?'once':'1 '+u.replace(/s$/,'');if(n===2&&u==='times')return 'twice';return n+' '+u}
+// mark the grammar word(s) in an answer with [brackets] (highlighted in Full help, a blank line in Blanks help)
+function grammarMark(s){
+  s=String(s);var m;
+  if(/^(Yes|No),/.test(s))return s.replace(/^((?:Yes|No), (?:I'm|I've|I'll|I))\s+(.*?)(\.)$/,function(_,a,b,c){return b?a+' ['+b+']'+c:_}).replace(/^((?:Yes|No), )(I'm|I've|I'll)\.$/,'$1[$2].');
+  if(m=s.match(/^I'm going to (.*)$/))return "I['m] [going to] "+m[1];
+  if(m=s.match(/^I'(ve|ll) (\S+)(.*)$/))return "I'"+m[1]+' ['+m[2]+']'+m[3];
+  if(m=s.match(/^I'm (.*)$/))return "I['m] "+m[1];
+  if(m=s.match(/^I (\S+)(.*)$/))return 'I ['+m[1]+']'+m[2];
+  if(m=s.match(/^My (.+?) (is|was) (.*)$/))return 'My '+m[1]+' ['+m[2]+'] '+m[3];
+  return s;
+}
+// what the ANSWERER should say for a square (shown on their tablet only while it's being asked)
+function answerFor(st,sq){
+  var a=ATTR_BY_ID[sq.a],it=a.items[sq.i],v=st[a.id],m=matches(st,a.id,sq.i),L=[],l2=null;
+  // the SHORT natural answer only ("Yes, I did." — no repeating the whole sentence)
+  if(a.type==='set')L=[m?a.yes:a.no];
+  else if(a.type==='setNum'){
+    if(a.single){var k=+Object.keys(v)[0],parts=String(a.me(a.items[k],v[k])).split(/\.\s+/).map(function(x,i,arr){return i<arr.length-1?x+'.':x});L=[parts[0]];if(m&&parts[1])l2=parts.slice(1).join(' ')}
+    else if(m){L=[a.yes];l2=a.me(it,v[sq.i])}else L=[a.no];
+  }else{
+    var act=a.items[v];
+    L=a.yes?[m?a.yes:a.no]:[a.me(act)];
+  }
+  var fix=function(x){return String(x).replace(/\.\.$/,'.')};
+  // facts-only help: the key info without the sentence
+  var facts=null,thenFacts=null;
+  if(a.type==='one'&&!a.yes){var A=a.items[v];facts=(A[2]||'')+' '+A[0]+(/^\d+$/.test(A[0])&&String(a.cond(A)).indexOf(A[0]+' cm')>=0?' cm':'')}
+  else if(a.type==='setNum'&&a.single){var K=+Object.keys(v)[0];facts=(a.items[K][2]||'')+' '+a.items[K][0];if(l2)thenFacts=numUnit(v[K],a.unit(a.items[K]))}
+  else if(l2&&a.type==='setNum')thenFacts=numUnit(v[sq.i],a.unit(it));
+  return {yes:m,yn:!!(a.yes&&!(a.type==='setNum'&&a.single)),lines:L.filter(Boolean).map(fix).map(grammarMark),then:l2&&grammarMark(fix(l2)),facts:facts,thenFacts:thenFacts};
+}
+// ── CARDS ──
+function squareView(sq){
+  if(sq.free)return {free:true};
+  var a=ATTR_BY_ID[sq.a],it=a.items[sq.i];
+  var v={e:it[2],cond:a.cond(it),condJp:a.condJp(it),q:a.q(it),info:!!sq.info};
+  if(a.open)v.open=a.open;
+  if(sq.info){v.q2=a.q2(it);v.unit=a.unit(it);v.min=a.min;v.max=a.max}
+  return v;
+}
+function canMatchAll(card,others){ // bipartite matching: every square gets a different classmate
+  var sqs=card.filter(function(s){return !s.free}),owner={};
+  function tryS(si,seen){
+    var s=sqs[si];
+    for(var j=0;j<others.length;j++){
+      var p=others[j];if(seen[p.n]||!matches(p.stats,s.a,s.i))continue;seen[p.n]=1;
+      if(owner[p.n]==null||tryS(owner[p.n],seen)){owner[p.n]=si;return true}
+    }
+    return false;
+  }
+  for(var i=0;i<sqs.length;i++)if(!tryS(i,{}))return false;
+  return true;
+}
+function buildCard(me){
+  var others=playerList().filter(function(p){return p!==me&&p.stats});
+  var size=settings.size,N=size*size;
+  var freeIdx=(settings.free&&size%2===1)?Math.floor(N/2):-1;
+  var need=N-(freeIdx>=0?1:0);
+  // candidate squares grouped by attribute, with how many classmates match
+  var groups={};
+  enabledAttrs().forEach(function(a){
+    a.items.forEach(function(it,i){
+      var c=others.filter(function(p){return matches(p.stats,a.id,i)}).length;
+      if(c<1)return;
+      (groups[a.id]=groups[a.id]||[]).push({a:a.id,i:i,c:c,info:a.type==='setNum'});
+    });
+  });
+  // one square per question: every square on a card is a DIFFERENT question (picked at random when more are on).
+  // Bingo guarantee: at least one line must be completable by DIFFERENT classmates; prefer cards where the whole card is.
+  var best=null,bestScore=0,qids=Object.keys(groups);
+  if(qids.length>=need){
+    for(var tries=0;tries<60;tries++){
+      var pick=pickQuestions(qids,need).map(function(id){
+        return shuffle(groups[id].slice()).sort(function(x,y){return score(x)-score(y)})[0];
+      });
+      var card=[];for(var c=0,j=0;c<N;c++)card.push(c===freeIdx?{free:true}:pick[j++]);
+      if(!settings.unique)return {card:card,unique:false};
+      if(canMatchAll(card,others))return {card:card,unique:true,lines:allLineIds().length};
+      var ls=winnableLines(card,{},others).length;
+      if(ls>bestScore){best=card;bestScore=ls}
+    }
+    if(best)return {card:best,unique:true,lines:bestScore};
+    return {card:card,unique:true,short:true}; // no winnable line — START re-rolls the stats
+  }
+  // not enough questions with a holder: fill what we can (START re-rolls / refuses before this reaches a tablet)
+  var all=qids.map(function(id){return shuffle(groups[id].slice())[0]});shuffle(all);
+  var card2=[];for(var c2=0;c2<N;c2++)card2.push(c2===freeIdx||!all.length?{free:true}:all.pop());
+  return {card:card2,unique:false,short:true};
+  function score(x){var r=x.c/Math.max(1,others.length);return Math.abs(r-0.18)+Math.random()*0.15}
+}
+// one question from each grammar point first (so every grammar point is on every card), the rest at random
+function pickQuestions(qids,need){
+  var byPack={},first=[];shuffle(qids.slice()).forEach(function(id){var pk=ATTR_BY_ID[id].pack;(byPack[pk]=byPack[pk]||[]).push(id)});
+  Object.keys(byPack).forEach(function(pk){first.push(byPack[pk][0])});
+  var rest=shuffle(qids.filter(function(id){return first.indexOf(id)<0}));
+  return shuffle(first.slice(0,need).concat(rest).slice(0,need));
+}
+function linesOf(p){
+  var s=settings.size,m=p.marks,L=[],r,c,ok;
+  function on(i){return !!m[i]}
+  for(r=0;r<s;r++){ok=true;for(c=0;c<s;c++)ok=ok&&on(r*s+c);if(ok)L.push('r'+r)}
+  for(c=0;c<s;c++){ok=true;for(r=0;r<s;r++)ok=ok&&on(r*s+c);if(ok)L.push('c'+c)}
+  ok=true;for(r=0;r<s;r++)ok=ok&&on(r*s+r);if(ok)L.push('d0');
+  ok=true;for(r=0;r<s;r++)ok=ok&&on(r*s+s-1-r);if(ok)L.push('d1');
+  return L;
+}
+function lineCells(id){
+  var s=settings.size,out=[],k;
+  if(id[0]==='r'){k=+id.slice(1);for(var c=0;c<s;c++)out.push(k*s+c)}
+  else if(id[0]==='c'){k=+id.slice(1);for(var r=0;r<s;r++)out.push(r*s+k)}
+  else if(id==='d0'){for(var i=0;i<s;i++)out.push(i*s+i)}
+  else for(var j=0;j<s;j++)out.push(j*s+s-1-j);
+  return out;
+}
+function oneToGo(p){ // any line with exactly one empty square
+  var s=settings.size,ids=[];for(var i=0;i<s;i++){ids.push('r'+i,'c'+i)}ids.push('d0','d1');
+  return ids.some(function(id){var e=lineCells(id).filter(function(x){return !p.marks[x]});return e.length===1});
+}
+function allLineIds(){var s=settings.size,ids=[];for(var i=0;i<s;i++)ids.push('r'+i,'c'+i);ids.push('d0','d1');return ids}
+// lines that can still be finished: their empty squares can go to DIFFERENT classmates not used yet on this card
+function winnableLines(card,marks,others){
+  return allLineIds().filter(function(id){
+    var cells=lineCells(id),rest=cells.filter(function(x){return !marks[x]}).map(function(x){return card[x]}).filter(function(s){return !s.free});
+    if(!rest.length&&cells.every(function(x){return marks[x]||card[x].free}))return false; // already done
+    return canMatchAll(rest,others);
+  });
+}
+function unusedOthers(p){
+  var used={};for(var k in p.marks)if(p.marks[k].t!=null)used[p.marks[k].t]=1;
+  return playerList().filter(function(o){return o!==p&&o.stats&&!used[o.n]});
+}
+function lineOpen(p){return allLineIds().some(function(id){return !lineCells(id).every(function(x){return p.marks[x]})})}
+// fail-safe: if no line can be finished with classmates you haven't used yet, you may ask people again
+function checkStuck(p,quiet){
+  if(!p.unique||p.reuse||!p.card||!p.card.length||!lineOpen(p))return false;
+  if(winnableLines(p.card,p.marks,unusedOthers(p)).length)return false;
+  grantRound(p,quiet);p.stuckPass=true;
+  return true;
+}
+// ── MATCHMAKING (like online match-making in a video game) ──
+// Free mochis wait in "Looking for a mochi…". The projector pairs two free mochis: both tablets say "Find #X!".
+// Both tap 🤝 FOUND → they talk. Each student's turn ends after 1 YES or 3 tries (NO / wrong claim).
+// When both turns are done, both go back to looking. You never meet the same classmate twice
+// until "ask again" is on for one of you (teacher button, dead-square rule, or you've met everyone).
+var LOST_AFTER_MS=30000;
+var lostAlerts=[]; // [{a:n,b:n,t:ms}] — "can't find each other"
+function mmOf(p){if(!p.mm)p.mm={s:'look',since:Date.now()};return p.mm}
+function setLook(p){p.mm={s:'look',since:Date.now()}}
+function partnerOf(p){var m=p.mm;if(!m||m.p==null)return null;var q=byNum(m.p);return q&&q.mm&&q.mm.p===p.n?q:null}
+function playing(p){return p.on!==false&&p.stats&&p.card&&p.card.length}
+function canMeet(a,b){
+  if(a===b||!playing(b))return false;
+  if(a.avoid===b.n||b.avoid===a.n)return false;              // just failed to find each other
+  var c=metCount(a,b);
+  if(c<Math.min(a.round||1,b.round||1))return true; // BOTH must be cleared to meet again (one more meeting per clearance)
+  // a stuck student (dead square) may meet again someone who can actually fill one of their open squares
+  return (a.stuckPass&&c<(a.round||1)&&canHelp(b,a))||(b.stuckPass&&c<(b.round||1)&&canHelp(a,b));
+}
+function canHelp(o,p){var nf=p.noFrom||{};return p.card.some(function(sq,i){return !sq.free&&!p.marks[i]&&matches(o.stats,sq.a,sq.i)&&!((nf[i]||[]).indexOf(o.n)>=0)})}
+function metCount(a,b){return (a.met&&a.met[b.n])||0}
+// a new "clearance": one more meeting allowed with every classmate (+ may use a classmate for another square)
+function grantRound(p,quiet){p.round=(p.round||1)+1;p.reuse=true;if(!quiet)pub('notice',{did:p.did,kind:'reuse'})}
+function matchmake(){
+  if(phase!=='play')return;
+  var changed=[],free=playerList().filter(function(p){return playing(p)&&mmOf(p).s==='look'}).sort(function(a,b){return a.mm.since-b.mm.since});
+  // met everyone who's here → may talk to classmates again
+  free.forEach(function(p){
+    var others=playerList().filter(function(o){return o!==p&&playing(o)});
+    if(others.length&&others.every(function(o){return metCount(p,o)>=(p.round||1)})){grantRound(p);changed.push(p)}
+  });
+  var taken={},now=Date.now();
+  free.forEach(function(a){
+    if(taken[a.did])return;
+    var best=null,bs=1e18;
+    free.forEach(function(b){if(b===a||taken[b.did]||!canMeet(a,b))return;
+      var sc=metCount(a,b)*1e13+(a.last===b.n||b.last===a.n?1e12:0)+b.mm.since;if(sc<bs){bs=sc;best=b}}); // new classmates first, then whoever waited longest
+    if(!best)return;
+    taken[a.did]=taken[best.did]=1;a.avoid=best.avoid=null;
+    a.mm={s:'match',p:best.n,at:now,found:false,lost:false};best.mm={s:'match',p:a.n,at:now,found:false,lost:false};
+    changed.push(a,best);
+  });
+  changed.forEach(function(p){sendYou(p)});
+  if(changed.length){renderMM();saveGame()}
+}
+function touch(p){p.lastSeen=Date.now();p.on=true}
+function onFound(d){
+  var p=d&&players[d.did];if(!p||phase!=='play'||d.gameId!==gameId)return;touch(p);
+  var m=mmOf(p);if(m.s!=='match')return sendYou(p);
+  var q=partnerOf(p);if(!q){setLook(p);sendYou(p);matchmake();return}
+  m.found=true;
+  if(q.mm.found)startTalk(q,p);else{sendYou(p);sendYou(q)} // whoever tapped FOUND first asks first
+  renderMM();saveGame();
+}
+function askable(p){var m=p.mm||{};return p.card.some(function(s,i){return !s.free&&!p.marks[i]&&!(m.asked&&m.asked[i])})}
+function checkTurn(p){var m=p.mm;if(m&&m.s==='talk'&&!m.done&&(m.tries>=TRIES_PER_TALK||!askable(p)))m.done=true}
+// a asks first; then they take turns, one question each (one side keeps asking if the other is done)
+function startTalk(a,b){
+  var now=Date.now();
+  [[a,b],[b,a]].forEach(function(x){x[0].met=x[0].met||{};x[0].met[x[1].n]=metCount(x[0],x[1])+1;x[0].last=x[1].n;
+    var asked={},nf=x[0].noFrom||{};Object.keys(nf).forEach(function(i){if(nf[i].indexOf(x[1].n)>=0&&!x[0].marks[i])asked[i]=1}); // NOs from an earlier meeting stay NO
+    x[0].mm={s:'talk',p:x[1].n,at:now,tries:0,asked:asked,done:false,got:null}});
+  clearLost(a.n,b.n);checkTurn(a);checkTurn(b);
+  if(a.mm.done&&b.mm.done){endTalk(a,b);return}
+  setTurn(a,b,a.mm.done?b.n:a.n);
+  sendYou(a);sendYou(b);
+}
+function setTurn(a,b,n){a.mm.turn=n;b.mm.turn=n;a.mm.asking=b.mm.asking=null;a.mm.turnAt=b.mm.turnAt=Date.now()}
+function myTurn(p){return p.mm&&p.mm.s==='talk'&&p.mm.turn===p.n&&!p.mm.done}
+// a NO or a wrong claim while talking = one try on that square
+function talkTry(p,t,sq){var m=p.mm;if(myTurn(p)&&m.p===t&&!m.asked[sq]){m.tries++;m.asked[sq]=1;return true}return false}
+// after the asker's YES/NO: switch to the partner (unless they're done) — both done → end of the talk
+function afterTurn(p){
+  checkTurn(p);var q=partnerOf(p);
+  if(p.mm.s!=='talk'||!q||q.mm.s!=='talk')return;
+  if(p.mm.done&&q.mm.done){endTalk(p,q);return}
+  setTurn(p,q,q.mm.done?p.n:q.n);
+  sendYou(p);sendYou(q);renderMM();
+}
+// both turns done → "bye" screen; each student taps to go back to looking (so nobody rushes off)
+function endTalk(a,b){
+  var now=Date.now();
+  [[a,b],[b,a]].forEach(function(x){var m=x[0].mm;x[0].mm={s:'bye',p:x[1].n,since:now,got:m.got,pgot:x[1].mm.got}});
+  sendYou(a);sendYou(b);renderMM();saveGame();
+}
+// the asker opened a square (or closed it) → the answerer's tablet shows that question + their answer
+function onAsking(d){
+  var p=d&&players[d.did];if(!p||phase!=='play'||d.gameId!==gameId)return;touch(p);
+  if(!myTurn(p))return sendYou(p);
+  var sq=d.sq==null?null:+d.sq;if(sq!=null&&(!p.card[sq]||p.card[sq].free||p.marks[sq]||p.mm.asked[sq]))sq=null;
+  if(p.mm.asking!=null&&sq!==p.mm.asking)return sendYou(p); // committed: can't switch or back out
+  if(p.mm.asking===sq)return;
+  p.mm.asking=sq;var q=partnerOf(p);sendYou(p);if(q)sendYou(q);
+}
+function onNext(d){
+  var p=d&&players[d.did];if(!p||phase!=='play'||d.gameId!==gameId)return;touch(p);
+  if(mmOf(p).s!=='bye')return sendYou(p);
+  setLook(p);sendYou(p);matchmake();renderMM();saveGame();
+}
+// partner left / went offline / was removed → back to looking
+function breakPair(p,kind){
+  var q=partnerOf(p);setLook(p);
+  if(q&&q.mm.s==='bye')q=null; // already finished with each other
+  if(q){setLook(q);clearLost(p.n,q.n);if(kind)pub('notice',{did:q.did,kind:kind,with:p.n});sendYou(q)}
+}
+function onLost(d){
+  var p=d&&players[d.did];if(!p||phase!=='play'||d.gameId!==gameId)return;touch(p);
+  var m=mmOf(p),q=partnerOf(p);if(m.s!=='match'||!q)return;
+  if(Date.now()-m.at<LOST_AFTER_MS-1500)return;
+  m.lost=true;
+  if(!lostAlerts.some(function(x){return (x.a===p.n&&x.b===q.n)||(x.a===q.n&&x.b===p.n)})){lostAlerts.push({a:p.n,b:q.n,t:Date.now()});sfxDing()}
+  sendYou(p);sendYou(q);renderMM();
+}
+function clearLost(a,b){lostAlerts=lostAlerts.filter(function(x){return !((x.a===a&&x.b===b)||(x.a===b&&x.b===a))})}
+// teacher: send this mochi (and its partner) back to "looking" — they won't be paired with each other right away
+function rematch(n){
+  var p=byNum(n);if(!p||phase!=='play')return;
+  var q=partnerOf(p);
+  if(q){p.avoid=q.n;q.avoid=p.n}
+  breakPair(p,'rematch');pub('notice',{did:p.did,kind:'rematch',with:q?q.n:null});sendYou(p);
+  matchmake();renderMM();if($('mgr').classList.contains('on'))renderMgr();saveGame();
+}
+function mmCounts(){var c={look:0,match:0,talk:0,bye:0};playerList().forEach(function(p){if(playing(p))c[mmOf(p).s]++});return c}
+function renderMM(){
+  var al=$('alerts');if(al){
+    lostAlerts=lostAlerts.filter(function(x){var a=byNum(x.a);return a&&a.mm&&a.mm.s==='match'&&a.mm.p===x.b});
+    al.innerHTML=phase==='play'?lostAlerts.map(function(x){
+      return '<div class="alert"><div class="am">'+mascotSVG(x.a)+'</div><div class="am">'+mascotSVG(x.b)+'</div><div class="at"><b>#'+x.a+' & #'+x.b+'</b> can\'t find each other<small>お互いを見つけられない</small></div><button class="cbtn" onclick="rematch('+x.a+')">🔄 Rematch</button></div>'}).join(''):'';
+  }
+  var mc=$('mmCount');if(mc){if(phase==='play'){var c=mmCounts();mc.innerHTML='💬 '+(c.talk/2|0)+' talking · 🔍 '+(c.match/2|0)+' finding · ⏳ '+c.look+' waiting'}else mc.innerHTML=''}
+  if($('mgr').classList.contains('on'))renderMgr();
+}
+// "NO" fail-safe: a student taps ✗ NO in a square after a classmate says no.
+// When THAT square is dead (no classmate they haven't used can answer it) and they've heard enough NOs on it
+// (NO_UNLOCK, or everyone they have left), they may ask people again. NOs that aren't true are ignored silently.
+function onNo(d){
+  var p=d&&players[d.did];if(!p||phase!=='play'||d.gameId!==gameId)return;
+  p.lastSeen=Date.now();p.on=true;
+  var sq=p.card[d.sq];if(!sq||sq.free||p.marks[d.sq])return;
+  var t=+d.target,tp=byNum(t);if(!tp||tp===p||!tp.stats)return;
+  var tr=talkTry(p,t,d.sq);
+  p.noFrom=p.noFrom||{};var nf=p.noFrom[d.sq]=p.noFrom[d.sq]||[];if(nf.indexOf(t)<0)nf.push(t);
+  logNo(p,d,t,tp,sq);
+  if(tr)afterTurn(p);
+  saveGame();
+}
+function logNo(p,d,t,tp,sq){
+  if(matches(tp.stats,sq.a,sq.i))return;            // they actually match — not a real NO
+  var used={};for(var k in p.marks)if(p.marks[k].t!=null)used[p.marks[k].t]=1;
+  if(used[t])return;                                  // only NOs from classmates you could still use count
+  p.nos=p.nos||{};var list=p.nos[d.sq]=p.nos[d.sq]||[];if(list.indexOf(t)<0)list.push(t);
+  if(!p.unique||p.reuse)return;
+  var left=unusedOthers(p),need=Math.min(NO_UNLOCK,left.length);
+  var dead=!left.some(function(o){return matches(o.stats,sq.a,sq.i)});
+  if(dead&&list.length>=need){grantRound(p);p.stuckPass=true;sendYou(p)}
+}
+// teacher button: everyone may ask classmates again
+function unlockAll(){
+  if(phase!=='play')return;
+  if(!window.confirm('Let every student meet / ask each classmate ONE more time?'))return;
+  allReuse=(allReuse===true?1:(allReuse||0))+1;playerList().forEach(function(p){if(p.card&&p.card.length)grantRound(p,true)});
+  pub('notice',{did:'*',kind:'reuse-all'});playerList().forEach(function(p,i){setTimeout(function(){sendYou(p)},i*20)});
+  renderCtrl();saveGame();matchmake();
+}
+function filledOf(p){return p.card.filter(function(s,i){return p.marks[i]&&!s.free}).length}
+function dealCard(p){
+  var b=buildCard(p);p.card=b.card;p.unique=!!settings.unique;p.reuse=false;p.nos={};p.short=!!b.short;p.marks={};p.locks={};p.lines=[];p.bingoAt=0;p.lastClaim=0;p.met={};p.noFrom={};p.avoid=null;p.round=1;p.last=null;p.stuckPass=false;p.mm={s:'look',since:Date.now()};
+  p.card.forEach(function(s,i){if(s.free)p.marks[i]={free:true}});
+}
+
+// ── PLAYERS ──
+var _prevNum={}; // did -> the number that tablet had before it re-rolled (so a re-roll gives a NEW mochi)
+function freeNumber(avoid){
+  var used={};playerList().forEach(function(p){used[p.n]=1});if(avoid)used[avoid]=1;
+  var max=Math.max(40,playerList().length+10),pool=[];
+  for(var i=1;i<=max;i++)if(!used[i])pool.push(i);
+  return pool[rnd(pool.length)];
+}
+function addPlayer(did,want){
+  want=+want;var taken=want&&playerList().some(function(o){return o.n===want});
+  var p={did:did,n:want>0&&want<1000&&!taken?want:freeNumber(_prevNum[did]),stats:null,card:[],marks:{},locks:{},lines:[],bingoAt:0,lastSeen:Date.now(),on:true,joinedAt:Date.now()};
+  players[did]=p;
+  if(phase==='rules'||phase==='play'){p.stats=genStats();dealCard(p);if(allReuse){p.reuse=true;p.round=1+(+allReuse||1)}}
+  if(phase==='setup')sfxPop();
+  return p;
+}
+function removePlayer(did){
+  var p=players[did];if(!p)return;
+  pub('kick',{did:did});delete players[did];
+  if(phase==="play"){breakPair(p,"left");matchmake()}
+  if(phase==='rules'||phase==='play'){repairCards()}renderMM();
+  renderAll();if($('mgr').classList.contains('on'))renderMgr();broadcastState(true);saveGame();
+}
+
+// ── ABLY ──
+function pub(name,data){if(_ablyReady&&_ch)try{_ch.publish(name,data)}catch(e){}}
+function initAbly(){
+  try{
+    var ably=new Ably.Realtime({key:ABLY_KEY,clientId:'projector'});
+    _ch=ably.channels.get(ABLY_CHANNEL);
+    ably.connection.on('connected',function(){_ablyReady=true;broadcastState(true)});
+    ably.connection.on('disconnected',function(){_ablyReady=false});
+    _ch.subscribe('hello',function(m){onHello(m.data)});
+    _ch.subscribe('probe',function(m){onProbe(m.data)});
+    _ch.subscribe('reclaim',function(m){onReclaim(m.data)});
+    _ch.subscribe('ping',function(m){onPing(m.data)});
+    _ch.subscribe('claim',function(m){onClaim(m.data)});
+    _ch.subscribe('no',function(m){onNo(m.data)});
+    _ch.subscribe('found',function(m){onFound(m.data)});
+    _ch.subscribe('lost',function(m){onLost(m.data)});
+    _ch.subscribe('next',function(m){onNext(m.data)});
+    _ch.subscribe('asking',function(m){onAsking(m.data)});
+    _ch.subscribe('leave',function(m){var p=players[m.data.did];if(p){p.on=false;renderAll();broadcastState()}});
+  }catch(e){console.warn('Ably',e)}
+}
+function onHello(d){
+  if(!d||!d.did)return;
+  var p=players[d.did];
+  if(!p){
+    if(phase==='end'){pub('state',stateMsg());return}
+    p=addPlayer(d.did,d.want); // the tablet asks for the number it had (e.g. the big screen was reloaded)
+  }
+  p.on=true;p.lastSeen=Date.now();
+  sendYou(p);renderAll();broadcastState();saveGame();matchmake();
+}
+function inGame(){return phase==='rules'||phase==='play'}
+function offlineNums(){return inGame()?playerList().filter(function(o){return !o.on}).map(function(o){return o.n}).sort(function(a,b){return a-b}):[]}
+// a tablet page just loaded: during a game it gets its mochi back; otherwise its old mochi is released (re-roll)
+function onProbe(d){
+  if(!d||!d.did)return;var p=players[d.did];
+  if(p&&(inGame()||d.keep)){p.on=true;p.lastSeen=Date.now();sendYou(p);renderAll();broadcastState();saveGame();return}
+  if(!p&&d.keep&&phase==='setup'){onHello({did:d.did,want:d.keep});return} // browser reloaded the tab by itself → same mochi
+  if(p){_prevNum[d.did]=p.n;delete players[d.did];renderAll();broadcastState(true);saveGame()}
+  pub('probe-reply',{did:d.did,inGame:inGame(),offline:offlineNums()});
+}
+// a NEW tablet/tab during a game takes over an offline mochi (e.g. the student's tablet crashed)
+function onReclaim(d){
+  if(!d||!d.did||!inGame())return;
+  var p=byNum(+d.n);
+  if(!p||p.on||players[d.did]){pub('probe-reply',{did:d.did,inGame:inGame(),offline:offlineNums(),taken:true});return}
+  delete players[p.did];p.did=d.did;players[d.did]=p;p.on=true;p.lastSeen=Date.now();
+  sendYou(p);renderAll();if($('mgr').classList.contains('on'))renderMgr();broadcastState(true);saveGame();
+}
+function onPing(d){
+  var p=d&&players[d.did];
+  if(!p){if(d&&d.did&&phase==='setup'){onHello(d)}else if(d&&d.did)pub('probe-reply',{did:d.did,inGame:inGame(),offline:offlineNums(),lost:true});return}
+  var was=p.on;p.lastSeen=Date.now();p.on=true;
+  if(d.gameId!==gameId)sendYou(p);
+  if(!was){renderAll();broadcastState();matchmake()}
+}
+setInterval(function(){
+  var ch=false,now=Date.now();
+  playerList().forEach(function(p){if(p.on&&now-p.lastSeen>STALE_MS){p.on=false;ch=true}});
+  if(ch){
+    renderAll();broadcastState()}
+  if(phase==='play')playerList().forEach(function(o){if(!o.on&&now-o.lastSeen>BREAK_MS&&o.mm&&o.mm.s!=='look')breakPair(o,'left')});
+  matchmake();
+},5000);
+function minPlayers(){return settings.unique?settings.size+1:3} // one-per-classmate: a full line needs this many DIFFERENT classmates, plus you
+function youMsg(p){
+  return {did:p.did,n:p.n,gameId:gameId,phase:phase,size:settings.size,help:settings.help,ansHelp:settings.ansHelp||'full',mm:mmView(p),win:settings.win,unique:!!p.unique,reuse:!!p.reuse,cardJp:!!settings.cardJp,
+    card:p.card.map(squareView),marks:p.marks,locks:p.locks,lines:p.lines,bingoAt:p.bingoAt};
+}
+function mmView(p){
+  var m=mmOf(p),q=partnerOf(p),v={s:m.s,since:m.since||0};
+  if(m.s==='bye'){v.p=m.p;v.got=m.got;v.pgot=m.pgot;return v}
+  if(m.s!=='look'&&q){v.p=q.n;v.at=m.at;v.lostMs=LOST_AFTER_MS;v.found=!!m.found;v.pfound=!!q.mm.found;v.lost=!!m.lost||!!q.mm.lost;
+    if(m.s==='talk'){v.tries=m.tries;v.max=TRIES_PER_TALK;v.asked=Object.keys(m.asked).map(Number);v.done=!!m.done;v.pdone=!!q.mm.done;v.turn=m.turn;v.turnAt=m.turnAt||0;v.ptries=q.mm.tries;v.asking=m.asking==null?null:m.asking;
+      // answerer: the square the asker is asking right now + what to say
+      if(m.turn===q.n&&q.mm.asking!=null){var sq=q.card[q.mm.asking];if(sq){var sv=squareView(sq);sv.ans=answerFor(p.stats,sq);v.q=sv}}}}
+  else v.s='look';
+  return v;
+}
+function sendYou(p){pub('you',youMsg(p))}
+function stateMsg(){
+  var list=playerList().map(function(p){return {n:p.n,f:p.card.length?filledOf(p):0,l:p.lines.length,b:p.bingoAt,on:p.on}});
+  return {gameId:gameId,phase:phase,win:settings.win,cardJp:!!settings.cardJp,unique:!!settings.unique,timerOn:!!settings.timerOn,timerMin:settings.timerMin,left:timeLeft(),paused:pausedLeft!=null,help:settings.help,size:settings.size,
+    count:list.length,players:list,bingos:bingoOrder.length,results:phase==='end'&&_revealed?results:null,tabSfx:settings.tabSfx!==false};
+}
+var _stT=null,_stLast=0;
+function broadcastState(now){
+  var go=function(){_stT=null;_stLast=Date.now();pub('state',stateMsg())};
+  if(now){if(_stT){clearTimeout(_stT);_stT=null}go();return}
+  if(_stT)return;
+  var wait=Math.max(0,350-(Date.now()-_stLast));_stT=setTimeout(go,wait);
+}
+
+// ── CLAIMS ──
+function onClaim(d){
+  var p=d&&players[d.did];if(!p)return;
+  p.lastSeen=Date.now();p.on=true;
+  var reply=function(ok,reason,extra){
+    var r={did:p.did,sq:d.sq,ok:ok,reason:reason,reuse:!!p.reuse,marks:p.marks,locks:p.locks,lines:p.lines,bingoAt:p.bingoAt,gameId:gameId};
+    for(var k in extra||{})r[k]=extra[k];pub('claim-result',r);
+  };
+  if(phase!=='play'||d.gameId!==gameId)return reply(false,'closed');
+  var sq=p.card[d.sq];if(!sq||sq.free)return reply(false,'closed');
+  if(p.marks[d.sq])return reply(false,'done');
+  if(p.locks[d.sq]&&p.locks[d.sq]>Date.now())return reply(false,'locked');
+  var t=+d.target;var tp=byNum(t);
+  if(t===p.n)return reply(false,'self');
+  if(p.mm&&p.mm.s==='talk'&&p.mm.p===t&&!myTurn(p))return reply(false,'notturn');
+  if(!tp||!tp.stats)return reply(false,'nobody');
+  if(p.unique&&!p.reuse){for(var k in p.marks)if(p.marks[k].t===t)return reply(false,'used')}
+  var ok=matches(tp.stats,sq.a,sq.i);
+  if(ok&&sq.info)ok=(+d.ans===answerOf(tp.stats,sq.a,sq.i));
+  if(!ok){var numWrong=sq.info&&matches(tp.stats,sq.a,sq.i);return reply(false,numWrong?'wrongnum':'checkagain')}
+  p.marks[d.sq]={t:t,a:sq.info?+d.ans:null};
+  delete p.locks[d.sq];
+  p.lastClaim=Date.now();
+  foundCount[t]=(foundCount[t]||0)+1;
+  var inTalk=myTurn(p)&&p.mm.p===t;if(inTalk){p.mm.done=true;p.mm.asked[d.sq]=1;p.mm.got=d.sq}
+  var before=p.lines.length;p.lines=linesOf(p);
+  var newLine=p.lines.length>before;
+  if(newLine&&!p.bingoAt){p.bingoAt=Date.now();bingoOrder.push(p.n);queuePop(p.n,bingoOrder.length);
+    if(settings.win==='first'&&!_autoEndT)_autoEndT=setTimeout(function(){_autoEndT=null;if(phase==='play')endGame('first')},AUTO_END_MS);
+    else if(everyoneBingo()&&!_autoEndT)_autoEndT=setTimeout(function(){_autoEndT=null;if(phase==='play'&&everyoneBingo())endGame('all')},AUTO_END_MS)}
+
+  var unlocked=checkStuck(p,true);
+  reply(true,null,{newLine:newLine,place:newLine&&before===0?bingoOrder.length:0,reuse:p.reuse,unlocked:unlocked});
+  if(inTalk)afterTurn(p);
+  flashTile(p.n);
+  renderStage();updateTop();broadcastState();saveGame();
+}
+
+// ── FLOW ──
+function startGame(){if(_autoEndT){clearTimeout(_autoEndT);_autoEndT=null}
+  allReuse=false;lostAlerts=[];
+  _rulePage=0;
+  var ps=playerList();if(ps.length<minPlayers())return;
+  if(enabledAttrs().length<squaresNeeded()||selectedPacks().length>MAX_PACKS){renderSetup();return}
+  // fail-safe: an offline mochi can't be asked, so it must not be the only holder of a stat
+  var off=ps.filter(function(p){return !p.on});
+  if(off.length&&ps.length-off.length>=minPlayers()&&window.confirm(off.length+' mochi'+(off.length>1?'s are':' is')+' offline (#'+off.map(function(p){return p.n}).join(', #')+').\nOK = remove '+(off.length>1?'them':'it')+' from this game (recommended — nobody can ask '+(off.length>1?'them':'it')+')\nCancel = keep '+(off.length>1?'them':'it'))){
+    off.forEach(function(p){pub('kick',{did:p.did});delete players[p.did]});ps=playerList();
+  }
+  gameId=Date.now();bingoOrder=[];foundCount={};results=null;pausedLeft=null;endsAt=0;
+  // fail-safe: re-roll stats until every card can be filled with real squares that some mochi holds
+  for(var tries=0;tries<25;tries++){
+    ps.forEach(function(p){p.stats=genStats()});
+    ps.forEach(function(p){dealCard(p)});
+    if(!ps.some(function(p){return p.short}))break;
+  }
+  if(ps.some(function(p){return p.short})){
+    ps.forEach(function(p){p.card=[];p.marks={};p.stats=null});gameId=0;
+    alert('Not enough different squares for a full card with these questions.\nTurn on more question types (or add items to yours), or use a smaller card.\nこの質問ではカードが埋まりません。質問を増やしてください。');
+    renderSetup();return;
+  }
+  phase='rules'; // only for the 3-2-1 countdown — no "today's questions" page any more
+  repairCards(true);
+  show('game');renderAll();
+  ps.forEach(function(p,i){setTimeout(function(){sendYou(p)},i*35)});
+  broadcastState(true);saveGame();
+  setTimeout(startPlay,300);
+}
+var _cdGame=0;
+function startPlay(){
+  if(phase!=='rules'||_cdGame===gameId)return;_cdGame=gameId;
+  pub('countdown',{gameId:gameId});
+  var cd=$('cd'),n=3;cd.classList.add('on');
+  var step=function(){
+    if(n>0){cd.innerHTML='<span>'+n+'</span>';sfxCount();n--;setTimeout(step,850)}
+    else{cd.innerHTML='<span style="color:var(--pink)">GO!</span>';sfxGo();
+      setTimeout(function(){cd.classList.remove('on')},700);
+      phase='play';endsAt=settings.timerOn&&settings.timerMin?Date.now()+settings.timerMin*60000:0;pausedLeft=null;
+      var t0=Date.now();shuffle(playerList()).forEach(function(p,i){p.mm={s:'look',since:t0+i}});
+      renderAll();broadcastState(true);
+      matchmake(); // pairs everyone (sends each tablet its partner)
+      playerList().forEach(function(p,i){if(p.mm.s==='look')setTimeout(function(){sendYou(p)},i*25)});saveGame();
+    }
+  };
+  step();
+}
+function timeLeft(){if(pausedLeft!=null)return pausedLeft;if(!endsAt)return null;return Math.max(0,endsAt-Date.now())}
+function togglePause(){
+  if(phase!=='play'||!endsAt&&pausedLeft==null)return;
+  if(pausedLeft!=null){endsAt=Date.now()+pausedLeft;pausedLeft=null}else{pausedLeft=timeLeft();_pausedAt=Date.now()}
+  renderCtrl();broadcastState(true);saveGame();
+}
+function addMinute(){
+  if(phase!=='play')return;
+  if(pausedLeft!=null)pausedLeft+=60000;else if(endsAt)endsAt+=60000;else endsAt=Date.now()+60000;
+  broadcastState(true);saveGame();
+}
+function endGame(reason){
+  if(phase!=='play')return;
+  phase='end';results=computeResults();endsAt=0;pausedLeft=null;
+  _popQ=[];_popBusy=false;$('pop').classList.remove('on');if(_autoEndT){clearTimeout(_autoEndT);_autoEndT=null}
+  var t={all:['EVERYONE GOT BINGO!','みんなビンゴ！'],teacher:['GAME OVER!','終了！'],first:['WE HAVE A WINNER!','勝者決定！']}[reason]||['TIME\'S UP!','終了！'];
+  var champs=results.rank.filter(function(x){return x.b>0}).length,K=window.REVEAL_SCALE==null?1:REVEAL_SCALE,ROLL=champs?2.2*K:0,SLAM=1.9*K;
+  _revealed=false;MUS.hold=true; // music stops for the reveal
+  var sl=$('slam'),gid=gameId;
+  if(ROLL){sl.innerHTML='<div class="roll">🥁</div>';sl.classList.add('on');sfxDrumroll(ROLL)}else sfxEnd();
+  setTimeout(function(){if(gameId!==gid)return;sl.innerHTML='<div>'+t[0]+'<small>'+t[1]+'</small></div>';sl.classList.add('on')},ROLL*1000);
+  setTimeout(function(){if(gameId!==gid)return;sl.classList.remove('on');renderAll();
+    // fanfares as the podium pedestals appear (3rd, 2nd, then the winner)
+    var shown=Math.min(champs,3);[[3,0.4],[2,1.2],[1,2.1]].forEach(function(x){if(x[0]<=shown)setTimeout(function(){sfxFanfare(x[0])},x[1]*1000)});
+    setTimeout(function(){if(gameId!==gid)return;_revealed=true;MUS.hold=false;broadcastState(true);playerList().forEach(function(p,i){setTimeout(function(){sendYou(p)},i*25)})},(champs?2.6:0.5)*1000*K);
+  },(ROLL+SLAM)*1000);
+  renderCtrl();updateTop();broadcastState(true);saveGame(); // tablets: "look at the big screen!" until the reveal
+}
+var _revealed=true;
+// everyone still in the game has a BINGO → end automatically (after the last BINGO pop-up)
+function everyoneBingo(){
+  var ps=playerList().filter(function(p){return p.card&&p.card.length&&p.on});
+  if(!ps.length)ps=playerList().filter(function(p){return p.card&&p.card.length});
+  return ps.length>0&&ps.every(function(p){return p.lines.length>0});
+}
+// places: BINGO students in the order they got BINGO; everyone else by squares filled
+function computeResults(){
+  var ps=playerList().filter(function(p){return p.card.length});
+  var most=settings.win==='most';
+  var bingo=ps.filter(function(p){return p.bingoAt}).sort(most?function(a,b){return b.lines.length-a.lines.length||a.bingoAt-b.bingoAt}:function(a,b){return a.bingoAt-b.bingoAt});
+  var rest=ps.filter(function(p){return !p.bingoAt}).sort(function(a,b){return filledOf(b)-filledOf(a)||(a.lastClaim||9e15)-(b.lastClaim||9e15)});
+  var rank=[];
+  bingo.forEach(function(p,i){rank.push({n:p.n,place:i+1,b:i+1,l:p.lines.length,f:filledOf(p)})});
+  var place=bingo.length;
+  rest.forEach(function(p,i){var prev=rest[i-1];if(!prev||filledOf(prev)!==filledOf(p))place=bingo.length+i+1;rank.push({n:p.n,place:place,b:0,l:0,f:filledOf(p)})});
+  var wanted=null;Object.keys(foundCount).forEach(function(k){if(!wanted||foundCount[k]>wanted.c)wanted={n:+k,c:foundCount[k]}});
+  var ml=null;if(!most)bingo.forEach(function(p){if(p.lines.length>=2&&(!ml||p.lines.length>ml.l))ml={n:p.n,l:p.lines.length}});
+  return {mode:settings.win,rank:rank,bingos:bingo.length,first:bingo[0]?bingo[0].n:null,wanted:wanted,mostLines:ml,size:settings.size,total:ps.length};
+}
+function backToSetup(){
+  phase='setup';gameId=0;results=null;endsAt=0;pausedLeft=null;
+  playerList().forEach(function(p){p.card=[];p.marks={};p.lines=[];p.bingoAt=0;p.stats=null});
+  show('setup');renderAll();broadcastState(true);saveGame();
+}
+
+// ── SAVE / RESUME ──
+var _svT=null;
+function saveGame(){
+  if(_svT)return;
+  _svT=setTimeout(function(){_svT=null;
+    try{
+      if(phase==='setup'||phase==='end'){localStorage.removeItem('mb_save');return}
+      localStorage.setItem('mb_save',JSON.stringify({t:Date.now(),players:players,phase:phase,gameId:gameId,left:timeLeft(),paused:pausedLeft!=null,bingoOrder:bingoOrder,foundCount:foundCount,settings:settings,customQs:customQs,customPacks:customPacks,allReuse:allReuse}));
+    }catch(e){}
+  },400);
+}
+function loadSave(){
+  try{var s=JSON.parse(localStorage.getItem('mb_save')||'null');if(s&&Date.now()-s.t<12*3600e3&&s.phase!=='setup')return s}catch(e){}
+  return null;
+}
+function resumeGame(){
+  var s=loadSave();if(!s)return;
+  (s.customQs||[]).forEach(function(d){if(!customQs.some(function(x){return x.id===d.id}))customQs.push(d)});
+  (s.customPacks||[]).forEach(function(d){if(!customPacks.some(function(x){return x.id===d.id}))customPacks.push(d)});
+  rebuildAttrs();
+  players=s.players;settings=s.settings;gameId=s.gameId;allReuse=!!s.allReuse;bingoOrder=s.bingoOrder||[];foundCount=s.foundCount||{};
+  phase=s.phase;if(phase==='rules'){phase='rules';setTimeout(startPlay,500)}
+  if(phase==='play'){if(s.left==null){endsAt=0;pausedLeft=null}else{pausedLeft=s.left;endsAt=0}} // resume paused
+  playerList().forEach(function(p){p.on=false;p.lastSeen=0;setLook(p)});lostAlerts=[];
+  show('game');renderAll();broadcastState(true);
+  repairCards(true);
+  playerList().forEach(function(p,i){setTimeout(function(){sendYou(p)},i*30)});
+}
+
+// ── RENDER: setup ──
+function selectedPacks(){var out=[];enabledAttrs().forEach(function(a){if(out.indexOf(a.pack)<0)out.push(a.pack)});return out}
+function packRoom(pk){var s=selectedPacks();return s.indexOf(pk)>=0||s.length<MAX_PACKS}
+function packFullMsg(){myqMsg('<span style="color:var(--red)">Max '+MAX_PACKS+' grammar points per game — turn one off first. 文法は1ゲーム3つまで。</span>')}
+function timerHint(){
+  if(settings.win==='first')return 'First BINGO wins: the game ends on its own — keep the timer as a safety net';
+  return 'Most BINGOs, 20–30 students: '+({3:'3×3 ≈ 8–10 min',4:'4×4 ≈ 12–15 min',5:'5×5 ≈ 18–20 min'})[settings.size];
+}
+function squaresNeeded(){return settings.size*settings.size-((settings.free&&settings.size%2)?1:0)}
+function renderSetup(){
+  // packs
+  var h='';
+  PACKS.forEach(function(pk){
+    var as=ATTRS.filter(function(a){return a.pack===pk.id});
+    if(!as.length)return;
+    var locked=!packRoom(pk.id);
+    var onN=as.filter(function(a){return settings.attrs.indexOf(a.id)>=0}).length;
+    h+='<div class="pack'+(locked?'" style="opacity:.45" title="Max 3 grammar points per game':'')+'"><div class="pack-h"><span style="font-size:24px">'+pk.emoji+'</span><span class="t">'+pk.en+'<small>'+pk.jp+'</small></span>'+
+      '<button class="opt'+(onN===as.length?' on':'')+'" onclick="togglePack(\''+pk.id+'\')">'+(onN===as.length?'✓ All':onN?onN+' / '+as.length:'Off')+'</button></div><div class="row">';
+    as.forEach(function(a){
+      h+='<button class="chip'+(settings.attrs.indexOf(a.id)>=0?' on':'')+(a.custom?' mine':'')+'" onclick="toggleAttr(\''+a.id+'\')">'+a.emoji+' '+escHTML(a.title)+(a.custom?'<span class="ed" title="Edit" onclick="event.stopPropagation();openEditor(\''+a.id+'\')">✎</span>':'')+'</button>';
+    });
+    h+='</div></div>';
+  });
+  $('packList').innerHTML=h;
+  var n=enabledAttrs().length;
+  var need=squaresNeeded();
+  var sp=selectedPacks(),nq=enabledAttrs().length,needQ=squaresNeeded();
+  $('gramBadge').textContent=sp.length+'/3 · '+nq+'Q';
+  $('gramSummary').innerHTML='📚 <span style="color:'+(nq>=needQ&&sp.length?'var(--green)':'var(--red)')+'">'+nq+' questions</span> from '+(sp.length?sp.map(function(x){var pk=PACKS.filter(function(y){return y.id===x})[0];return (pk&&pk.emoji||'')+' '+escHTML(packName(x))}).join(', '):'no grammar yet')+
+    ' <span class="note">— tap to change · タップして変更</span>';
+  if($('tab-rules').classList.contains('on'))renderRulesPage();
+  $('attrCount').innerHTML='<div style="margin-bottom:4px"><b style="font-size:16px;color:'+(sp.length?'var(--green)':'var(--red)')+'">'+sp.length+' / '+MAX_PACKS+'</b> grammar points · 文法 '+(sp.length?'— '+sp.map(function(x){return escHTML(packName(x))}).join(', '):'— pick up to 3')+'</div><b style="font-size:16px;color:'+(n>=need?'var(--green)':'var(--red)')+'">'+n+' / '+need+'</b> questions selected · 選択中 — '+(n>=need?(n>need?'each card gets a random '+need+' of them':'one question per square'):'need '+(need-n)+' more (one per square)');
+  $('sizeBtns').innerHTML=[3,4,5].map(function(s){return '<button class="opt'+(settings.size===s?' on':'')+'" onclick="setOpt(\'size\','+s+')">'+s+' × '+s+'</button>'}).join('');
+  $('winBtns').innerHTML=[['first','🏁 First BINGO wins','最初のビンゴで勝ち'],['most','🎯 Most BINGOs','ライン数で勝負']].map(function(o){
+    return '<button class="opt'+(settings.win===o[0]?' on':'')+'" onclick="setOpt(\'win\',\''+o[0]+'\')">'+o[1]+'<small>'+o[2]+'</small></button>'}).join('');
+  $('ansBtns').innerHTML=[['full','Full answer','「Yes, I did.」'],['blank','Fill the blanks','「Yes, I ＿＿.」'],['facts','Facts only','✓ YES · 2 brothers']].map(function(o){
+    return '<button class="opt'+((settings.ansHelp||'full')===o[0]?' on':'')+'" onclick="setOpt(\'ansHelp\',\''+o[0]+'\')">'+o[1]+'<small>'+o[2]+'</small></button>'}).join('');
+  $('helpBtns').innerHTML=[['full','Full question','質問を全部表示'],['blank','Fill the blanks','穴埋め'],['none','No help','ヒントなし']].map(function(o){
+    return '<button class="opt'+(settings.help===o[0]?' on':'')+'" onclick="setOpt(\'help\',\''+o[0]+'\')">'+o[1]+'<small>'+o[2]+'</small></button>'}).join('');
+  $('timerBox').innerHTML='<div class="toggle'+(settings.timerOn?' on':'')+'" onclick="setOpt(\'timerOn\','+(!settings.timerOn)+')"><span class="sw"></span></div>'+
+    '<input class="tinput" type="number" min="1" max="60" value="'+settings.timerMin+'" '+(settings.timerOn?'':'disabled')+' onchange="setTimerMin(this.value)"> <span style="font-weight:800">min</span>'+
+    (settings.timerOn?'':'<span class="note" style="margin-left:8px">off = no time limit ∞</span>')+
+    '<div class="note" style="width:100%;margin-top:4px">💡 '+timerHint()+' · おすすめ時間</div>';
+  $('toggles').innerHTML=
+    tog('unique','One classmate per square','同じ人は1マスだけ — needs '+(settings.size+1)+'+ mochis. Every card has a line they can finish; if a student gets stuck, their tablet lets them ask people again.')+
+    tog('cardJp','日本語 on bingo squares','Show the Japanese under each square (off = English only) · マスに日本語を表示')+
+    (settings.size%2?tog('free','Free center square','真ん中はフリー'):'')+
+    tog('board','Show race board','進み具合を大画面に表示 (you can hide it during the game)')+
+    tog('tabSfx','Tablet sounds','タブレットの効果音 — soft sounds only for matches and YES / NO (you can mute them during the game)');
+  renderLobby();
+}
+function tog(k,t,s){return '<div class="toggle'+(settings[k]?' on':'')+'" onclick="setOpt(\''+k+'\','+(!settings[k])+')"><span class="sw"></span><span>'+t+'<small>'+s+'</small></span></div>'}
+function togglePack(id){
+  var as=ATTRS.filter(function(a){return a.pack===id}).map(function(a){return a.id});
+  var all=as.every(function(x){return settings.attrs.indexOf(x)>=0});
+  if(!all&&!packRoom(id)){packFullMsg();return}
+  settings.attrs=settings.attrs.filter(function(x){return as.indexOf(x)<0});
+  if(!all)settings.attrs=settings.attrs.concat(as);
+  saveSettings();renderSetup();
+}
+function toggleAttr(id){
+  var i=settings.attrs.indexOf(id);if(i>=0)settings.attrs=settings.attrs.filter(function(x){return x!==id});
+  else{if(!packRoom(ATTR_BY_ID[id].pack)){packFullMsg();return}settings.attrs.push(id)}
+  saveSettings();renderSetup();
+}
+function setTimerMin(v){v=Math.round(+v);if(!(v>=1))v=10;if(v>60)v=60;settings.timerMin=v;saveSettings();renderSetup()}
+function setupTab(t){
+  document.querySelectorAll('.stab').forEach(function(b){b.classList.toggle('on',b.dataset.tab===t)});
+  document.querySelectorAll('#setup .tabpane').forEach(function(x){x.classList.toggle('on',x.id==='tab-'+t)});
+  if(t==='rules')renderRulesPage();
+}
+function ruleSteps(){
+  return [
+    ['🍡','Get your mochi','Tap your tablet. Your <b>number</b> is your name in this game.','タブレットをタップしてもちをもらう。番号がこのゲームでの名前。'],
+    ['🔍','Find your partner','Your tablet says <b>"Find #12!"</b> — #12 is looking for you too. <b>"Are you number 12?"</b> Found them? You <b>both</b> tap <b>🤝 FOUND</b>.','「#12を探せ！」相手もあなたを探している。見つけたら2人とも「🤝 FOUND」を押す。'],
+    ['💬','Take turns','<b>🗣️ Asker:</b> tap a square and ask the question on your screen. <b>👂 Answerer:</b> your screen shows your answer — say it! YES → tap <b>✓ YES</b>, NO → tap <b>✗ NO</b>, then switch. Up to <b>3 questions each</b> — a YES ends your asking.','聞く人：マスを押して画面の質問をする。答える人：画面に出る答えを言う。はい→「✓ YES」、いいえ→「✗ NO」、そして交代。1人3問まで。'],
+    ['⏭️','Next partner','When you are both done, tap <b>👍 NEXT</b>. Your tablet finds your next partner. <b>"Looking for a mochi…"</b> = wait a moment.','2人とも終わったら「👍 NEXT」を押す。次の相手が出る。「Looking…」は少し待とう。'],
+    settings.unique?['👥','One classmate per square','Use a <b>different</b> person for every square. You meet each classmate <b>once</b> — later your tablet may let you meet again.','1マスに1人ずつ。同じ人とは1回だけ（あとでまた会えるかも）。']
+                   :['👥','Meet everyone','You meet each classmate <b>once</b> — later your tablet may let you meet again.','同じ人とは1回だけ（あとでまた会えるかも）。'],
+    settings.win==='first'?['🏁','First BINGO wins!','The first to make a line — a row, a column or a diagonal — wins!','縦・横・ななめで最初に一列そろえた人の勝ち！']
+                          :['🎯','Most BINGOs!','Make as many lines as you can before time runs out!','時間内にできるだけたくさんラインを作ろう！']
+  ];
+}
+function renderRulesPage(){
+  var h='<div class="rp"><h2>HOW TO PLAY<span class="jp">遊び方</span></h2><div class="rpgrid">'+ruleSteps().map(function(r,i){
+    return '<div class="rstep"><div class="ic">'+r[0]+'</div><div><div class="n">STEP '+(i+1)+' · '+r[1]+'</div><div class="en">'+r[2]+'</div><div class="jpl">'+r[3]+'</div></div></div>'}).join('')+'</div>'+
+    '<div class="rban"><div>🗣️ English only · 英語だけ</div><div>🙈 Don\'t show your screen · 画面を見せない</div><div>⏰ '+(settings.timerOn?settings.timerMin+' minutes · '+settings.timerMin+'分':'No time limit · 時間制限なし')+'</div></div></div>';
+  $('rulesPage').innerHTML=h;
+}
+function setOpt(k,v){settings[k]=v;if(k==='size'&&v%2===0)settings.free=false;saveSettings();renderSetup();broadcastState()}
+function renderLobby(){
+  var ps=playerList().sort(function(a,b){return a.n-b.n});
+  $('lobbyGrid').innerHTML=ps.map(function(p){
+    return '<div class="lob'+(p.on?'':' off')+'"><div class="mw">'+mascotSVG(p.n)+'</div><button class="x" title="Remove" onclick="removePlayer(\''+p.did+'\')">✕</button></div>';
+  }).join('')||'<div class="note" style="grid-column:1/-1;text-align:center;padding:30px">Waiting for tablets… 待機中</div>';
+  $('lobbyCount').textContent=ps.length+' joined · 参加中';
+  var need=squaresNeeded(),have=enabledAttrs().length;
+  var mp=minPlayers(),ok=ps.length>=mp&&have>=need;
+  $('startBtn').disabled=!ok;
+  $('startNote').innerHTML=ps.length<mp?'Need at least '+mp+' mochis — you + '+(mp-1)+' classmates for a line · '+mp+'人以上必要':have<need?'<span style="color:var(--red);cursor:pointer" onclick="setupTab(\'grammar\')">Select at least '+need+' questions in 📚 Grammar — one for every square ('+have+' / '+need+')<br>マスの数だけ質問を選んでください</span>':'';
+  var s=loadSave(),rb=$('resumeBtn');
+  if(s&&phase==='setup'){var pc=Object.keys(s.players).length;rb.style.display='';rb.textContent='▶ RESUME LAST GAME · '+pc+' players · '+Math.round((Date.now()-s.t)/60000)+' min ago'}
+  else rb.style.display='none';
+}
+
+// ── RENDER: game ──
+function renderAll(){
+  if(phase==='setup'){renderSetup();return}
+  renderStage();renderCtrl();updateTop();renderMM();
+}
+function updateTop(){
+  var t={rules:'GET READY! · 準備',play:'FIND SOMEONE WHO… · 探そう！',end:'RESULTS · 結果'}[phase]||'';
+  $('phaseTitle').textContent=t;
+  $('bingoCount').textContent=phase==='play'&&bingoOrder.length?'🎉 '+bingoOrder.length+' BINGO'+(bingoOrder.length>1?'S':''):'';
+  tickTimer();
+}
+var _lastSec=-1;
+function tickTimer(){
+  var el=$('timer');if(!el)return;
+  if(phase!=='play'){el.style.display='none';return}
+  el.style.display='';
+  var l=timeLeft();
+  if(l==null){el.textContent='∞';el.classList.remove('low');return}
+  var s=Math.ceil(l/1000);el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+(pausedLeft!=null?' ⏸':'');
+  el.classList.toggle('low',s<=30&&pausedLeft==null);
+  if(s!==_lastSec){if(s<=10&&s>0&&pausedLeft==null)sfxTick();_lastSec=s}
+  if(l<=0&&pausedLeft==null&&endsAt)endGame();
+}
+setInterval(function(){if(phase==='play')tickTimer()},250);
+
+function renderCtrl(){
+  var c=$('ctrl'),h='';
+  if(phase==='rules')h='';
+  else if(phase==='play')h='<button class="cbtn" onclick="toggleBoard()">'+(settings.board?'🙈 Hide board':'👀 Show board')+'</button>'+
+    (!settings.board&&selectedPacks().length>1?'<button class="cbtn" onclick="toggleExPause()">'+(_askPaused?'▶ Examples':'⏸ Examples')+'</button><button class="cbtn" onclick="nextExample()">⏭ Next example</button>':'')+
+    '<button class="cbtn" onclick="togglePause()">'+(pausedLeft!=null?'▶ Resume':'⏸ Pause')+'</button>'+
+    '<button class="cbtn" onclick="addMinute()">＋1 min</button>'+
+    '<button class="cbtn" onclick="openMgr()">👥 Mochis</button>'+
+    '<button class="cbtn" onclick="unlockAll()">🔓 Let everyone ask again'+(allReuse?' (+1 more)':'')+'</button>'+
+    '<button class="cbtn" onclick="toggleTabSfx()">'+(settings.tabSfx!==false?'🔔 Tablets':'🔕 Tablets')+'</button>'+
+    '<button class="cbtn" onclick="cycleHelp()">💡 Question: '+{full:'Full',blank:'Blanks',none:'None'}[settings.help]+'</button>'+
+    '<button class="cbtn" onclick="cycleAnsHelp()">💬 Answer: '+{full:'Full',blank:'Blanks',facts:'Facts'}[settings.ansHelp||'full']+'</button>'+
+    '<button class="cbtn" onclick="toggleMusic()">'+(_musicOn?'🔊':'🔇')+' Music</button>'+
+    '<button class="cbtn main" onclick="if(confirm(\'End the game now?\'))endGame(\'teacher\')">🏁 END</button>';
+  else if(phase==='end')h='<button class="cbtn" onclick="toggleMusic()">'+(_musicOn?'🔊':'🔇')+' Music</button><button class="cbtn main" onclick="backToSetup()">↺ PLAY AGAIN</button>';
+  c.innerHTML=h;
+}
+function toggleTabSfx(){settings.tabSfx=settings.tabSfx===false;saveSettings();renderCtrl();broadcastState(true)}
+function toggleBoard(){settings.board=!settings.board;_askAt=Date.now();saveSettings();renderStage();renderCtrl()}
+function cycleAnsHelp(){settings.ansHelp={full:'blank',blank:'facts',facts:'full'}[settings.ansHelp||'full'];saveSettings();renderCtrl();playerList().forEach(function(p){sendYou(p)})}
+function cycleHelp(){settings.help={full:'blank',blank:'none',none:'full'}[settings.help];saveSettings();renderCtrl();broadcastState(true);playerList().forEach(function(p){sendYou(p)})}
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT')return;
+  if((e.key==='b'||e.key==='B')&&phase==='play')toggleBoard();
+  if(phase==='rules'&&(e.key==='ArrowRight'||e.key==='ArrowLeft'))turnRules(e.key==='ArrowRight'?1:-1);
+});
+
+function renderStage(){
+  if(phase==='play'&&settings.win==='first'&&bingoOrder.length&&$('stage').innerHTML)return; // keep the winner secret until the victory screen
+  var st=$('stage');
+  if(phase==='rules')st.innerHTML='<div class="askview"><div class="big">GET READY!</div><div class="note" style="font-size:22px">準備はいい？</div></div>';
+  else if(phase==='play')st.innerHTML=settings.board?boardHTML():askHTML();
+  else if(phase==='end')st.innerHTML=resultsHTML();
+  fitStage();
+}
+function exampleItem(a){return a.items[(a.id.length*3)%a.items.length]}
+function rulesHTML(){
+  var steps=[
+    ['Read your mochi on the <b>ME</b> tab.','タブレットの「ME」で自分のもちを確認。'],
+    ['Your tablet says <b>"Find #12!"</b> Find them — you <b>both</b> tap <b>🤝 FOUND</b>.','タブレットの番号の人を探して、2人とも「FOUND」を押す。'],
+    ['<b>Take turns:</b> one question each, in English. YES → ✓ YES, NO → ✗ NO, then switch. Up to 3 each.','交代で1問ずつ質問！1人3問まで。'],
+    settings.win==='first'?['First to make a line → <b>BINGO</b> wins!'+(settings.unique?' One classmate per square.':''),'最初に一列そろえた人の勝ち！'+(settings.unique?' 同じ人は1マスだけ。':'')]
+                          :['Make as many lines as you can → <b>most BINGOs</b> wins!'+(settings.unique?' One classmate per square.':''),'ラインをたくさん作ろう！'+(settings.unique?' 同じ人は1マスだけ。':'')]
+  ];
+  var h='<div class="rules"><div class="steps">'+steps.map(function(s,i){return '<div class="step"><div class="n">'+(i+1)+'</div><div><div class="en">'+s[0]+'</div><div class="jp">'+s[1]+'</div></div></div>'}).join('')+'</div>';
+  var cards=enabledAttrs().map(function(a){
+    var it=exampleItem(a),q=a.q(it),ans;
+    if(a.type==='setNum'){ans=(a.yes?a.yes+' ':'')+a.me(it,2);q=a.single?a.q(it)+' → '+a.q2(it):q+' → '+a.q2(it)}
+    else if(a.type==='set')ans=a.yes+' / '+a.no;
+    else ans=a.me(it)+(a.yes?' / '+a.no:'');
+    return '<div class="qcard"><div class="e">'+a.emoji+'</div><div><div class="q">'+frameHTML(q,'full')+'</div><div class="a">'+escHTML(ans)+'</div></div></div>';
+  });
+  cards.push('<div class="qcard ask-num"><div class="e">🔢</div><div><div class="q"><b class="gr">Are you</b> number 12?</div><div class="a">Yes, I am! / No, I\'m number 17.</div></div></div>');
+  var pages=Math.ceil(cards.length/RULE_PAGE);if(_rulePage>=pages)_rulePage=0;
+  h+='<div class="qhead">Ask like this!<span class="jp">こう質問しよう</span>'+(pages>1?'<span class="jp" style="margin-left:14px">('+(_rulePage+1)+' / '+pages+')</span>':'')+'</div><div class="qgrid" id="qgrid">';
+  h+=cards.slice(_rulePage*RULE_PAGE,(_rulePage+1)*RULE_PAGE).join('');
+  return h+'</div></div>';
+}
+var RULE_PAGE=12,_rulePage=0;
+function rulePages(){return Math.ceil((enabledAttrs().length+1)/RULE_PAGE)}
+function turnRules(d){var n=rulePages();_rulePage=(_rulePage+d+n)%n;renderStage();renderCtrl()}
+// board hidden → one SET example question per grammar point in this game (always the full sentence)
+var PACK_EXAMPLE={basic:['like',1],past:['weekend',1],future:['plan',0],perfect:['been',0]};
+function packExample(pk){
+  var on=enabledAttrs().filter(function(a){return a.pack===pk}),ex=PACK_EXAMPLE[pk],a=null,i=0;
+  if(ex)a=on.filter(function(x){return x.id===ex[0]})[0];
+  if(a)i=ex[1];else{a=on[0];i=0}
+  if(!a)return null;var it=a.items[i]||a.items[0];
+  return {e:it[2]||a.emoji,q:a.q(it)};
+}
+function askHTML(){
+  var pks=selectedPacks();if(!pks.length)return '';
+  var pk=pks[_askIdx%pks.length],still=_askShown===pk;_askShown=pk;var P=PACKS.filter(function(x){return x.id===pk})[0]||{en:pk,jp:'',emoji:'📝'},ex=packExample(pk);if(!ex)return '';
+  return '<div class="askview"><div class="big">ASK IN ENGLISH!</div>'+
+    '<div class="packtag">'+P.emoji+' '+escHTML(P.en)+(P.jp?' · '+escHTML(P.jp):'')+(pks.length>1?' <span class="dots3">'+pks.map(function(x,k){return '<i class="'+(x===pk?'on':'')+'"></i>'}).join('')+'</span>':'')+'</div>'+
+    '<div class="askcard'+(still?' still':'')+'"><div class="e">'+ex.e+'</div><div><div class="q">'+frameHTML(ex.q,'full')+'</div></div></div>'+
+    (bingoOrder.length&&settings.win!=='first'?'<div class="note" style="font-size:24px">🎉 '+bingoOrder.length+' BINGO'+(bingoOrder.length>1?'S':'')+' so far!</div>':'')+'</div>';
+}
+var _askIdx=0,_askShown=null,_askPaused=false,_askAt=Date.now(),ASK_EVERY=40000;
+function nextExample(){_askIdx++;_askAt=Date.now();renderStage()}
+function toggleExPause(){_askPaused=!_askPaused;_askAt=Date.now();renderCtrl()}
+setInterval(function(){if(phase==='play'&&!settings.board&&!_askPaused&&selectedPacks().length>1&&Date.now()-_askAt>=ASK_EVERY)nextExample()},1000);
+
+function boardHTML(){
+  var ps=playerList().filter(function(p){return p.card.length});
+  ps.sort(function(a,b){return b.lines.length-a.lines.length||filledOf(b)-filledOf(a)||(a.bingoAt||9e15)-(b.bingoAt||9e15)||a.n-b.n});
+  var n=Math.max(1,ps.length),st=$('stage'),W=(st&&st.clientWidth||window.innerWidth)-32,H=(st&&st.clientHeight||window.innerHeight-150)-28;
+  // pick the column count that makes tiles (about 2:1) as big as possible
+  var best=1,bs=0;for(var c=1;c<=12;c++){var rows=Math.ceil(n/c),tw=(W-(c-1)*8)/c,th=(H-(rows-1)*8)/rows,sz=Math.min(tw/2.1,th);if(sz>bs){bs=sz;best=c}}
+  bs=Math.min(bs,150);var mw=bs*0.72;
+  var s=settings.size;
+  return '<div class="board" style="--bc:'+best+';--mw:'+mw+'px;--th:'+bs+'px;--mini:'+(bs*0.8)+'px">'+ps.map(function(p,i){
+    var lc={};p.lines.forEach(function(id){lineCells(id).forEach(function(x){lc[x]=1})});
+    var mini='<div class="mini" style="grid-template-columns:repeat('+s+',1fr)">';
+    for(var k=0;k<s*s;k++)mini+='<i class="'+(p.marks[k]?(p.marks[k].free?'fr':lc[k]?'ln':'on'):'')+'"></i>';
+    mini+='</div>';
+    var cls='tile'+(p.lines.length&&i<3?' rank'+(i+1):'')+(p.on?'':' off')+(p.lines.length?' bingo':'')+(!p.lines.length&&oneToGo(p)?' hot':'');
+    var tag=p.lines.length?'BINGO'+(p.lines.length>1?' ×'+p.lines.length:''):(oneToGo(p)?'1 TO GO!':'');
+    return '<div class="'+cls+'" id="tile'+p.n+'">'+(tag?'<span class="tag">'+tag+'</span>':'')+'<div class="mw">'+mascotSVG(p.n)+'</div><div class="info">'+mini+'</div></div>';
+  }).join('')+'</div>';
+}
+function flashTile(n){if(settings.win==='first'&&bingoOrder.length)return;var t=$('tile'+n);if(t){t.classList.remove('flash');void t.offsetWidth;t.classList.add('flash')}}
+function resultsHTML(){
+  var r=results;if(!r)return '';
+  var champs=r.rank.filter(function(x){return x.b>0});
+  var h='<div class="results">';
+  if(champs.length){
+    h+='<div class="vhead">'+(r.mode==='first'?'🏆 BINGO WINNER <span>ビンゴ王</span>':r.mode==='most'?'🏆 MOST BINGOS <span>ライン数ランキング</span>':'🏆 BINGO CHAMPIONS <span>ビンゴ王</span>')+'</div><div class="podium">';
+    var shown=champs.slice(0,3),order=shown.length===1?[0]:shown.length===2?[1,0]:[1,0,2];
+    order.forEach(function(i){var x=shown[i],delay=[2.1,1.2,0.4][i];
+      h+='<div class="pod p'+(i+1)+'" style="--d:'+delay+'s">'+(i===0?'<div class="rays"></div>':'')+
+        '<div class="mw">'+(i===0?'<div class="crown">👑</div>':'')+mascotSVG(x.n)+'</div>'+
+        '<div class="ped"><div class="r">'+['🥇','🥈','🥉'][i]+'</div><div class="pn">#'+x.n+'</div><div class="s">'+(r.mode==='most'?x.l+' line'+(x.l>1?'s':''):r.mode==='first'?'BINGO!':ordinal(i+1)+' BINGO'+(x.l>1?' · '+x.l+' lines':''))+'</div></div></div>';
+    });
+    h+='</div>';
+  }else{
+    h+='<div class="vhead">NO BINGO THIS TIME! <span>今回はビンゴなし</span></div><div class="closest">'+r.rank.slice(0,3).map(function(x){
+      return '<div class="cl"><div class="mw">'+mascotSVG(x.n)+'</div><b>#'+x.n+'</b><span>'+x.f+' ✓ squares</span></div>'}).join('')+'</div><div class="note" style="font-size:16px">So close! あと少し！</div>';
+  }
+  h+='<div class="awards" style="--d:2.8s">';
+  if(r.mostLines)h+='<div class="award"><div class="mw">'+mascotSVG(r.mostLines.n)+'</div><div><div class="t">⭐ Most lines</div><div class="d">#'+r.mostLines.n+' · '+r.mostLines.l+' lines · 一番多いライン</div></div></div>';
+  if(r.wanted)h+='<div class="award"><div class="mw">'+mascotSVG(r.wanted.n)+'</div><div><div class="t">🔍 Most Wanted</div><div class="d">#'+r.wanted.n+' was found '+r.wanted.c+' times · 一番見つけられた</div></div></div>';
+  h+='</div>';
+  var more=champs.slice(3),still=r.rank.filter(function(x){return !x.b});
+  if(more.length)h+='<div class="rest" style="--d:3s"><b>Also BINGO · ビンゴ</b>'+more.map(function(x){return '<span class="bg">'+ordinal(x.b)+' #'+x.n+(r.mode==='most'?' · '+x.l+'L':'')+'</span>'}).join('')+'</div>';
+  if(still.length&&champs.length)h+='<div class="rest" style="--d:3.2s"><b>'+(r.mode==='first'?'Closest · おしい！':'Keep practicing · あと少し')+'</b>'+still.map(function(x){return '<span>#'+x.n+' · '+x.f+'✓</span>'}).join('')+'</div>';
+  return h+'</div>';
+}
+function fitStage(){
+  var g=$('qgrid');if(!g)return;
+  var n=g.children.length,cols=n<=4?2:n<=9?3:4;g.style.setProperty('--qc',cols);
+  var f=26;g.style.setProperty('--qf',f+'px');
+  while(f>11&&g.scrollHeight>g.clientHeight+2){f-=1;g.style.setProperty('--qf',f+'px')}
+}
+window.addEventListener('resize',function(){if(phase!=='setup')renderStage()});
+
+// ── BINGO POPUPS ──
+var _popQ=[],_popBusy=false;
+function queuePop(n,place){_popQ.push([n,place]);if(!_popBusy)nextPop()}
+function nextPop(){
+  var x=_popQ.shift();if(!x){_popBusy=false;$('pop').classList.remove('on');return}
+  _popBusy=true;var n=x[0],pl=x[1];
+  var cols=['var(--pink)','var(--yellow)','var(--green)','var(--blue)','var(--orange)'];
+  $('pop').innerHTML='<div class="bingo-word">'+'BINGO!'.split('').map(function(ch,i){return '<span style="color:'+cols[i%5]+';animation-delay:'+(i*0.06)+'s">'+ch+'</span>'}).join('')+'</div>'+
+    '<div class="pop-sub">'+(settings.win==='first'?'Who is it? · だれかな？':ordinal(pl)+' BINGO!')+'</div>';
+  $('pop').classList.add('on');sfxBingo();confetti();
+  setTimeout(nextPop,2800);
+}
+function ordinal(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+function confetti(){
+  var cols=['#ff5d8f','#ffd23f','#3ddc97','#4cc9f0','#9b5de5','#ff9f1c'];
+  for(var i=0;i<60;i++){var d=document.createElement('div');d.className='confetti';
+    d.style.left=Math.random()*100+'vw';d.style.background=cols[i%6];d.style.animationDuration=(1.6+Math.random()*1.6)+'s';d.style.animationDelay=Math.random()*.5+'s';
+    document.body.appendChild(d);setTimeout(function(el){return function(){el.remove()}}(d),3800)}
+}
+
+// ── MUSIC (light synth loop) ──
+
+// ── HOW TO PLAY demo (big screen only; uses the grammar you picked) ──
+var _demo={on:false,step:0,t:null,paused:false};
+var DEMO_MS=7000;
+function demoData(){
+  var pk=selectedPacks()[0]||'past',on=enabledAttrs(),ex=PACK_EXAMPLE[pk],a=null,i=0;
+  if(ex)a=on.filter(function(x){return x.id===ex[0]})[0];if(a)i=ex[1];else{a=on.filter(function(x){return x.pack===pk})[0]||on[0]||ATTR_BY_ID.weekend;i=0}
+  var it=a.items[i]||a.items[0],yes=a.yes?a.yes:a.me(it);
+  var sq=on.filter(function(x){return x!==a}).slice(0,8).map(function(x){var y=x.items[0];return {e:y[2]||x.emoji,c:x.cond(y)}});
+  while(sq.length<8)sq.push({e:'⭐',c:'…'});
+  sq.splice(4,0,{e:it[2]||a.emoji,c:a.cond(it),me:1});
+  return {q:a.q(it),ans:grammarMark(yes),sq:sq};
+}
+var DEMO_STEPS=[
+  ['Every tablet is a <b>mochi</b>. Your number is your name!','タブレット＝あなたのもち。番号がこのゲームでの名前！'],
+  ['Your tablet finds you a partner: <b>"Find #12!"</b>','タブレットが相手を決める：「#12を探せ！」'],
+  ['Walk and ask: <b>"Are you number 12?"</b>','歩いて探そう：「Are you number 12?」'],
+  ['Found them? <b>Both</b> tap <b>🤝 FOUND</b>.','見つけたら2人とも「🤝 FOUND」を押す'],
+  ['🗣️ The asker taps a <b>square</b>…','聞く人：マスを1つ選ぶ…'],
+  ['…and asks the <b>question</b> in English.','…英語で質問する'],
+  ['👂 The answerer\'s screen shows the <b>answer</b>. Say it!','答える人：画面の答えを言おう'],
+  ['YES → tap <b>✓ YES</b>. NO → tap <b>✗ NO</b>. Then <b>switch</b>!','はい→「✓ YES」、いいえ→「✗ NO」。そして交代！'],
+  ['Up to <b>3 questions each</b>. Then <b>👍 NEXT</b> → a new partner!','1人3問まで。終わったら「👍 NEXT」→次の相手へ！'],
+  [null,null] // BINGO — text depends on the win mode
+];
+function demoHTML(st){
+  var D=demoData(),A=4,B=12,cap=DEMO_STEPS[st];
+  if(st===9)cap=settings.win==='first'?['Make a line → <b>BINGO!</b> The first BINGO wins!','縦・横・ななめで一列そろえたらビンゴ！最初の人の勝ち！']:['Make lines → <b>BINGO!</b> Most BINGOs wins!','一列そろえたらビンゴ！たくさん作った人の勝ち！'];
+  var h='<div class="cap" key="'+st+'"><div class="en">'+cap[0]+'</div><div class="jp">'+cap[1]+'</div></div><div class="stage2">';
+  var grid=function(pick,got,line){return '<div class="mini3">'+D.sq.map(function(x,k){var cls=(k===4&&pick?'pick':'')+(k===4&&got?' got':'')+(line&&line.indexOf(k)>=0?' ln':'');
+      return '<div class="'+cls+'"><span class="e">'+x.e+'</span>'+escHTML(x.c)+(k===4&&got?'<span class="st">#12 ✓</span>':'')+'</div>'}).join('')+'</div>'};
+  var screen,L,R,move=0,bubL='',bubR='',hand='';
+  if(st===9){
+    return h+'<div style="display:flex;flex-direction:column;align-items:center;gap:16px"><div class="tab2" style="width:clamp(340px,34vw,520px);height:clamp(250px,25vw,380px)">'+grid(false,true,[3,4,5])+'</div><div class="bigline"><span style="color:var(--pink)">B</span><span style="color:var(--yellow)">I</span><span style="color:var(--green)">N</span><span style="color:var(--blue)">G</span><span style="color:var(--orange)">O</span><span style="color:var(--pink)">!</span></div></div></div>';
+  }
+  var findScr=function(me,p,pressed,wait){return '<div class="mm">'+mascotSVG(p)+'</div><div class="t1">🔍 FIND <b>#'+p+'</b>!</div><div class="t2">#'+p+' is looking for you too!</div>'+(wait?'<div class="t2" style="color:var(--green);font-weight:800">✓ Waiting for #'+p+'…</div>':'<div class="fb2'+(pressed?' press':'')+'">🤝 FOUND #'+p+'!</div>')};
+  if(st===0){L='<div class="mm">'+mascotSVG(A)+'</div><div class="t1">You are <b>MOCHI '+A+'</b>!</div>';R='<div class="mm">'+mascotSVG(B)+'</div><div class="t1">You are <b>MOCHI '+B+'</b>!</div>'}
+  else if(st===1){L=findScr(A,B);R=findScr(B,A)}
+  else if(st===2){L=findScr(A,B);R=findScr(B,A);move=1;bubL='"Are you number <b>12</b>?"';bubR='"Yes! 🙋"'}
+  else if(st===3){L=findScr(A,B,true);R=findScr(B,A,true);move=1;hand='both'}
+  else if(st===4){L='<div class="t2" style="font-weight:800;color:var(--yellow)">🗣️ Your turn — ask #'+B+'!</div>'+grid(true);R='<div class="mm">'+mascotSVG(A)+'</div><div class="t1" style="font-size:clamp(17px,1.8vw,26px)">👂 #'+A+' is choosing a question…</div>';move=1;hand='sq'}
+  else if(st===5||st===6||st===7){
+    L='<div class="t2" style="font-weight:800;color:var(--yellow)">🗣️ ASK #'+B+'</div><div class="qbox">'+frameHTML(D.q,'full')+'</div><div class="yn"><div>✗ NO</div><div class="y'+(st===7?' press':'')+'">✓ YES</div></div>';
+    R='<div class="t2">👂 #'+A+' asks you:</div><div class="qbox">'+frameHTML(D.q,'full')+'</div><div class="abox"><div class="l">💬 YOUR ANSWER</div><div class="s">'+frameHTML(D.ans,'full')+'</div></div>';
+    move=1;if(st===5)bubL='"'+framePlain(D.q)+'"';if(st===6)bubR='"'+framePlain(D.ans)+'"';if(st===7)hand='yes';
+  }
+  else if(st===8){L='<div class="t2" style="font-weight:800;color:var(--yellow)">✓ You got a square!</div>'+grid(false,true);R='<div class="mm">'+mascotSVG(A)+'</div><div class="t1">👋 Done with <b>#'+A+'</b>!</div><div class="fb2">👍 NEXT</div>';move=1}
+  var side=function(n,scr,bub,dir,lab){return '<div class="dm" style="transform:translateX('+(move?dir*-2:0)+'vw)">'+(bub?'<div class="bub">'+bub+'</div>':'')+'<div class="who">'+mascotSVG(n)+'</div><div class="lbl">'+lab+'</div><div class="tab2">'+scr+
+    ((hand==='both')||(hand==='sq'&&n===A)||(hand==='yes'&&n===A)?'<div class="hand" style="'+(hand==='sq'?'left:56%;top:60%':hand==='yes'?'right:14%;bottom:6%':'left:58%;bottom:4%')+'">👆</div>':'')+'</div></div>'};
+  var role=st>=4&&st<=7;
+  h+=side(A,L,bubL,-1,role?'🗣️ ASKER · 聞く人':'#'+A)+side(B,R,bubR,1,role?'👂 ANSWERER · 答える人':'#'+B);
+  return h+'</div>';
+}
+function renderDemo(){
+  var el=$('demo');if(!_demo.on){el.classList.remove('on');return}
+  el.classList.add('on');
+  el.innerHTML=demoHTML(_demo.step)+'<div class="dctrl"><button class="cbtn" onclick="demoGo(-1)">◀</button><div class="dots">'+DEMO_STEPS.map(function(x,k){return '<i class="'+(k===_demo.step?'on':'')+'"></i>'}).join('')+'</div>'+
+    '<button class="cbtn" onclick="demoGo(1)">▶</button><button class="cbtn" onclick="demoPause()">'+(_demo.paused?'▶ Play':'⏸ Pause')+'</button><button class="cbtn main" onclick="closeDemo()">✕ Close</button></div>';
+  if([3,7,8].indexOf(_demo.step)>=0)sfxPop();
+  if(_demo.step===9)sfxBingo();
+}
+function demoTimer(){clearTimeout(_demo.t);if(_demo.on&&!_demo.paused)_demo.t=setTimeout(function(){if(_demo.step>=DEMO_STEPS.length-1){closeDemo();return}_demo.step++;renderDemo();demoTimer()},_demo.step===DEMO_STEPS.length-1?5000:DEMO_MS)}
+function openDemo(){audio();_demo={on:true,step:0,t:null,paused:false};renderDemo();demoTimer()}
+function closeDemo(){clearTimeout(_demo.t);_demo.on=false;renderDemo()}
+function demoGo(d){_demo.step=Math.max(0,Math.min(DEMO_STEPS.length-1,_demo.step+d));renderDemo();demoTimer()}
+function demoPause(){_demo.paused=!_demo.paused;renderDemo();demoTimer()}
+document.addEventListener('keydown',function(e){if(!_demo.on)return;if(e.key==='Escape')closeDemo();if(e.key==='ArrowRight')demoGo(1);if(e.key==='ArrowLeft')demoGo(-1);if(e.key===' '){e.preventDefault();demoPause()}});
+
+// ── MUSIC (big screen only; tablets never play music) ──
+// 4-bar loops written as 16th-note steps: lead melody, bass, soft chord pad, drums (k = kick, s = snare, h = hi-hat)
+var MUS={name:null,pend:null,timer:null,next:0,step:0,gain:null,hold:false};
+var NOTE=function(m){return 440*Math.pow(2,(m-69)/12)};
+var SONGS={
+  lobby:{bpm:100,vol:.5,lead:'triangle',
+    chords:[[60,64,67],[57,60,64],[53,57,60],[55,59,62]],
+    mel:[[76,0,79,0,81,0,79,0,76,0,74,0,72,0,0,0],[72,0,76,0,74,0,72,0,69,0,0,0,72,0,74,0],[77,0,76,0,74,0,72,0,74,0,76,0,77,0,79,0],[79,0,0,0,77,0,76,0,74,0,0,0,71,0,74,0]],
+    bass:[0,-1,-1,-1,-1,-1,7,-1,0,-1,-1,-1,-1,-1,7,-1],
+    k:'x.........x.....',s:'................',h:'..x...x...x...x.'},
+  play:{bpm:126,vol:.55,lead:'square',
+    chords:[[65,69,72],[67,71,74],[64,67,71],[69,72,76]],
+    mel:[[72,0,72,69,0,72,0,74,0,72,0,69,67,0,65,0],[67,0,71,0,74,0,72,71,0,69,0,67,0,0,74,0],[76,0,74,0,71,0,74,76,0,79,0,76,74,0,71,0],[72,0,71,0,69,0,0,72,0,76,0,74,72,0,0,0]],
+    bass:[0,-1,-1,0,-1,-1,12,-1,0,-1,-1,0,-1,-1,7,-1],
+    k:'x.....x.x.......',s:'....x.......x...',h:'x.x.x.x.x.x.x.x.',
+    // extra layer that comes in every 2nd and 3rd time round: a bell counter-line + claps (+ a fill before it returns)
+    lay:{arp:[-1,-1,2,-1,-1,-1,1,-1,-1,-1,2,-1,1,-1,0,-1],oct:24,wave:'sine',v:.22,clap:'....x.......x..x'}},
+  // someone is one square from BINGO (3 in a row on 4×4) → faster, minor, driving
+  tension:{bpm:150,vol:.6,lead:'square',
+    chords:[[57,60,64],[53,57,60],[55,59,62],[52,56,59]],
+    mel:[[81,0,79,0,76,0,79,0,81,0,84,0,81,0,79,0],[77,0,76,0,72,0,76,0,77,0,81,0,77,0,76,0],[79,0,77,0,74,0,77,0,79,0,83,0,79,0,77,0],[76,0,80,0,83,0,80,0,76,0,80,0,83,0,88,0]],
+    bass:[0,-1,12,-1,0,-1,12,-1,0,-1,12,-1,0,-1,12,-1],
+    k:'x...x...x...x.x.',s:'....x.......x...',h:'xxxxxxxxxxxxxxxx',
+    lay:{arp:[0,-1,2,-1,1,-1,2,-1,0,-1,2,-1,1,2,1,2],oct:24,wave:'triangle',v:.15,clap:'....x..x....x.x.'}},
+  end:{bpm:112,vol:.55,lead:'square',
+    chords:[[60,64,67],[65,69,72],[67,71,74],[60,64,67]],
+    mel:[[72,0,76,0,79,0,84,0,0,0,79,0,84,0,0,0],[81,0,0,0,77,0,81,0,84,0,0,0,81,0,79,0],[79,0,83,0,86,0,83,0,79,0,0,0,74,0,77,0],[76,0,79,0,84,0,0,0,0,0,0,0,0,0,0,0]],
+    bass:[0,-1,-1,-1,7,-1,-1,-1,0,-1,-1,-1,7,-1,12,-1],
+    k:'x.......x.......',s:'....x.......x...',h:'..x...x...x...x.'}
+};
+var _noise=null;
+function noiseBuf(a){if(!_noise){var b=a.createBuffer(1,Math.floor(a.sampleRate*1.2),a.sampleRate),d=b.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1;_noise=b}return _noise}
+// t = seconds from now
+function drum(kind,t,vol,dest){
+  var a=_ac;if(!a)return;dest=dest||_sfxGain;var T=a.currentTime+Math.max(0,t);
+  try{
+    if(kind==='k'){var o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(150,T);o.frequency.exponentialRampToValueAtTime(42,T+0.13);g.gain.setValueAtTime(vol,T);g.gain.exponentialRampToValueAtTime(0.001,T+0.2);o.connect(g);g.connect(dest);o.start(T);o.stop(T+0.22);return}
+    var src=a.createBufferSource(),f=a.createBiquadFilter(),g2=a.createGain(),dur={h:.035,s:.14,c:1.6,r:.09}[kind]||.1;
+    src.buffer=noiseBuf(a);f.type=kind==='h'||kind==='c'?'highpass':'bandpass';f.frequency.value=kind==='h'?7500:kind==='c'?3500:1700;
+    g2.gain.setValueAtTime(vol,T);g2.gain.exponentialRampToValueAtTime(0.001,T+dur);src.connect(f);f.connect(g2);g2.connect(dest);src.start(T);src.stop(T+dur+0.05);
+  }catch(e){}
+}
+function anyOneToGo(){return phase==='play'&&playerList().some(function(p){return p.card&&p.card.length&&!p.lines.length&&oneToGo(p)})}
+function musicFor(){if(MUS.hold)return null;return phase==='play'?(anyOneToGo()?'tension':'play'):phase==='end'?'end':phase==='rules'?null:'lobby'}
+// one 16th-note step of a song, t seconds from now (also used to render the preview WAVs)
+function playStep(name,st,t){
+  var S=SONGS[name],v=S.vol,bar=Math.floor(st/16)%4,b=st%16,sx=60/S.bpm/4,ch=S.chords[bar];
+    var m=S.mel[bar][b];if(m){var len=1;while(len<4&&!S.mel[bar][b+len]&&b+len<16)len++;tone(NOTE(m),t,sx*len*0.95,S.lead,(S.lead==='square'?.07:.16)*v,MUS.gain)}
+    var bs=S.bass[b];if(bs>=0)tone(NOTE(ch[0]-24+bs),t,sx*1.8,'triangle',.3*v,MUS.gain);
+    if(b===0)ch.forEach(function(n){tone(NOTE(n),t,sx*15,'sine',.045*v,MUS.gain)});
+    if(S.k[b]==='x')drum('k',t,.5*v,MUS.gain);
+    if(S.s[b]==='x')drum('s',t,.22*v,MUS.gain);
+    if(S.h[b]==='x')drum('h',t,(name==='tension'&&b%2?.05:.09)*v,MUS.gain);
+    if(S.lay){var cyc=Math.floor(st/64)%4,L=S.lay;
+      if(cyc===1||cyc===2){var ai=L.arp[b];if(ai>=0)tone(NOTE(ch[ai]+L.oct),t,sx*1.6,L.wave,L.v*v,MUS.gain);if(L.clap[b]==='x'){drum('s',t,.24*v,MUS.gain);drum('h',t+0.012,.12*v,MUS.gain)}}
+      if(cyc===2&&bar===3&&b>=12)drum('s',t,(.12+.04*(b-12))*v,MUS.gain); // little snare fill before the layer drops out
+    }
+  return sx;
+}
+function musicTick(){
+  var a=_ac;if(!a)return;
+  var want=musicFor(); // keeps playing silently while muted, so un-muting picks up where the song naturally is
+  if(want!==MUS.name){
+    if(!MUS.name||!want){MUS.name=want;MUS.step=0;MUS.next=a.currentTime+0.08}else MUS.pend=want; // switch songs on the next bar
+  }else MUS.pend=null;
+  if(!MUS.name)return;
+  while(MUS.next<a.currentTime+0.2){
+    if(MUS.step%16===0&&MUS.pend){MUS.name=MUS.pend;MUS.pend=null;MUS.step=0}
+    var sx=playStep(MUS.name,MUS.step,MUS.next-a.currentTime);
+    MUS.step++;MUS.next+=sx;
+  }
+}
+function updateMusic(){
+  var a=audio();if(!a)return;
+  if(!MUS.gain){MUS.gain=a.createGain();MUS.gain.gain.value=_musicOn?1.0:0;MUS.gain.connect(a.destination)}
+  if(!MUS.timer)MUS.timer=setInterval(musicTick,50);
+}
+function updateMusicName(){}
+// ── victory reveal: drumroll → slam + crash → a fanfare as each podium mochi appears ──
+function sfxDrumroll(dur){var a=audio();if(!a||!_soundOn)return;var n=Math.floor(dur*22);for(var i=0;i<n;i++){var t=i/n*dur;drum('r',t,0.05+0.35*(i/n),_sfxGain)}drum('k',dur,.7);drum('c',dur,.45)}
+function sfxFanfare(level){ // 1 = winner
+  if(!_soundOn)return;
+  if(level===1){[[67,0,.12],[72,.12,.12],[76,.24,.12],[79,.36,.5],[76,.86,.14],[79,1.0,.9]].forEach(function(x){tone(NOTE(x[0]),x[1],x[2]+.05,'square',.12);tone(NOTE(x[0]-12),x[1],x[2]+.05,'triangle',.25)});
+    [60,64,67,72].forEach(function(n){tone(NOTE(n),1.0,1.2,'triangle',.12)});drum('c',1.0,.35);drum('k',1.0,.6)}
+  else{var base=level===2?64:60;[[base,0,.1],[base+5,.1,.1],[base+9,.2,.45]].forEach(function(x){tone(NOTE(x[0]),x[1],x[2]+.05,'square',.09);tone(NOTE(x[0]-12),x[1],x[2],'triangle',.2)});drum('k',.2,.5)}
+}
+function toggleMusic(){_musicOn=!_musicOn;if(MUS.gain&&_ac){var g=MUS.gain.gain,t=_ac.currentTime;g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);g.linearRampToValueAtTime(_musicOn?1.0:0,t+0.25)}$('musicBtn').textContent=_musicOn?'🔊 Music: ON':'🔇 Music: OFF';updateMusic();if(phase!=='setup')renderCtrl()}
+
+// ── FAIL-SAFE: every square on every card must have a mochi (other than you) who matches it ──
+function holders(p,sq){return playerList().filter(function(o){return o!==p&&o.stats&&matches(o.stats,sq.a,sq.i)})}
+function onCard(p,a,i){return p.card.some(function(s){return !s.free&&s.a===a&&s.i===i})}
+function pickReplacement(p,old){
+  var c=[];
+  enabledAttrs().forEach(function(a){a.items.forEach(function(it,i){
+    if(onCard(p,a.id,i))return;if(a.id!==old.a&&p.card.some(function(s){return !s.free&&s.a===a.id}))return;var sq={a:a.id,i:i,info:a.type==='setNum'};
+    var h=holders(p,sq).length;if(h)c.push({sq:sq,h:h,same:a.id===old.a});
+  })});
+  if(!c.length)return null;
+  shuffle(c).sort(function(x,y){return (y.same?1:0)-(x.same?1:0)||Math.abs(x.h-3)-Math.abs(y.h-3)});
+  return c[0].sq;
+}
+function uniquePossible(p){ // remaining squares, each to a classmate not already used
+  var used={};for(var k in p.marks)if(p.marks[k].t!=null)used[p.marks[k].t]=1;
+  var rest=p.card.filter(function(s,i){return !s.free&&!p.marks[i]});
+  var others=playerList().filter(function(o){return o!==p&&o.stats&&!used[o.n]});
+  return canMatchAll(rest,others);
+}
+var _repairLog=[];
+function repairCards(quiet){
+  if(phase!=='rules'&&phase!=='play')return 0;
+  var fixed=0;
+  playerList().forEach(function(p){
+    if(!p.card||!p.card.length)return;
+    var changed=[];
+    p.card.forEach(function(sq,i){
+      if(sq.free||p.marks[i])return;
+      if(holders(p,sq).length)return;
+      var r=pickReplacement(p,sq);
+      if(p.noFrom)delete p.noFrom[i];
+      if(r){p.card[i]=r}else{p.card[i]={free:true};p.marks[i]={free:true}}
+      delete p.locks[i];changed.push(i);
+    });
+    if(checkStuck(p,true))changed.push(-1);
+    if(changed.length){
+      fixed+=changed.length;_repairLog.push({n:p.n,squares:changed,t:Date.now()});
+      p.lines=linesOf(p);
+      if(!quiet&&changed.some(function(x){return x>=0}))pub('notice',{did:p.did,kind:'repair',squares:changed.filter(function(x){return x>=0})});
+      else if(!quiet&&p.reuse)pub('notice',{did:p.did,kind:'reuse'});
+      sendYou(p);
+    }
+  });
+  return fixed;
+}
+// check used by tests / devtools: list any square nobody can satisfy
+function auditCards(){
+  var bad=[];playerList().forEach(function(p){(p.card||[]).forEach(function(sq,i){if(!sq.free&&!p.marks[i]&&!holders(p,sq).length)bad.push({n:p.n,sq:i,a:sq.a,i:sq.i})})});
+  return bad;
+}
+
+// ── MOCHI MANAGER (during the game) ──
+function openMgr(){$('mgr').classList.add('on');renderMgr()}
+function closeMgr(){$('mgr').classList.remove('on')}
+function mgrStatus(p){
+  if(!p.on)return ['📴 Offline','オフライン'];
+  if(phase!=='play')return [filledOf(p)+' squares','']
+  var m=mmOf(p),q=partnerOf(p),mins=function(t){var s=Math.round((Date.now()-t)/1000);return s<60?s+'s':Math.floor(s/60)+'m '+(s%60)+'s'};
+  if(m.s==='talk'&&q)return ['💬 Talking with #'+q.n,mins(m.at)+(m.done?' · turn done':' · '+m.tries+'/'+TRIES_PER_TALK+' tries')];
+  if(m.s==='bye')return ['👋 Done with #'+m.p,mins(m.since)+' · tapping next'];
+  if(m.s==='talk'&&q&&m.turn!=null)return [(m.turn===p.n?'🗣️ Asking #':'👂 Answering #')+q.n,mins(m.at)+' · '+m.tries+'/'+TRIES_PER_TALK+' tries'+(m.done?' · done':'')];
+  if(m.s==='match'&&q)return ['🔍 Finding #'+q.n+(m.lost||q.mm.lost?' ⚠️':''),mins(m.at)+(m.found?' · tapped FOUND':'')];
+  return ['⏳ Waiting',mins(m.since)];
+}
+function renderMgr(){
+  var ps=playerList().sort(function(a,b){return a.n-b.n}),play=phase==='play';
+  $('mgrBox').innerHTML='<h2>👥 Mochis <small class="jp" style="font-size:14px">'+ps.length+' in the game'+(play?' · '+(function(c){return '💬 '+(c.talk/2|0)+' talking · 🔍 '+(c.match/2|0)+' finding · ⏳ '+c.look+' waiting'})(mmCounts()):'')+'</small><button class="x" onclick="closeMgr()">✕</button></h2>'+
+    '<div class="note" style="grid-column:1/-1">🔄 Rematch = send a mochi (and its partner) back to look for someone new. ✕ = remove a mochi whose student has left — squares only that mochi could answer are swapped automatically.<br>🔄 再マッチ：相手を変える。✕：いなくなった生徒のもちを外す（そのもちしか答えられないマスは自動で入れ替わります）。</div>'+
+    '<div class="mrow">'+ps.map(function(p){var st=mgrStatus(p),busy=play&&p.on&&p.mm&&p.mm.s!=='look',al=play&&p.mm&&p.mm.s==='match'&&(p.mm.lost||(partnerOf(p)&&partnerOf(p).mm.lost));
+      return '<div class="mcard'+(p.on?'':' off')+(al?' alertc':'')+'"><div class="mw">'+mascotSVG(p.n)+'</div><div class="ms">'+st[0]+'<small>'+st[1]+'</small></div>'+
+        (busy?'<button title="Rematch" onclick="rematch('+p.n+')">🔄</button>':'')+'<button title="Remove" onclick="mgrRemove(\''+p.did+'\')">✕</button></div>'}).join('')+'</div>';
+}
+setInterval(function(){if(phase==='play'&&$('mgr').classList.contains('on'))renderMgr()},2000);
+function mgrRemove(did){
+  var p=players[did];if(!p)return;
+  if(playerList().length<=2){alert('At least 2 mochis are needed.');return}
+  if(phase==='play'&&!window.confirm('Remove mochi #'+p.n+' from this game?'))return;
+  removePlayer(did);
+}
+
+// ── MY QUESTIONS: editor, export, import ──
+var edDraft=null,edNewPack='';
+// the answer type decides where the mochis' answers come from
+var ED_TYPES=[
+  {k:'yesno',label:'Yes / No',ex:'Can you swim? · Have you ever ___?'},
+  {k:'freq',label:'How often',ex:'every day, once a week…'},
+  {k:'duration',label:'How long',ex:'for 1 year … for 10 years'},
+  {k:'times',label:'How many times',ex:'once, twice, three times…'},
+  {k:'clock',label:'What time',ex:'6:00 AM … 11:00 PM'},
+  {k:'day',label:'What day',ex:'Monday … Sunday'},
+  {k:'month',label:'What month',ex:'January … December'},
+  {k:'season',label:'What season',ex:'spring, summer, fall, winter'},
+  {k:'count',label:'How many',ex:'1 … 5'},
+  {k:'height',label:'How tall',ex:'150 cm … 180 cm'},
+  {k:'list',label:'My own answers',ex:'you type the answers'},
+  {k:'yesnum',label:'Yes / No + number',ex:'they tell you a number'}
+];
+var ED_TEMPLATES={
+  yesno:{kind:'set',emoji:'💪',q:'[Can] you ___?',card:'can ___',me:'I can ___.',yes:'Yes, I can.',no:"No, I can't.",items:[]},
+  freq:{kind:'one',pool:'freq',emoji:'🏃',open:'[How often] [do] you exercise?',q:'[Do] you exercise ___?',card:'exercises ___',me:'I exercise ___.',cardJp:'___運動する',yes:'Yes, I do.',no:"No, I don't."},
+  duration:{kind:'one',pool:'duration',emoji:'🎹',open:'[How long] [have] you [played] the piano?',q:'[Have] you [played] the piano ___?',card:'has played the piano ___',me:"I've played the piano ___.",cardJp:'ピアノを___弾いている',yes:'Yes, I have.',no:"No, I haven't."},
+  times:{kind:'one',pool:'times',emoji:'🗼',open:'[How many times] [have] you [been] to Tokyo?',q:'[Have] you [been] to Tokyo ___?',card:'has been to Tokyo ___',me:"I've been to Tokyo ___.",cardJp:'東京に___行ったことがある',yes:'Yes, I have.',no:"No, I haven't."},
+  clock:{kind:'one',pool:'clock',emoji:'⏰',open:'[What time] [do] you [get up]?',q:'[Do] you [get up] at ___?',card:'gets up at ___',me:'I get up at ___.',cardJp:'___に起きる',poolOn:[0,1,2,3,4],yes:'Yes, I do.',no:"No, I don't."},
+  day:{kind:'one',pool:'day',emoji:'✏️',open:'[What day] [do] you [go] to juku?',q:'[Do] you [go] to juku on ___?',card:'goes to juku on ___',me:'I go to juku on ___.',cardJp:'___に塾に行く',yes:'Yes, I do.',no:"No, I don't."},
+  month:{kind:'one',pool:'month',emoji:'🎂',open:'[When] [is] your birthday?',q:'[Is] your birthday in ___?',card:'has a birthday in ___',me:'My birthday is in ___.',cardJp:'___生まれ',yes:'Yes, it is.',no:"No, it isn't."},
+  season:{kind:'one',pool:'season',emoji:'🌸',open:'[Which] season [do] you like [best]?',q:'[Do] you like ___ [best]?',card:'likes ___ best',me:'I like ___ best.',cardJp:'___が一番好き',yes:'Yes, I do.',no:"No, I don't."},
+  count:{kind:'one',pool:'count',emoji:'👨‍👩‍👧',open:'[How many] cousins [do] you [have]?',q:'[Do] you [have] ___ cousins?',card:'has ___ cousins',me:'I have ___ cousins.',cardJp:'いとこが___人いる',yes:'Yes, I do.',no:"No, I don't."},
+  height:{kind:'one',pool:'height',emoji:'📏',open:'[How tall] [are] you?',q:'[Are] you ___ tall?',card:'is ___ tall',me:"I'm ___ tall.",cardJp:'身長___',yes:'Yes, I am.',no:"No, I'm not."},
+  list:{kind:'one',pool:'list',emoji:'🍓',open:'[What] [is] your favorite fruit?',q:'[Is] your favorite fruit ___?',card:'likes ___ best',me:'My favorite fruit is ___.',yes:'Yes, it is.',no:"No, it isn't.",items:[]},
+  yesnum:{kind:'setNum',emoji:'🧳',q:'[Have] you ever [been] to ___?',q2:'[How many times] [have] you [been] there?',card:'has been to ___',me:"I've been to ___ {n} times.",yes:'Yes, I have.',no:"No, I haven't.",numPool:'times',unit:'times',min:1,max:6,items:[]}
+};
+function openEditor(id){
+  var d=id?customQs.filter(function(x){return x.id===id})[0]:null;
+  if(d){edDraft=JSON.parse(JSON.stringify(d));if(edDraft.kind==='one'&&!edDraft.pool)edDraft.pool='list'}
+  else{edDraft=JSON.parse(JSON.stringify(ED_TEMPLATES.yesno));edDraft.pack='basic'}
+  edDraft._itemsText=itemsText(edDraft.items);edNewPack='';
+  $('qed').classList.add('on');renderEditor();
+}
+function closeEditor(){$('qed').classList.remove('on');edDraft=null}
+function edType(k){
+  var keep={id:edDraft.id,pack:edDraft.pack,_itemsText:edDraft._itemsText,title:edDraft.title};
+  edDraft=JSON.parse(JSON.stringify(ED_TEMPLATES[k]));
+  for(var x in keep)if(keep[x]!=null)edDraft[x]=keep[x];
+  if(k==='yesnum'||k==='yesno'||k==='list'){edDraft.items=parseItems(edDraft._itemsText||'')}else delete edDraft._itemsText;
+  renderEditor();
+}
+function edSet(k,v){
+  if(k==='pack'&&v==='__new'){edDraft.pack='__new';renderEditor();return}
+  edDraft[k]=v;
+  if(k==='_itemsText')edDraft.items=parseItems(v);
+  if(k==='q'&&edDraft.kind==='set'){var b=hasBlank(v),el=$('edItems');if(el&&(el.style.display==='none')===b){renderEditor();return}}
+  renderEdPreview();
+}
+function edNumPool(k){var n=NUM_POOLS[k];edDraft.numPool=k;edDraft.unit=n.en;edDraft.min=n.min;edDraft.max=n.max;renderEditor()}
+function edPoolToggle(i){
+  var P=ANSWER_POOLS[edDraft.pool],on=edDraft.poolOn&&edDraft.poolOn.length?edDraft.poolOn.slice():P.items.map(function(x,j){return j});
+  var at=on.indexOf(i);if(at>=0)on.splice(at,1);else on.push(i);on.sort(function(a,b){return a-b});
+  edDraft.poolOn=on;renderEditor();
+}
+function edField(k,label,hint,ph){
+  return '<div class="fld"><label>'+label+(hint?' <small>'+hint+'</small>':'')+'</label><input value="'+escHTML(edDraft[k]==null?'':edDraft[k])+'" placeholder="'+escHTML(ph||'')+'" oninput="edSet(\''+k+'\',this.value)"></div>';
+}
+function renderEditor(){
+  var d=edDraft,t=answerKind(d),pool=d.kind==='one'&&d.pool!=='list'?ANSWER_POOLS[d.pool]:null;
+  var packs=PACKS.map(function(p){return '<option value="'+p.id+'"'+(d.pack===p.id?' selected':'')+'>'+escHTML(p.en)+(p.jp?' · '+escHTML(p.jp):'')+'</option>'}).join('')+'<option value="__new"'+(d.pack==='__new'?' selected':'')+'>＋ New pack…</option>';
+  var h='<h2>'+(d.id?'✎ Edit question':'＋ New question')+'<button class="x" onclick="closeEditor()">✕</button></h2><div>';
+  h+='<div class="fld"><label>① Answer type <small>the mochis\' answers come only from this pool · 答えの種類</small></label><div class="row">'+ED_TYPES.map(function(o){
+    return '<button class="opt'+(t===o.k?' on':'')+'" onclick="edType(\''+o.k+'\')">'+o.label+'<small>'+o.ex+'</small></button>'}).join('')+'</div></div>';
+  h+='<div class="fld"><div class="three"><div><label>② Grammar pack</label><select onchange="edSet(\'pack\',this.value)">'+packs+'</select></div><div><label>Emoji</label><input value="'+escHTML(d.emoji||'')+'" oninput="edSet(\'emoji\',this.value)"></div><div><label>Name <small>optional</small></label><input value="'+escHTML(d.title||'')+'" placeholder="auto" oninput="edSet(\'title\',this.value)"></div></div></div>';
+  if(d.pack==='__new')h+='<div class="fld"><label>New pack name</label><input value="'+escHTML(edNewPack)+'" placeholder="e.g. Comparatives" oninput="edNewPack=this.value;renderEdPreview()"></div>';
+  if(d.kind==='one'){
+    h+=edField('open','③ Question','[brackets] = highlighted grammar','[How often] [do] you exercise?');
+    h+=edField('q','Yes / No version','optional · ___ = the answer','[Do] you exercise ___?');
+    h+=edField('card','Card text','"Find someone who…" · ___ = the answer','exercises ___');
+    h+=edField('me',"Mochi's sentence",'___ = the answer','I exercise ___.');
+    if(pool)h+=edField('cardJp','日本語 card text','optional · ___ = the answer in Japanese','___運動する');
+    if(hasBlank(d.q))h+='<div class="fld"><div class="two"><div><label>Yes answer</label><input value="'+escHTML(d.yes||'')+'" oninput="edSet(\'yes\',this.value)"></div><div><label>No answer</label><input value="'+escHTML(d.no||'')+'" oninput="edSet(\'no\',this.value)"></div></div></div>';
+  }else{
+    h+=edField('q','③ Question',d.kind==='set'?'use ___ for a list of items, or write one full question':'___ = the item','[Can] you ___?');
+    if(d.kind==='setNum')h+=edField('q2','Follow-up question','asks for the number','[How many times] [have] you [been] there?');
+    var single=d.kind==='set'&&!hasBlank(d.q);
+    h+=edField('card','Card text','"Find someone who…"'+(single?'':' · ___ = the item'),single?'can swim':'can ___');
+    h+=edField('me',"Mochi's sentence",d.kind==='setNum'?'___ = item, {n} = number':(single?'':'___ = the item'),single?'I can swim.':'I can ___.');
+    if(single)h+=edField('cardJp','日本語 card text','optional','泳げる');
+    h+='<div class="fld"><div class="two"><div><label>Yes answer</label><input value="'+escHTML(d.yes||'')+'" oninput="edSet(\'yes\',this.value)"></div><div><label>No answer</label><input value="'+escHTML(d.no||'')+'" oninput="edSet(\'no\',this.value)"></div></div></div>';
+  }
+  if(d.kind==='setNum')h+='<div class="fld"><label>The number they tell you <small>answers come only from this range</small></label><div class="row">'+Object.keys(NUM_POOLS).map(function(k){var n=NUM_POOLS[k];
+    return '<button class="opt'+(d.numPool===k||(!d.numPool&&d.unit===n.en)?' on':'')+'" onclick="edNumPool(\''+k+'\')">'+n.en+'<small>'+n.min+'–'+n.max+'</small></button>'}).join('')+'</div></div>';
+  if(pool){
+    var on=d.poolOn&&d.poolOn.length?d.poolOn:pool.items.map(function(x,i){return i});
+    h+='<div class="fld"><label>④ Answer pool: '+pool.emoji+' '+pool.en+' <small>tap to leave an answer out · 使わない答えをタップ</small></label><div class="row">'+pool.items.map(function(it,i){
+      return '<button class="chip'+(on.indexOf(i)>=0?' on':'')+'" onclick="edPoolToggle('+i+')">'+escHTML(it[0])+'</button>'}).join('')+'</div></div>';
+  }
+  var showItems=d.kind==='setNum'||d.pool==='list'||(d.kind==='set');
+  if(showItems){
+    var hide=d.kind==='set'&&!hasBlank(d.q);
+    var lab=d.pool==='list'?'④ Answers — one per line':'④ Items — one per line';
+    h+='<div class="fld" id="edItems" style="'+(hide?'display:none':'')+'"><label>'+lab+' <small>English | 日本語 card text (optional) | emoji (optional)</small></label><textarea oninput="edSet(\'_itemsText\',this.value)" placeholder="'+(d.pool==='list'?'apples | りんごが一番好き | 🍎&#10;bananas | バナナが一番好き | 🍌&#10;grapes':'swim | 泳げる | 🏊&#10;cook | 料理ができる | 🍳&#10;ski')+'">'+escHTML(d._itemsText||'')+'</textarea></div>';
+  }
+  h+='</div><div><div class="prev-box" id="edPrev"></div></div>';
+  h+='<div class="mrow">'+(d.id?'<button class="danger" onclick="deleteCustom(\''+d.id+'\')">🗑 Delete</button><span class="spacer"></span>':'')+'<button class="cbtn" onclick="closeEditor()">Cancel</button><button class="big-btn g" id="edSave" style="font-size:22px;padding:8px 22px" onclick="saveEditor()">✓ SAVE</button></div>';
+  $('qedBox').innerHTML=h;renderEdPreview();
+}
+function edClean(){
+  var d=JSON.parse(JSON.stringify(edDraft));delete d._itemsText;
+  ['q','q2','open','card','me','yes','no','unit','emoji','title','cardJp'].forEach(function(k){if(typeof d[k]==='string')d[k]=d[k].trim();if(d[k]==='')delete d[k]});
+  if(d.kind!=='setNum'){delete d.q2;delete d.unit;delete d.min;delete d.max;delete d.numPool}
+  if(d.kind==='one'){
+    if(d.pool!=='list'){delete d.items}else{d.items=parseItems(edDraft._itemsText);delete d.poolOn;delete d.cardJp}
+    if(!hasBlank(d.q)){if(!d.open&&d.q)d.open=d.q;delete d.q;delete d.yes;delete d.no}
+  }else{
+    delete d.open;delete d.pool;delete d.poolOn;
+    d.items=d.kind==='set'&&!hasBlank(d.q)?[]:parseItems(edDraft._itemsText);
+    if(!(d.kind==='set'&&!hasBlank(d.q)))delete d.cardJp;
+  }
+  return d;
+}
+function edErrors(d){var e=validateQ(d);if(d.pack==='__new'&&!edNewPack.trim())e.push('Name the new pack');if(!d.pack)e.push('Pick a pack');return e}
+function renderEdPreview(){
+  var el=$('edPrev');if(!el||!edDraft)return;
+  var d=edClean(),e=edErrors(d),h='<div class="h">PREVIEW · プレビュー</div>';
+  var a=null;try{a=customToAttr(d)}catch(x){}
+  var items=a&&a.items.length?a.items:[['___','','']],item=items[0];
+  var pool=d.kind==='one'&&d.pool!=='list'?ANSWER_POOLS[d.pool]:null;
+  if(a){
+    h+='<div class="pv"><div class="l">CARD · Find someone who…</div><div class="v">'+(item[2]||a.emoji)+' '+escHTML(a.cond(item))+'</div>'+(item[1]?'<div class="jp" style="font-size:13px">'+escHTML(item[1])+'</div>':'')+'</div>';
+    h+='<div class="pv"><div class="l">ASK</div><div class="v">'+frameHTML(a.q(item),'full')+'</div>'+(a.open&&hasBlank(d.q)?'<div class="jp" style="font-size:13px">or: '+frameHTML(a.open,'full')+'</div>':'')+'</div>';
+    if(d.kind==='setNum')h+='<div class="pv"><div class="l">THEN ASK</div><div class="v">'+frameHTML(a.q2(item),'full')+'</div></div>';
+    h+='<div class="pv"><div class="l">MOCHI SAYS (ME tab)</div><div class="v">'+escHTML((d.kind!=='one'&&a.yes?a.yes+' ':'')+a.me(item,3))+'</div>'+(d.kind!=='one'&&a.no?'<div class="jp" style="font-size:13px">or: '+escHTML(a.no)+'</div>':'')+'</div>';
+  }
+  var src=pool?'Each mochi gets ONE answer from '+pool.emoji+' '+pool.en+': '+items.map(function(x){return x[0]}).join(', ')
+    :d.kind==='one'?'Each mochi gets ONE of your '+items.length+' answers.'
+    :d.kind==='setNum'?'About a third of the mochis say yes to each item, then a number from '+(d.min)+' to '+(d.max)+' '+escHTML(d.unit||'')+'.'
+    :hasBlank(d.q)?'About a third of the mochis say yes to each item.':'About a third of the mochis say yes.';
+  h+='<div class="note">'+src+'</div>';
+  h+=e.length?'<div class="errs">'+e.map(function(x){return '• '+escHTML(x)}).join('<br>')+'</div>':'<div class="oks">✓ Ready to save</div>';
+  el.innerHTML=h;var sb=$('edSave');if(sb)sb.disabled=e.length>0;
+}
+function newId(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function saveEditor(){
+  var d=edClean();if(edErrors(d).length)return;
+  if(d.pack==='__new'){var name=edNewPack.trim(),ex=customPacks.filter(function(x){return x.en.toLowerCase()===name.toLowerCase()})[0];
+    if(ex)d.pack=ex.id;else{var np={id:newId('cp_'),en:name,jp:'',emoji:'📝'};customPacks.push(np);d.pack=np.id}}
+  var isNew=!d.id;if(isNew)d.id=newId('cq_');
+  customQs=customQs.filter(function(x){return x.id!==d.id});customQs.push(d);
+  rebuildAttrs();var parked=false;if(isNew&&settings.attrs.indexOf(d.id)<0){if(packRoom(d.pack))settings.attrs.push(d.id);else parked=true}
+  saveCustom();saveSettings();closeEditor();renderSetup();myqMsg('✓ Saved "'+escHTML(ATTR_BY_ID[d.id].title)+'"'+(parked?' — left OFF (already '+MAX_PACKS+' grammar points on)':''));
+}
+function deleteCustom(id){
+  if(!window.confirm('Delete this question type?'))return;
+  customQs=customQs.filter(function(x){return x.id!==id});
+  customPacks=customPacks.filter(function(p){return customQs.some(function(q){return q.pack===p.id})});
+  settings.attrs=settings.attrs.filter(function(x){return x!==id});
+  rebuildAttrs();saveCustom();saveSettings();closeEditor();renderSetup();
+}
+function myqMsg(t){var el=$('myqMsg');if(!el)return;el.innerHTML=t;el.style.display='block';clearTimeout(myqMsg._t);myqMsg._t=setTimeout(function(){el.style.display='none'},6000)}
+function exportCustom(){
+  if(!customQs.length){myqMsg('Nothing to export yet — make a question first.');return}
+  var blob=new Blob([JSON.stringify({app:'mochi-bingo',version:1,packs:customPacks,questions:customQs},null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mochi-bingo-questions-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+  myqMsg('✓ Exported '+customQs.length+' question types — import the .json on another computer.');
+}
+function importCustomData(payload){
+  var qs=Array.isArray(payload)?payload:(payload&&payload.questions)||null;
+  if(!qs)throw new Error('format');
+  var packs=(payload&&payload.packs)||[],ok=0,skipped=[];
+  packs.forEach(function(p){if(p&&p.id&&p.en&&!BUILTIN_PACKS.some(function(b){return b.id===p.id})){customPacks=customPacks.filter(function(x){return x.id!==p.id});customPacks.push({id:p.id,en:p.en,jp:p.jp||'',emoji:p.emoji||'📝'})}});
+  qs.forEach(function(d){
+    if(d&&d.packName&&!d.pack){var ex=PACKS.concat(customPacks).filter(function(p){return p.en.toLowerCase()===String(d.packName).toLowerCase()})[0];
+      if(ex)d.pack=ex.id;else{var np={id:newId('cp_'),en:d.packName,jp:'',emoji:'📝'};customPacks.push(np);d.pack=np.id}}
+    if(d&&!d.pack)d.pack='perfect';
+    if(d&&d.items&&d.items.length&&typeof d.items[0]==='string')d.items=d.items.map(function(s){return parseItems(s)[0]}).filter(Boolean);
+    var e=validateQ(d);
+    if(e.length){skipped.push((d&&(d.title||d.q))||'?');return}
+    if(!d.id)d.id=newId('cq_');
+    customQs=customQs.filter(function(x){return x.id!==d.id});customQs.push(d);
+    rebuildAttrs();if(settings.attrs.indexOf(d.id)<0&&packRoom(d.pack))settings.attrs.push(d.id);ok++;
+  });
+  customPacks=customPacks.filter(function(p){return customQs.some(function(q){return q.pack===p.id})});
+  rebuildAttrs();saveCustom();saveSettings();renderSetup();
+  return {ok:ok,skipped:skipped};
+}
+function importCustom(input){
+  var f=input.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(e){
+    try{var res=importCustomData(JSON.parse(e.target.result));
+      myqMsg('✓ Imported '+res.ok+' question type'+(res.ok===1?'':'s')+(res.skipped.length?' · <span style="color:var(--red)">skipped '+res.skipped.length+' with problems: '+res.skipped.map(escHTML).join(', ')+'</span>':''));
+    }catch(err){myqMsg('<span style="color:var(--red)">✗ Could not read that file — use a .json exported from Mochi Bingo.</span>')}
+    input.value='';
+  };
+  r.readAsText(f);
+}
+
+// ── INIT ──
+function leaveSplash(){audio();updateMusic();show('setup');renderSetup()}
+$('splashParade').innerHTML=[3,17,8,26,12,31,5].map(function(n){return '<div>'+mascotSVG(n)+'</div>'}).join('');
+(function(){var sc=document.createElement('script');sc.src='https://cdn.ably.com/lib/ably.min-2.js';sc.onload=initAbly;document.head.appendChild(sc)})();
+</script>
+</body>
+</html>

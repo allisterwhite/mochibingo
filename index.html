@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Mochi Bingo! Tablet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1033;--panel:#261a4d;--panel2:#31245f;--line:#45378a;
+  --text:#fff8ee;--dim:#bfb5df;--dim2:#8a7fb3;
+  --pink:#ff5d8f;--yellow:#ffd23f;--green:#3ddc97;--blue:#4cc9f0;--red:#ff4d6d;--orange:#ff9f1c;
+  --disp:'Baloo 2','Arial Rounded MT Bold',sans-serif;--body:'M PLUS Rounded 1c','Baloo 2',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--body);user-select:none;-webkit-user-select:none;
+  background-image:radial-gradient(circle at 10% 15%,rgba(255,93,143,.12) 0 90px,transparent 91px),radial-gradient(circle at 92% 85%,rgba(76,201,240,.1) 0 120px,transparent 121px)}
+button{font-family:inherit;cursor:pointer;border:none;color:inherit}
+.mascot{display:block;width:100%;height:100%;overflow:visible}
+.gr{color:var(--yellow);font-weight:800}
+.blank i{font-style:normal;display:inline-block;border-bottom:3px solid var(--yellow);line-height:1;margin:0 2px}
+.jp{color:var(--dim)}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:safe center;gap:14px;padding:18px;text-align:center;overflow-y:auto}
+.logo{font-family:var(--disp);font-weight:800;line-height:.9;font-size:clamp(44px,11vw,80px);text-shadow:0 5px 0 rgba(0,0,0,.35)}
+.logo .m{color:var(--pink)}.logo .b{color:var(--yellow)}
+.big-btn{font-family:var(--disp);font-weight:800;font-size:clamp(22px,5vw,30px);padding:14px 28px;border-radius:18px;background:var(--pink);color:#fff;box-shadow:0 6px 0 #b8325f}
+.big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b8325f}
+.big-btn:disabled{opacity:.35}
+.msg{font-size:clamp(15px,3.4vw,20px);color:var(--dim);line-height:1.5}
+.hero{width:clamp(130px,30vh,240px);height:clamp(150px,34vh,275px);animation:drop .7s cubic-bezier(.3,1.6,.5,1)}
+@keyframes drop{from{transform:translateY(-60px) scale(.4);opacity:0}}
+.youare{font-family:var(--disp);font-weight:800;font-size:clamp(30px,7vw,52px);line-height:1}
+.youare b{color:var(--yellow)}
+.lobtop{display:flex;align-items:center;gap:22px;justify-content:center;flex-wrap:wrap;text-align:left}
+.lobtop .hero{width:clamp(110px,22vh,190px);height:clamp(126px,25vh,218px)}
+.rmini{width:min(900px,100%);background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:12px 16px;text-align:left;display:flex;flex-direction:column;gap:8px}
+.rmini-t{font-family:var(--disp);font-weight:800;font-size:20px;color:var(--yellow);text-align:center}
+.rmini-s{display:flex;gap:10px;align-items:flex-start;font-size:clamp(14px,2.2vw,17px);line-height:1.35}
+.rmini-n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--yellow);color:#2b2140;font-family:var(--disp);font-weight:800;display:flex;align-items:center;justify-content:center}
+.rmini-i{font-size:22px;line-height:1;flex-shrink:0}
+.rmini .jp{font-size:.88em}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--dim2);display:inline-block}
+.dot.on{background:var(--green)}
+
+/* header */
+.hdr{display:flex;align-items:center;gap:10px;padding:6px 10px;background:rgba(0,0,0,.28);border-bottom:2px solid var(--line);flex-shrink:0}
+.hdr .mw{width:40px;height:46px}
+.hdr .num{font-family:var(--disp);font-weight:800;font-size:26px;line-height:1}
+.hdr .stat{font-family:var(--disp);font-weight:800;font-size:18px;background:var(--panel2);border-radius:10px;padding:2px 10px}
+.hdr .stat.y{color:var(--yellow)}
+.hdr .sp{flex:1}
+.tabs{display:flex;gap:6px}
+.tab{font-family:var(--disp);font-weight:800;font-size:18px;padding:6px 14px;border-radius:12px;background:var(--panel2);color:var(--dim);border:2px solid var(--line)}
+.tab.on{background:var(--yellow);color:#2b2140;border-color:var(--yellow)}
+#tmr{font-family:var(--disp);font-weight:800;font-size:22px;min-width:64px;text-align:center}
+#tmr.low{color:var(--red)}
+.banner{background:rgba(255,210,63,.14);border-bottom:2px solid rgba(255,210,63,.4);color:var(--yellow);font-weight:800;text-align:center;padding:6px 10px;font-size:clamp(13px,2.6vw,16px);flex-shrink:0}
+.banner .jp{color:#e8d48a;font-weight:500;margin-left:6px}
+.body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.ansv{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 14px}
+.ans-who{display:flex;align-items:center;gap:10px;font-weight:800;font-size:clamp(18px,3.4vw,24px)}
+.ans-who .mw{width:54px;height:62px}.ans-who b{color:var(--yellow)}
+.ans-q{display:flex;align-items:center;gap:12px;background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:10px 16px;width:min(100%,900px)}
+.ans-q .e{font-size:clamp(34px,6vw,52px)}
+.ans-q .qq{font-weight:800;font-size:clamp(22px,4vw,34px);line-height:1.2}
+.ans-q .o{font-size:.6em;color:var(--dim);margin-top:4px}
+.ans-a{width:min(100%,900px);border-radius:16px;padding:10px 16px;border:3px solid var(--line);background:var(--panel2)}
+.ans-a.yes{border-color:var(--green);background:rgba(61,220,151,.12)}
+.ans-a.no{border-color:var(--red);background:rgba(255,77,109,.10)}
+.ans-a .l{font-size:14px;font-weight:800;color:var(--dim);margin-bottom:4px}
+.ans-a .s1{font-family:var(--disp);font-weight:800;font-size:clamp(28px,5.6vw,46px);line-height:1.15}
+.ans-a .s2{font-weight:800;font-size:clamp(20px,3.8vw,30px);margin-top:4px}
+.mmb{display:flex;align-items:center;gap:12px;margin:8px auto 0;padding:6px 14px;border-radius:16px;width:min(100%,980px);flex-shrink:0;border:2px solid var(--line);background:var(--panel)}
+.mmb .fm{width:46px;height:53px;flex-shrink:0}
+.mmb .ft{flex:1;min-width:0}
+.mmb .f1{font-family:var(--disp);font-weight:800;font-size:clamp(18px,3.4vw,26px);line-height:1.05}
+.mmb .f1 b{color:var(--yellow)}
+.mmb .f2{font-size:13px;color:var(--dim)}
+.mmb.talk{background:rgba(61,220,151,.12);border-color:var(--green)}
+.mmb.done{background:rgba(76,201,240,.12);border-color:var(--blue)}
+.mmb.look{background:rgba(255,255,255,.04);border-style:dashed}
+.dots i{display:inline-block;animation:dot 1.2s infinite both;font-style:normal}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.tries{display:flex;gap:5px;flex-shrink:0}
+.tries span{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);background:rgba(0,0,0,.25)}
+.tries span.x{background:var(--red);border-color:var(--red)}
+.tries span.ok{background:var(--green);border-color:var(--green)}
+.matchv{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:10px}
+.matchv .big{width:clamp(110px,28vh,210px);height:clamp(126px,32vh,240px);animation:findPop .6s cubic-bezier(.3,1.7,.5,1)}
+.matchv .t1{font-family:var(--disp);font-weight:800;font-size:clamp(36px,8vw,64px);line-height:1}
+.matchv .t1 b{color:var(--yellow)}
+.matchv .t2{color:var(--dim);font-size:clamp(14px,2.6vw,18px)}
+.matchv .say{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:6px 16px;font-weight:800;font-size:clamp(16px,3vw,22px)}
+.foundbtn{font-family:var(--disp);font-weight:800;font-size:clamp(24px,5vw,36px);background:var(--green);color:#10331f;border-radius:20px;padding:10px 34px;box-shadow:0 6px 0 #1f8a5a}
+.foundbtn:active{transform:translateY(4px);box-shadow:0 2px 0 #1f8a5a}
+.foundbtn small{display:block;font-family:var(--body,inherit);font-size:14px;font-weight:700}
+.waitf{font-weight:800;font-size:clamp(18px,3.4vw,24px);color:var(--green)}
+.lostbtn{background:var(--panel2);border:2px solid var(--line);border-radius:12px;padding:6px 14px;font-weight:800;font-size:15px}
+.lostbtn small{display:block;font-size:12px;color:var(--dim);font-weight:500}
+.lostmsg{color:var(--pink);font-weight:800;font-size:15px}
+.sq.asked{opacity:.5}
+.sq .nob{position:absolute;top:3px;right:5px;font-size:12px;font-weight:800;color:var(--red)}
+.partner{display:flex;align-items:center;gap:10px;background:var(--panel2);border:2px solid var(--green);border-radius:14px;padding:6px 10px;margin-bottom:8px}
+.partner .mw{width:50px;height:57px}
+.partner b{font-family:var(--disp);font-size:24px;color:var(--yellow)}
+@keyframes findPop{from{transform:scale(.7)}}
+
+/* card */
+.cardwrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px}
+.grid{display:grid;gap:6px;width:min(100%,calc((100vh - 130px) * 1.7));max-width:900px;height:100%;max-height:calc(100vw * .82)}
+.sq{position:relative;background:var(--panel);border:2.5px solid var(--line);border-radius:14px;padding:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;min-height:0;overflow:hidden}
+.sq:active{transform:scale(.97)}
+.sq .e{font-size:var(--se,28px);line-height:1}
+.sq .c{font-weight:800;font-size:var(--sc,14px);line-height:1.15}
+.sq .cj{font-size:calc(var(--sc,14px)*.72);color:var(--dim);line-height:1.15}
+.sq .info{position:absolute;top:3px;right:5px;font-size:calc(var(--sc,14px)*.85)}
+.sq.done{background:rgba(61,220,151,.16);border-color:var(--green)}
+.sq.line{border-color:var(--yellow);background:rgba(255,210,63,.16)}
+.sq.free{background:rgba(255,210,63,.12);border-style:dashed;border-color:var(--yellow)}
+.sq.free .e{font-size:calc(var(--se,28px)*1.2)}
+.sq.lock{opacity:.5}
+.sq .stamp{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(26,16,51,.55);animation:stamp .4s cubic-bezier(.3,1.7,.5,1)}
+.sq .stamp .mw{height:min(calc(var(--se,28px)*2.15),58%);aspect-ratio:100/120;width:auto}
+.sq .stamp b{font-family:var(--disp);font-size:calc(var(--sc,14px)*1.15);line-height:1}
+.sq .stamp small{font-size:calc(var(--sc,14px)*.8);color:var(--dim)}
+@keyframes stamp{from{transform:scale(2.2) rotate(-12deg);opacity:0}}
+.sq .lk{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:800;font-size:calc(var(--sc,14px)*2);color:var(--red);background:rgba(0,0,0,.35)}
+.preview .sq{pointer-events:none}
+
+/* sheet */
+#sheet{position:fixed;inset:0;background:rgba(10,6,24,.75);display:none;align-items:flex-end;justify-content:center;z-index:20}
+#sheet.on{display:flex}
+.sh{background:var(--panel);border:2px solid var(--line);border-bottom:none;border-radius:22px 22px 0 0;width:min(100%,980px);max-height:100%;overflow-y:auto;padding:14px 16px 16px;animation:up .25s ease-out;display:grid;grid-template-columns:1fr 1fr;gap:12px 18px}
+@keyframes up{from{transform:translateY(60px)}}
+.sh .full{grid-column:1/-1}
+.sh-top{display:flex;align-items:center;gap:12px}
+.sh-top .e{font-size:44px}
+.sh-top .f{font-size:clamp(16px,2.6vw,20px);color:var(--yellow);font-weight:800;letter-spacing:.03em}
+.sh-top>div:nth-child(2){flex:1}
+.sh-top .c{font-family:var(--disp);font-weight:800;font-size:clamp(22px,4vw,30px);line-height:1.1}
+.sh-top .x{margin-left:auto;width:44px;height:44px;border-radius:50%;background:var(--panel2);font-size:20px;flex-shrink:0}
+.askbox{background:var(--panel2);border-radius:14px;padding:10px 12px}
+.askbox .l{font-size:12px;font-weight:800;color:var(--pink);letter-spacing:.08em}
+.askbox .q{font-weight:800;font-size:clamp(18px,3.4vw,24px);line-height:1.3;margin-top:2px}
+.askbox .o{font-size:14px;color:var(--dim);margin-top:4px}
+.numrow{display:flex;align-items:center;gap:10px}
+.numbox{flex:1;font-family:var(--disp);font-weight:800;font-size:40px;background:var(--bg);border:2.5px solid var(--yellow);border-radius:14px;text-align:center;height:62px;line-height:62px}
+.numbox.empty{color:var(--dim2);font-size:20px;border-color:var(--line)}
+.prev{width:56px;height:64px}
+.pad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.pad button{font-family:var(--disp);font-weight:800;font-size:24px;background:var(--panel2);border:2px solid var(--line);border-radius:12px;height:48px}
+.pad button:active{background:var(--line)}
+.lbl2{font-size:13px;font-weight:800;color:var(--dim);margin-bottom:6px}
+.ans{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:6px}
+.ans button{font-family:var(--disp);font-weight:800;font-size:22px;background:var(--panel2);border:2px solid var(--line);border-radius:12px;height:46px}
+.ans button.on{background:var(--yellow);color:#2b2140;border-color:var(--yellow)}
+.claim{flex:2;font-size:26px}
+.ynrow{display:flex;gap:10px;width:100%}
+.nobtn{flex:1;font-size:24px;background:var(--panel2);color:var(--text);box-shadow:0 6px 0 #1b1238;border:2px solid var(--line)}
+.nobtn small{font-size:14px;color:var(--dim)}
+.fb{min-height:24px;font-weight:800;text-align:center;font-size:16px}
+.fb.bad{color:var(--red)}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+
+/* me */
+.me{flex:1;min-height:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.mehead{display:flex;align-items:center;gap:14px;justify-content:center}
+.mehead .mw{width:80px;height:92px}
+.mehead .t{font-family:var(--disp);font-weight:800;font-size:clamp(26px,5vw,38px);line-height:1}
+.mehead .t b{color:var(--yellow)}
+.mehead .s{font-size:14px;color:var(--dim)}
+.ghead{font-family:var(--disp);font-weight:800;font-size:20px;display:flex;align-items:center;gap:8px;margin:8px 2px -2px;color:var(--yellow)}
+.ghead small{font-family:var(--body);font-size:13px;color:var(--dim);font-weight:500}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.pc{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:10px 12px}
+.pc .h{display:flex;gap:8px;align-items:center;font-weight:800;color:var(--dim);font-size:14px}
+.pc .h span{font-size:22px}
+.pc .sent{font-weight:800;font-size:clamp(18px,3.2vw,22px);margin-top:4px;display:flex;gap:8px;align-items:center}
+.pc .yn{font-size:13px;color:var(--dim);margin-top:2px}
+.pc .yn b{color:var(--green)}.pc .yn i{color:var(--red);font-style:normal;font-weight:800}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.ch{border-radius:99px;padding:3px 10px;font-size:14px;font-weight:800;background:rgba(0,0,0,.25);color:var(--dim2);text-decoration:line-through;text-decoration-color:rgba(255,77,109,.6)}
+.ch.on{background:rgba(61,220,151,.2);color:var(--text);text-decoration:none;border:1.5px solid var(--green)}
+.ch.on em{font-style:normal;color:var(--yellow)}
+
+/* overlays */
+#ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:40;background:rgba(18,10,38,.86);text-align:center}
+#ov.on{display:flex}
+.lock1{font-weight:800;font-size:14px;color:var(--yellow);text-align:right;line-height:1.1}.lock1 small{display:block;font-size:11px;color:var(--dim);font-weight:500}
+.rulesfab{position:fixed;left:12px;bottom:12px;z-index:30;background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:8px 14px;font-weight:800;font-size:16px;color:var(--text)}
+.bw{display:flex;gap:4px;font-family:var(--disp);font-weight:800;font-size:clamp(64px,16vw,130px);line-height:1}
+.bw span{display:inline-block;animation:letter .6s cubic-bezier(.3,1.8,.5,1) both;text-shadow:0 6px 0 rgba(0,0,0,.4)}
+@keyframes letter{from{transform:translateY(-100px) scale(.2);opacity:0}}
+.cdn{font-family:var(--disp);font-weight:800;font-size:clamp(120px,30vw,240px);color:var(--yellow);animation:cdz .8s ease-out both}
+@keyframes cdz{from{transform:scale(2.2);opacity:0}30%{opacity:1}to{transform:scale(.9)}}
+.confetti{position:fixed;top:-20px;width:10px;height:16px;border-radius:3px;z-index:41;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+.place{font-family:var(--disp);font-weight:800;font-size:clamp(46px,12vw,90px);line-height:1}
+.statrow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.statrow div{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:8px 16px;font-weight:800;font-size:18px}
+.statrow b{font-family:var(--disp);font-size:28px;color:var(--yellow);display:block;line-height:1}
+@media (max-width:700px){.sh{grid-template-columns:1fr}}
+/* ── bigger text for small tablets (6 Oct) ── */
+.msg{font-size:clamp(17px,3.8vw,22px)}
+.rmini-s{font-size:clamp(16px,2.6vw,19px)}
+.hdr .num{font-size:30px}.hdr .stat{font-size:21px}
+.tab{font-size:20px}#tmr{font-size:26px}
+.banner{font-size:clamp(15px,3vw,19px)}
+.mmb .f1{font-size:clamp(22px,4.2vw,32px)}
+.mmb .f2{font-size:clamp(14px,2.4vw,17px)}
+.ans-who{font-size:clamp(20px,3.8vw,28px)}
+.ans-q .qq{font-size:clamp(26px,4.8vw,40px)}
+.ans-a .l{font-size:16px}
+.ans-a .s1{font-size:clamp(34px,6.8vw,56px)}
+.ans-a .s2{font-size:clamp(24px,4.4vw,34px)}
+.matchv .t2{font-size:clamp(16px,3vw,21px)}
+.matchv .say{font-size:clamp(20px,3.6vw,26px)}
+.foundbtn small{font-size:16px}
+.waitf{font-size:clamp(20px,3.8vw,28px)}
+.lostbtn{font-size:17px}.lostbtn small{font-size:14px}.lostmsg{font-size:17px}
+.sq .nob{font-size:14px}
+.sh-top .e{font-size:52px}
+.sh-top .f{font-size:clamp(19px,3.2vw,24px)}
+.askbox .l{font-size:14px}
+.askbox .q{font-size:clamp(24px,4.4vw,34px)}
+.lbl2{font-size:15px}
+.ans button{font-size:26px;height:54px}
+.claim{font-size:30px}.nobtn{font-size:28px}.nobtn small{font-size:16px}
+.fb{font-size:18px}
+.partner b{font-size:28px}
+.lock1{font-size:16px}.lock1 small{font-size:13px}
+.rulesfab{font-size:18px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="sheet" onclick="if(event.target===this)userClose()"><div class="sh" id="sh"></div></div>
+<div id="ov"></div>
+<script>
+// ── SHARED: mascots, sound, Ably helpers (same block in projector + terminal) ──
+var ABLY_KEY='4ZBykA.Tuugsg:cgyxBZXHQyC7_2do0olX7UKSMSJi56RhILeV4mZOJCE';
+var ABLY_CHANNEL='bingo-room1';
+var MASCOT_COLORS=['#ff5d8f','#ffb703','#3ddc97','#4cc9f0','#9b5de5','#ff7b29','#2ec4b6','#f15bb5','#4895ef','#a7c957','#e63946','#b5838d'];
+function shadeHex(hex,amt){
+  var c=parseInt(hex.slice(1),16),r=c>>16,g=(c>>8)&255,b=c&255,f=amt<0?0:255,p=Math.abs(amt);
+  r=Math.round((f-r)*p+r);g=Math.round((f-g)*p+g);b=Math.round((f-b)*p+b);
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function mascotLook(n){
+  var h=Math.imul(n+7,2654435761)>>>0;
+  return {col:MASCOT_COLORS[n%12],eyes:(h>>>5)%4,mouth:(h>>>9)%3,acc:(h>>>13)%9};
+}
+function mascotColor(n){return mascotLook(n).col}
+function mascotSVG(n,opt){
+  opt=opt||{};
+  var L=mascotLook(n),c=L.col,d=shadeHex(c,-0.38),li=shadeHex(c,0.5),ink='#2b2140';
+  var s='<svg class="mascot'+(opt.cls?' '+opt.cls:'')+'" viewBox="0 -8 100 120" xmlns="http://www.w3.org/2000/svg" aria-label="#'+n+'">';
+  s+='<ellipse cx="50" cy="106" rx="30" ry="5" fill="rgba(0,0,0,.28)"/>';
+  // accessory behind (headphones band)
+  if(L.acc===5)s+='<path d="M13 52 Q13 6 50 6 Q87 6 87 52" fill="none" stroke="#3a3354" stroke-width="6" stroke-linecap="round"/>';
+  s+='<ellipse cx="34" cy="99" rx="11" ry="7" fill="'+d+'"/><ellipse cx="66" cy="99" rx="11" ry="7" fill="'+d+'"/>';
+  s+='<path d="M50 18C79 18 93 42 93 67C93 92 75 101 50 101C25 101 7 92 7 67C7 42 21 18 50 18Z" fill="'+c+'" stroke="'+d+'" stroke-width="3"/>';
+  s+='<ellipse cx="31" cy="36" rx="10" ry="5.5" fill="#fff" opacity=".35" transform="rotate(-32 31 36)"/>';
+  s+='<ellipse cx="50" cy="82" rx="23" ry="15" fill="'+li+'"/>';
+  if(opt.num!==false)s+='<text x="50" y="'+(n>=100?88:90)+'" text-anchor="middle" font-size="'+(n>=100?17:n>=10?22:24)+'" font-weight="800" font-family="Baloo 2,Arial Rounded MT Bold,Arial,sans-serif" fill="'+d+'">'+n+'</text>';
+  s+='<ellipse cx="24" cy="62" rx="6" ry="4" fill="#ff8fab" opacity=".75"/><ellipse cx="76" cy="62" rx="6" ry="4" fill="#ff8fab" opacity=".75"/>';
+  // eyes
+  [37,63].forEach(function(x){
+    if(L.eyes===0)s+='<circle cx="'+x+'" cy="52" r="6" fill="'+ink+'"/><circle cx="'+(x+2)+'" cy="50" r="2" fill="#fff"/>';
+    else if(L.eyes===1)s+='<path d="M'+(x-6)+' 54 Q'+x+' 45 '+(x+6)+' 54" fill="none" stroke="'+ink+'" stroke-width="3.6" stroke-linecap="round"/>';
+    else if(L.eyes===2)s+='<circle cx="'+x+'" cy="51" r="8.5" fill="#fff" stroke="'+ink+'" stroke-width="2"/><circle cx="'+(x+1)+'" cy="52" r="5" fill="'+ink+'"/><circle cx="'+(x+3)+'" cy="50" r="1.8" fill="#fff"/>';
+    else s+='<path d="M'+(x-6)+' 51 a6 6 0 0 0 12 0 z" fill="'+ink+'"/><path d="M'+(x-7)+' 50.5 h14" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>';
+  });
+  if(L.mouth===0)s+='<path d="M43 63 Q50 70 57 63" fill="none" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>';
+  else if(L.mouth===1)s+='<path d="M43.5 62 Q50 73 56.5 62 Z" fill="#7a1f3d" stroke="'+ink+'" stroke-width="2" stroke-linejoin="round"/>';
+  else s+='<path d="M42 63 q4 4.5 8 0 q4 4.5 8 0" fill="none" stroke="'+ink+'" stroke-width="3" stroke-linecap="round"/>';
+  // accessories on top
+  switch(L.acc){
+    case 1: s+='<path d="M50 19 V6" stroke="#2d6a4f" stroke-width="3"/><ellipse cx="42" cy="7" rx="8" ry="4.5" fill="#52b788" transform="rotate(-25 42 7)"/><ellipse cx="58" cy="5" rx="8" ry="4.5" fill="#74c69d" transform="rotate(25 58 5)"/>';break;
+    case 2: s+='<path d="M38 22 L52 -4 L64 21 Z" fill="#ffd166" stroke="#2b2140" stroke-width="2" stroke-linejoin="round"/><path d="M42 15 L58 13 M46 7 L56 6" stroke="#ef476f" stroke-width="3"/><circle cx="52" cy="-4" r="4" fill="#ef476f"/>';break;
+    case 3: s+='<path d="M66 24 L56 15 L57 30 Z M66 24 L76 15 L75 30 Z" fill="#ff4d8d" stroke="#2b2140" stroke-width="1.5" stroke-linejoin="round"/><circle cx="66" cy="23" r="3.5" fill="#ff85b3" stroke="#2b2140" stroke-width="1.5"/>';break;
+    case 4: s+='<path d="M50 19 V3" stroke="#2b2140" stroke-width="2.5"/><circle cx="50" cy="1" r="5.5" fill="#ffd60a" stroke="#2b2140" stroke-width="2"/>';break;
+    case 5: s+='<rect x="4" y="42" width="12" height="20" rx="5" fill="#3a3354"/><rect x="84" y="42" width="12" height="20" rx="5" fill="#3a3354"/>';break;
+    case 6: s+='<path d="M34 22 L34 6 L42 14 L50 2 L58 14 L66 6 L66 22 Z" fill="#ffd60a" stroke="#b8860b" stroke-width="2" stroke-linejoin="round"/><circle cx="50" cy="16" r="2.6" fill="#e63946"/>';break;
+    case 7: s+='<path d="M22 32 Q50 -2 78 32 Z" fill="'+shadeHex(c,-0.15)+'" stroke="#2b2140" stroke-width="2"/><rect x="20" y="27" width="60" height="8" rx="4" fill="#fff" stroke="#2b2140" stroke-width="2"/><circle cx="50" cy="8" r="6" fill="#fff" stroke="#2b2140" stroke-width="2"/>';break;
+    case 8: s+='<path d="M28 27 Q22 12 30 6 Q32 18 38 22 Z M72 27 Q78 12 70 6 Q68 18 62 22 Z" fill="#fff1d6" stroke="#2b2140" stroke-width="2" stroke-linejoin="round"/>';break;
+  }
+  return s+'</svg>';
+}
+// grammar frame: [bracketed] parts are the target grammar
+function frameHTML(q,help){
+  if(!q)return '';
+  if(help==='blank')return q.replace(/\[([^\]]+)\]/g,function(m,w){return '<span class="blank">'+w.split(/\s+/).map(function(x){return '<i style="width:'+(0.62*x.length+0.4).toFixed(2)+'em">&nbsp;</i>'}).join(' ')+'</span>'});
+  return q.replace(/\[([^\]]+)\]/g,'<b class="gr">$1</b>');
+}
+function framePlain(q){return (q||'').replace(/\[|\]/g,'')}
+function escHTML(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+// ── sound ──
+var _ac=null,_sfxGain=null,_soundOn=true;
+function audio(){
+  if(!_ac){try{_ac=new (window.AudioContext||window.webkitAudioContext)();_sfxGain=_ac.createGain();_sfxGain.gain.value=0.9;_sfxGain.connect(_ac.destination)}catch(e){_ac=null}}
+  if(_ac&&_ac.state==='suspended')try{_ac.resume()}catch(e){}
+  return _ac;
+}
+function tone(f,t0,dur,type,vol,dest){
+  var a=audio();if(!a||!_soundOn)return;
+  try{var o=a.createOscillator(),g=a.createGain();o.type=type||'sine';o.frequency.value=f;
+  var t=a.currentTime+t0;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol||0.3,t+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g);g.connect(dest||_sfxGain);o.start(t);o.stop(t+dur+0.05)}catch(e){}
+}
+function sfxPop(){tone(660,0,.12,'triangle',.35);tone(990,.06,.14,'triangle',.3)}
+function sfxDing(){tone(1046,0,.25,'sine',.4);tone(1568,.08,.35,'sine',.32)}
+function sfxBuzz(){tone(150,0,.32,'square',.18);tone(110,.05,.32,'square',.14)}
+function sfxTick(){tone(1200,0,.05,'square',.12)}
+function sfxBingo(){[523,659,784,1046,784,1046,1318].forEach(function(f,i){tone(f,i*.09,.28,'triangle',.38)});tone(262,0,.7,'sine',.35)}
+function sfxGo(){tone(523,0,.15,'square',.2);tone(784,0,.5,'triangle',.4);tone(1046,.05,.5,'triangle',.3)}
+function sfxCount(){tone(440,0,.18,'square',.2)}
+function sfxEnd(){[784,659,523,392].forEach(function(f,i){tone(f,i*.16,.35,'triangle',.4)});tone(196,.6,.9,'sine',.4)}
+// ── END SHARED ──
+
+
+// ── TABLET SOUNDS (no music; BINGO fanfare is on the big screen) — soft, only for: matched, FOUND, YES, NO ──
+var TAB_VOL=0.5;
+function tReady(){var a=audio();if(a&&_sfxGain&&_sfxGain.gain.value!==TAB_VOL)_sfxGain.gain.value=TAB_VOL;return a}
+function tSfxMatch(){if(!tReady())return;tone(1318,0,.16,'sine',.35);tone(1760,.12,.3,'sine',.32)}          // "Find #12!" — the louder one
+function tSfxTap(){if(!tReady())return;tone(880,0,.06,'triangle',.12)}                                        // you tapped FOUND
+function tSfxTalk(){if(!tReady())return;tone(660,0,.09,'triangle',.18);tone(990,.07,.14,'triangle',.18)}       // both tapped FOUND
+function tSfxYes(){if(!tReady())return;tone(1046,0,.14,'sine',.38);tone(1318,.09,.14,'sine',.36);tone(1568,.18,.3,'sine',.34)} // ✓ YES
+function tSfxNo(){if(!tReady())return;var a=_ac;try{var o=a.createOscillator(),g=a.createGain(),t=a.currentTime;o.type='sine';o.frequency.setValueAtTime(170,t);o.frequency.exponentialRampToValueAtTime(80,t+.18);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(_soundOn?.28:.0001,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.22);o.connect(g);g.connect(_sfxGain);o.start(t);o.stop(t+.25)}catch(e){}} // ✗ NO — soft low thud
+
+// ── STATE ──
+var did=(function(){var d=null;try{d=sessionStorage.getItem('mb_did')}catch(e){}if(!d){d='t'+Math.random().toString(36).slice(2,10);try{sessionStorage.setItem('mb_did',d)}catch(e){}}return d})();
+var joined=false; // every page load starts at "get your mochi" — the projector gives the old one back only during a game
+var probe=null,_probed=false,probeWait=false; // projector's answer about this tablet: {inGame, offline:[numbers]}
+var me=null;      // 'you' message
+var st=null;      // last 'state' message
+var deadline=null;
+var tab='card';
+var sheetSq=null,entryNum='',entryAns=null,sheetMsg='',sheetBad=false,_claimWait=false;
+var _ch=null,_ablyReady=false,_lastHello=0;
+
+function $(id){return document.getElementById(id)}
+function pub(n,d){if(_ablyReady&&_ch)try{_ch.publish(n,d)}catch(e){}}
+function hello(force){if(!joined)return;if(!force&&Date.now()-_lastHello<2000)return;_lastHello=Date.now();pub('hello',{did:did,want:myNum()})}
+// remember my number in this tab, so a browser reload of a hidden tab (or a reloaded big screen) gives the SAME mochi back
+function myNum(){if(me)return me.n;try{return +sessionStorage.getItem('mb_num')||null}catch(e){return null}}
+function saveNum(n){try{sessionStorage.setItem('mb_num',n)}catch(e){}}
+// the browser reloaded this tab by itself (it was in the background / discarded) → keep the mochi; a reload by a person → new mochi
+// (a reload by a person also hides the page for a moment while it reloads — so only a tab hidden for more than 3 s counts)
+var _autoReload=(function(){var r=false;try{var h=+sessionStorage.getItem('mb_hidden')||0;r=!!document.wasDiscarded||(h>0&&Date.now()-h>3000);if(!document.hidden)sessionStorage.removeItem('mb_hidden')}catch(e){}return r})();
+document.addEventListener('visibilitychange',function(){try{if(document.hidden){if(!sessionStorage.getItem('mb_hidden'))sessionStorage.setItem('mb_hidden',String(Date.now()))}else sessionStorage.removeItem('mb_hidden')}catch(e){}});
+
+function initAbly(){
+  try{
+    var ably=new Ably.Realtime({key:ABLY_KEY,clientId:did});
+    _ch=ably.channels.get(ABLY_CHANNEL);
+    ably.connection.on('connected',function(){_ablyReady=true;if(!_probed){_probed=true;probeWait=true;pub('probe',{did:did,keep:_autoReload?myNum():null});setTimeout(function(){if(probeWait){probeWait=false;render()}},2500)}else hello(true);render()});
+    ably.connection.on('disconnected',function(){_ablyReady=false;render()});
+    _ch.subscribe('state',function(m){onState(m.data)});
+    _ch.subscribe('you',function(m){if(m.data.did===did){joined=true;probeWait=false;onYou(m.data)}});
+    _ch.subscribe('probe-reply',function(m){if(m.data.did===did){try{sessionStorage.removeItem('mb_num')}catch(e){}probe=m.data;probeWait=false;if(m.data.lost){joined=false;me=null}render()}});
+    _ch.subscribe('claim-result',function(m){if(m.data.did===did)onClaimResult(m.data)});
+    _ch.subscribe('kick',function(m){if(m.data.did===did){try{sessionStorage.removeItem('mb_num')}catch(e){}joined=false;me=null;probe=null;closeSheet();render()}});
+    _ch.subscribe('notice',function(m){if(m.data.did==='*'&&m.data.kind==='reuse-all'&&me){me.reuse=true;render();notice('🔓','Teacher: everyone can ask classmates again!','先生より：同じ人にもう一度聞いてもOK！')}
+      if(m.data.did===did&&m.data.kind==='reuse'){if(me)me.reuse=true;render();notice('🔓','You can meet your classmates one more time!','同じ人ともう1回会えるよ！ビンゴを目指そう')}
+      if(m.data.did===did&&m.data.kind==='left'){closeSheet();notice('🚪','#'+m.data.with+' left the game.','#'+m.data.with+'はいなくなりました · Finding you a new mochi… 新しい相手を探しています')}
+      if(m.data.did===did&&m.data.kind==='rematch'){closeSheet();notice('🔄','The teacher found you a new partner!','先生が新しい相手を探しています · Wait a moment… 少し待ってね')}
+      if(m.data.did===did&&m.data.kind==='repair'){if(sheetSq!=null&&m.data.squares.indexOf(sheetSq)>=0)closeSheet();notice('🔄','A square on your card changed — a mochi left the game.','カードのマスが変わりました（もちが一人抜けました）')}});
+    _ch.subscribe('countdown',function(m){if(me&&m.data.gameId===me.gameId)countdown()});
+  }catch(e){console.warn('Ably',e)}
+}
+function ping(){if(joined&&_ablyReady)pub('ping',{did:did,gameId:me?me.gameId:null,want:myNum()})}
+setInterval(ping,8000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden){hello(true);ping()}});
+
+function onState(d){
+  _soundOn=d.tabSfx!==false; // the teacher can mute every tablet from the big screen
+  var prevPhase=st&&st.phase;st=d;
+  if(d.left!=null&&!d.paused)deadline=Date.now()+d.left;else deadline=null;
+  if(joined&&d.phase!=='setup'&&(!me||me.gameId!==d.gameId)&&d.phase!=='end')hello();
+  if(joined&&d.phase==='setup'&&!me)hello();
+  if(me&&d.help&&me.help!==d.help){me.help=d.help}
+  if(me&&d.cardJp!=null)me.cardJp=d.cardJp;
+  if(prevPhase!==d.phase){tab='card';closeSheet()}
+  render();
+}
+setInterval(function(){
+  if(!me||!_ablyReady)return;var m=me.mm||{};
+  if(_pend.found){if(m.s==='match'&&m.at===_pend.found.at&&!_srvFound)pub('found',{did:did,gameId:me.gameId});else _pend.found=null}
+  if(_pend.next){if(m.s==='bye'&&m.since===_pend.next.since)pub('next',{did:did,gameId:me.gameId});else _pend.next=null}
+  if(_pend.no){var P=_pend.no;if(m.s==='talk'&&m.at===P.at&&m.turn===me.n&&m.tries===P.tries)pub('no',{did:did,gameId:me.gameId,sq:P.sq,target:P.n});else _pend.no=null}
+  if(sheetSq!=null&&canAsk()&&m.asking!==sheetSq&&Date.now()-_askSent.at>1500)sendAsking(sheetSq);
+},2000);
+function onYou(d){
+  saveNum(d.n);
+  // keep what I already tapped until the big screen catches up (no flicker back to the FOUND button)
+  _srvFound=!!(d.mm&&d.mm.found);
+  if(_pend.found&&d.mm&&d.mm.s==='match'&&d.mm.at===_pend.found.at&&!d.mm.found)d.mm.found=true;
+  var first=!me||me.n!==d.n,old=me&&me.gameId===d.gameId&&me.mm?me.mm:null;me=d;
+  var m=d.mm||{s:'look'};
+  if(!first&&d.phase==='play'&&old){
+    if(m.s==='match'&&(old.s!=='match'||old.p!==m.p))mmOverlay('match',m.p);
+    else if(m.s==='talk'&&old.s!=='talk')mmOverlay('talk',m.p);
+    else if(m.s==='bye'&&old.s!=='bye'){closeSheet()}
+  }
+  if(sheetSq!=null&&!_claimWait&&!(m.s==='talk'&&m.turn===d.n&&!m.done))closeSheet(); // not your turn any more
+  if(sheetSq==null&&m.s==='talk'&&m.turn===d.n&&!m.done&&m.asking!=null&&d.phase==='play')setTimeout(function(){if(sheetSq==null&&committed()!=null)openSheet(committed())},0);
+  if(d.phase!==(st&&st.phase)&&st)st.phase=d.phase;
+  if(m.s==='match'&&old&&old.s!=='match')tab='card';
+  render();
+}
+// big short messages for the match-making steps (wait for any other message to finish first)
+function mmOverlay(kind,n,tries){
+  var ov=$('ov');
+  if(ov.classList.contains('on')&&ov.dataset.t==='rules'){if(kind==='match')tSfxMatch();else tSfxTalk();return} // reading the rules: the screen underneath already shows it
+  if(ov.classList.contains('on')&&!ov.dataset.t&&(tries||0)<12){setTimeout(function(){mmOverlay(kind,n,(tries||0)+1)},400);return}
+  if(!me||!me.mm)return;
+  if(kind==='match'&&!(me.mm.s==='match'&&me.mm.p===n))return;
+  if(kind==='talk'&&!(me.mm.s==='talk'&&me.mm.p===n))return;
+  ov.dataset.t='1';
+  ov.innerHTML=kind==='match'?'<div style="width:clamp(110px,24vh,170px);height:clamp(126px,27vh,195px)">'+mascotSVG(n)+'</div><div style="font-family:var(--disp);font-weight:800;font-size:clamp(30px,7vw,52px);color:var(--yellow)">🔍 Find #'+n+'!</div><div class="msg">'+n+'番を探そう！ #'+n+' is looking for you too!</div>'
+    :'<div style="font-size:70px">🤝</div><div style="font-family:var(--disp);font-weight:800;font-size:clamp(30px,7vw,52px);color:var(--green)">Talk with #'+n+'!</div><div class="msg">'+(me.mm.turn===me.n?'🗣️ You ask first! あなたから質問':'👂 #'+n+' asks first — listen! #'+n+'から質問')+'</div>';
+  ov.classList.add('on');ov.onclick=function(){ov.classList.remove('on')};clearTimeout(_toastT);_toastT=setTimeout(function(){ov.classList.remove('on')},kind==='match'?1800:1300);if(kind==='match')tSfxMatch();else tSfxTalk();
+}
+function onClaimResult(d){
+  _claimWait=false;
+  if(!me)return;
+  me.marks=d.marks;me.locks=d.locks;me.lines=d.lines;me.bingoAt=d.bingoAt;var wasReuse=me.reuse;me.reuse=!!d.reuse;
+  if(d.ok){
+    closeSheet();tSfxYes();render();
+    if(d.newLine)showBingo(d.place);
+    else if(d.unlocked&&!wasReuse)notice('🔓','You can ask classmates again!','もう一度同じ人に聞いてもOK！ビンゴを目指そう');
+  }else{
+    var why={wrongnum:['🔁 Check again! Ask the number one more time.','もう一度確認しよう！数字をもう一度聞こう'],checkagain:['🔁 Check again! Did they say YES?','もう一度確認しよう！本当に「はい」？'],nomatch:['✗ Not a match! Check and ask again.','違うみたい。もう一度聞こう！'],used:['You already used #'+entryNum+' for a square!','その人はもう使った。'],
+      self:["That's you! Find a classmate.",'それは自分の番号！'],nobody:['There is no #'+entryNum+' in this game.',entryNum+'番はいません。'],
+      locked:['Wait a moment…','少し待って…'],notturn:['Wait — it\'s #'+(mmv().p)+'\'s turn to ask.','相手の番です。'],done:['Already done!','もう完了！'],closed:['The game is not running.','ゲーム中ではありません。']}[d.reason]||['Try again','もう一度'];
+    sheetMsg=why[0]+'<br><span class="jp" style="font-weight:500">'+why[1]+'</span>';sheetBad=true;
+    if(d.reason==='wrongnum'||d.reason==='checkagain'){tSfxNo();if(d.reason==='wrongnum')entryAns=null;renderSheet();checkAgain(why)}
+    else if(d.reason==='nomatch'){tSfxNo();closeSheet();render();toast(sheetMsg)}else{tSfxNo();renderSheet();var s=$('sh');s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake')}
+  }
+}
+
+// ── helpers ──
+function lineCells(id,s){
+  var out=[],k;
+  if(id[0]==='r'){k=+id.slice(1);for(var c=0;c<s;c++)out.push(k*s+c)}
+  else if(id[0]==='c'){k=+id.slice(1);for(var r=0;r<s;r++)out.push(r*s+k)}
+  else if(id==='d0'){for(var i=0;i<s;i++)out.push(i*s+i)}
+  else for(var j=0;j<s;j++)out.push(j*s+s-1-j);
+  return out;
+}
+function filled(){if(!me)return 0;var n=0;me.card.forEach(function(s,i){if(me.marks[i]&&!s.free)n++});return n}
+function total(){return me?me.card.filter(function(s){return !s.free}).length:0}
+function phaseNow(){return st?st.phase:(me?me.phase:'setup')}
+
+// ── RENDER ──
+function render(){
+  var app=$('app');
+  var fab='<button class="rulesfab" onclick="openRules()">📖 RULES · ルール</button>';
+  if(!joined){app.innerHTML=joinHTML()+fab;return}
+  if(!me){app.innerHTML=fab+'<div class="center"><div class="logo"><span class="m">MOCHI</span><br><span class="b">BINGO!</span></div><div class="msg">Connecting… 接続中 <span class="dot'+(_ablyReady?' on':'')+'"></span><br>Is the big screen open? 大画面は開いていますか？</div></div>';return}
+  var ph=phaseNow();
+  if(ph==='setup'){app.innerHTML=lobbyHTML()+fab;return}
+  if(ph==='end'){app.innerHTML=endHTML()+fab;return}
+  var m=mmv(),busy=ph==='play'&&(m.s==='match'||m.s==='talk'||m.s==='bye');
+  var h=headerHTML(ph,busy);
+  if(ph==='rules')h+='<div class="banner">👀 Get ready! This is your card. 準備！これがあなたのカード</div>';
+  if(ph==='play'&&me.reuse&&me.card.length)h+='<div class="banner" style="color:var(--blue);background:rgba(76,201,240,.12);border-color:rgba(76,201,240,.35)">🔓 You can ask classmates again — go for BINGO!<span class="jp" style="color:#a9dff0">同じ人にもう一度聞いてもOK</span></div>';
+  var body;
+  if(ph==='play'&&m.s==='bye')body=byeHTML();
+  else if(ph==='play'&&m.s==='talk')body=m.turn===me.n?cardHTML(false):answerHTML();
+  else if(ph==='play'&&m.s==='match')body=matchHTML();
+  else body=cardHTML(ph!=='play');
+  h+='<div class="body">'+body+'</div>';
+  app.innerHTML=h;
+  fitCard();tickT();
+}
+function joinHTML(){
+  if(probeWait)return '<div class="center"><div class="logo"><span class="m">MOCHI</span><br><span class="b">BINGO!</span></div><div class="msg">Connecting… 接続中</div></div>';
+  if(probe&&probe.inGame&&probe.offline&&probe.offline.length){
+    return '<div class="center"><div class="logo" style="font-size:clamp(34px,8vw,56px)"><span class="m">MOCHI</span> <span class="b">BINGO!</span></div>'+
+      '<div class="msg"><b style="color:var(--text)">A game is running. Were you already playing?</b><br><b style="color:var(--text)">ゲーム中です。もう参加していましたか？</b><br>Tap YOUR mochi to get it back · 自分のもちをタップして戻ろう</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:720px">'+probe.offline.map(function(n){return '<button onclick="reclaim('+n+')" style="background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:6px 8px;width:96px"><div style="width:70px;height:80px;margin:0 auto">'+mascotSVG(n)+'</div></button>'}).join('')+'</div>'+
+      (probe.taken?'<div class="msg" style="color:var(--red)">That mochi is back online — pick yours again.<br>そのもちは使用中です。もう一度選んでね。</div>':'')+
+      '<button class="big-btn" style="font-size:20px" onclick="doJoin()">I\'M NEW — GET A MOCHI</button><div class="msg">はじめての人はこちら・新しいもちをもらう</div></div>';
+  }
+  return '<div class="center" onclick="doJoin()" style="cursor:pointer"><div class="logo"><span class="m">MOCHI</span><br><span class="b">BINGO!</span></div>'+
+    '<div style="display:flex;gap:8px;height:90px">'+[4,19,11,27].map(function(n){return '<div style="width:76px">'+mascotSVG(n,{num:false})+'</div>'}).join('')+'</div>'+
+    '<button class="big-btn">TAP TO GET YOUR MOCHI</button><div class="msg">タップしてもちをもらおう！</div></div>';
+}
+function doJoin(){audio();joined=true;probe=null;hello(true);render()}
+function reclaim(n){audio();joined=true;probe=null;pub('reclaim',{did:did,n:n});render()}
+function lobbyHTML(){
+  return '<div class="center" style="justify-content:flex-start;padding-top:22px"><div class="lobtop"><div class="hero">'+mascotSVG(me.n)+'</div><div><div class="msg">You are… あなたは…</div>'+
+    '<div class="youare">MOCHI <b>'+me.n+'</b>!</div><div class="msg"><b>'+me.n+'番</b>のもちです。<br>Wait for the teacher · 先生を待とう</div>'+
+    '<div class="msg" style="font-size:13px">Remember your number! 自分の番号を覚えよう <span class="dot'+(_ablyReady?' on':'')+'"></span></div></div></div>'+rulesMiniHTML()+'</div>';
+}
+function ruleSteps(){
+  var uq=st?st.unique!==false:true;
+  return [
+    ['🍡','Get your mochi','Your <b>number</b> is your name in this game.','番号がこのゲームでの名前。'],
+    ['🔍','Find your partner','Your tablet says <b>"Find #12!"</b> — #12 is looking for you too. <b>"Are you number 12?"</b> Found them? You <b>both</b> tap <b>🤝 FOUND</b>.','「#12を探せ！」相手もあなたを探している。見つけたら2人とも「🤝 FOUND」を押す。'],
+    ['💬','Take turns','<b>🗣️ Asker:</b> tap a square and ask the question on your screen. <b>👂 Answerer:</b> your screen shows your answer — say it! YES → tap <b>✓ YES</b>, NO → tap <b>✗ NO</b>, then switch. Up to <b>3 questions each</b> — a YES ends your asking.','聞く人：マスを押して画面の質問をする。答える人：画面に出る答えを言う。はい→「✓ YES」、いいえ→「✗ NO」、そして交代。1人3問まで。'],
+    ['⏭️','Next partner','When you are both done, tap <b>👍 NEXT</b>. Your tablet finds your next partner. <b>"Looking for a mochi…"</b> = wait a moment.','2人とも終わったら「👍 NEXT」を押す。次の相手が出る。「Looking…」は少し待とう。'],
+    uq?['👥','One classmate per square','Use a <b>different</b> person for every square. You meet each classmate <b>once</b> — later your tablet may let you meet again.','1マスに1人ずつ。同じ人とは1回だけ（あとでまた会えるかも）。']
+      :['👥','Meet everyone','You meet each classmate <b>once</b> — later your tablet may let you meet again.','同じ人とは1回だけ（あとでまた会えるかも）。'],
+    (st&&st.win==='most')?['🎯','Most BINGOs!','Make as many lines as you can before time runs out!','時間内にできるだけたくさんラインを作ろう！']
+      :['🏁','First BINGO wins!','The first to make a line — a row, a column or a diagonal — wins!','縦・横・ななめで最初に一列そろえた人の勝ち！'],
+    ['🙈','Play fair','English only, and don\'t show your screen.','英語だけ。画面を見せない。']
+  ];
+}
+function rulesMiniHTML(){
+  return '<div class="rmini"><div class="rmini-t">HOW TO PLAY　遊び方</div>'+ruleSteps().map(function(r,i){
+    return '<div class="rmini-s"><div class="rmini-n">'+(i+1)+'</div><div class="rmini-i">'+r[0]+'</div><div><b>'+r[1]+'</b> — '+r[2]+'<br><span class="jp">'+r[3]+'</span></div></div>'}).join('')+'</div>';
+}
+function openRules(){var ov=$('ov');ov.dataset.t='rules';ov.innerHTML='<div style="width:min(900px,94vw);max-height:90vh;overflow-y:auto">'+rulesMiniHTML()+'<div class="msg" style="margin-top:8px">Tap to close · タップで閉じる</div></div>';ov.classList.add('on');ov.onclick=function(){ov.classList.remove('on')};clearTimeout(_toastT)}
+function headerHTML(ph,busy){
+  var lines=(me.lines||[]).length;
+  if(busy)return '<div class="hdr"><div class="mw">'+mascotSVG(me.n)+'</div><div class="num">#'+me.n+'</div>'+
+    '<div class="stat">✓ '+filled()+'/'+total()+'</div>'+(lines?'<div class="stat y">⭐ '+lines+' BINGO</div>':'')+
+    '<div class="sp"></div><div id="tmr"></div><button class="tab" onclick="openRules()" title="Rules">📖 RULES</button></div>';
+  return '<div class="hdr"><div class="mw">'+mascotSVG(me.n)+'</div><div class="num">#'+me.n+'</div>'+
+    '<div class="stat">✓ '+filled()+'/'+total()+'</div>'+(lines?'<div class="stat y">⭐ '+lines+' BINGO</div>':'')+
+    '<div class="sp"></div><div id="tmr"></div><button class="tab" onclick="openRules()" title="Rules">📖 RULES</button></div>';
+}
+function setTab(t){tab=t;render()}
+function mmv(){return (me&&me.mm)||{s:'look'}}
+function triesHTML(m){var h='<div class="tries">';for(var k=0;k<(m.max||3);k++)h+='<span class="'+(k<m.tries?'x':'')+'"></span>';return h+'</div>'}
+function mmBannerHTML(){
+  var m=mmv();
+  if(m.s==='talk'){
+    var n=m.p;
+    return '<div class="mmb talk"><div class="fm">'+mascotSVG(n)+'</div><div class="ft"><div class="f1">🗣️ Your turn — ask <b>#'+n+'</b>!</div><div class="f2">Tap a square and ask in English · マスを押して質問しよう · question '+(m.tries+1)+' of '+(m.max||3)+(m.pdone?' · #'+n+' is done asking — keep going!':'')+'</div></div>'+triesHTML(m)+'</div>';
+  }
+  return '<div class="mmb look"><div class="fm" style="opacity:.6">'+mascotSVG(me.n)+'</div><div class="ft"><div class="f1">⏳ Looking for a mochi<span class="dots"><i>.</i><i>.</i><i>.</i></span></div><div class="f2">Everyone is talking — wait a moment! みんな話し中。少し待ってね · Read your card!</div></div></div>';
+}
+function answerHTML(){
+  var m=mmv(),n=m.p,q=m.q,help=me.help||'full';
+  if(!q)return '<div class="matchv"><div class="big">'+mascotSVG(n)+'</div><div class="t1" style="font-size:clamp(28px,6vw,48px)">👂 <b>#'+n+'</b> is choosing a question<span class="dots"><i>.</i><i>.</i><i>.</i></span></div>'+
+    '<div class="t2">'+n+'番が質問を選んでいます。よく聞こう！ · Listen!</div>'+(m.done?'<div class="t2">✓ You\'re done asking — just answer. 答えるだけ</div>':'<div class="t2">Then it\'s your turn to ask · 次はあなたの番</div>')+'</div>';
+  var A=q.ans,h='<div class="ansv"><div class="ans-who"><div class="mw">'+mascotSVG(n)+'</div><div>👂 <b>#'+n+'</b> asks you: · '+n+'番の質問</div></div>';
+  h+='<div class="ans-q"><div class="e">'+q.e+'</div><div class="qq">'+frameHTML(q.q,'full')+'</div></div>';
+  if(help!=='full')h+='<div class="t2" style="font-weight:800">🤝 Stuck? Help #'+n+' make the question! 困っていたら手伝ってあげよう</div>';
+  var ah=me.ansHelp||'full',fmt=function(x){return frameHTML(x,ah==='blank'?'blank':'full')};
+  if(ah==='facts'){ // only the facts — the student makes the sentence
+    h+='<div class="ans-a '+(A.yes?'yes':'no')+'"><div class="l">💬 YOUR ANSWER · 答えを作ろう</div>'+
+      (A.yn?'<div class="s1">'+(A.yes?'✓ YES':'✗ NO')+'</div>':'')+(A.facts?'<div class="s1">'+escHTML(A.facts)+'</div>':'')+'</div>';
+    if(A.then)h+='<div class="ans-a yes"><div class="l">② THEN · 次の質問: '+frameHTML(q.q2,'full')+'</div><div class="s1">'+escHTML(A.thenFacts||'')+'</div></div>';
+  }else{
+    h+='<div class="ans-a '+(A.yes?'yes':'no')+'"><div class="l">💬 YOUR ANSWER · あなたの答え</div>'+A.lines.map(function(x,i){return '<div class="'+(i?'s2':'s1')+'">'+fmt(x)+'</div>'}).join('')+'</div>';
+    if(A.then)h+='<div class="ans-a yes"><div class="l">② THEN · 次の質問: '+frameHTML(q.q2,'full')+'</div><div class="s1">'+fmt(A.then)+'</div></div>';
+  }
+  return h+'</div>';
+}
+function byeHTML(){
+  var m=mmv(),n=m.p;
+  var got=function(i){var q=me.card[i];return q?'<div class="say" style="border-color:var(--green)">'+q.e+' '+escHTML(q.cond)+'</div>':''};
+  return '<div class="matchv"><div class="big" style="height:clamp(100px,24vh,180px);width:clamp(88px,21vh,160px)">'+mascotSVG(n)+'</div>'+
+    '<div class="t1" style="font-size:clamp(30px,6.5vw,52px)">👋 Done with <b>#'+n+'</b>!</div>'+
+    (m.got!=null?'<div class="t2">✓ You got a square! マスをゲット！</div>'+got(m.got):'<div class="t2">No square this time — next partner! 次の人へ！</div>')+
+    '<div class="say">🗣️ "Thank you!"</div>'+
+    '<button class="foundbtn" onclick="doNext()">👍 NEXT<small>次の相手へ</small></button></div>';
+}
+function doNext(){if(!me)return;audio();_pend.next={since:me.mm.since};pub('next',{did:did,gameId:me.gameId});me.mm={s:'look',since:Date.now()};render()}
+function matchHTML(){
+  var m=mmv(),n=m.p,canLost=Date.now()-(m.at||0)>=(m.lostMs||30000);
+  var h='<div class="matchv"><div class="big">'+mascotSVG(n)+'</div><div class="t1">🔍 FIND <b>#'+n+'</b>!</div><div class="t2">#'+n+' is looking for you too! · '+n+'番もあなたを探しています</div>'+
+    '<div class="say">🗣️ "Are you number '+n+'?"</div>';
+  if(!m.found)h+='<button class="foundbtn" onclick="doFound()">🤝 FOUND #'+n+'!<small>見つけた！</small></button>';
+  else h+='<div class="waitf">✓ Waiting for #'+n+' to tap FOUND<span class="dots"><i>.</i><i>.</i><i>.</i></span><div class="t2">#'+n+'も「FOUND」を押すまで待ってね</div></div>';
+  if(m.lost)h+='<div class="lostmsg">📣 The teacher knows. Keep looking! 先生に知らせたよ。探し続けよう！</div>';
+  else h+='<button class="lostbtn" id="lostbtn" '+(canLost?'':'style="visibility:hidden"')+' onclick="doLost()">😵 Can\'t find #'+n+'?<small>見つからない → 先生に知らせる</small></button>';
+  return h+'</div>';
+}
+var _pend={},_srvFound=false; // taps the big screen hasn't confirmed yet → sent again every 2 s
+function doFound(){if(!me)return;audio();tSfxTap();_pend.found={at:me.mm.at,p:me.mm.p};pub('found',{did:did,gameId:me.gameId});if(me.mm){me.mm.found=true;render()}}
+function doLost(){if(!me)return;pub('lost',{did:did,gameId:me.gameId});if(me.mm){me.mm.lost=true;render()}}
+setInterval(function(){var b=$('lostbtn');if(b&&me&&me.mm&&Date.now()-(me.mm.at||0)>=(me.mm.lostMs||30000))b.style.visibility='visible'},1000);
+function cardHTML(preview){
+  if(!me.card||!me.card.length)return '<div class="center"><div class="msg">Getting your card… カード準備中</div></div>';
+  var s=me.size,lc={};(me.lines||[]).forEach(function(id){lineCells(id,s).forEach(function(x){lc[x]=1})});
+  var asked={};if(!preview&&mmv().s==='talk')(mmv().asked||[]).forEach(function(i){asked[i]=1});
+  var h=(!preview?mmBannerHTML():'')+'<div class="cardwrap'+(preview?' preview':'')+'"><div class="grid" id="grid" style="grid-template-columns:repeat('+s+',1fr);grid-template-rows:repeat('+s+',1fr)">';
+  me.card.forEach(function(q,i){
+    var m=me.marks[i],lk=me.locks&&me.locks[i]&&me.locks[i]>Date.now();
+    if(q.free){h+='<div class="sq free"><div class="e">⭐</div><div class="c">FREE</div></div>';return}
+    var cls='sq'+(m?' done':'')+(lc[i]?' line':'')+(lk?' lock':'')+(!m&&asked[i]?' asked':'');
+    h+='<div class="'+cls+'" onclick="openSheet('+i+')"><div class="e">'+q.e+'</div><div class="c">'+escHTML(q.cond)+'</div>'+(me.cardJp&&q.condJp?'<div class="cj">'+escHTML(q.condJp)+'</div>':'')+(q.info?'<span class="info">🔢</span>':'')+(!m&&asked[i]&&!lk?'<span class="nob">✗ #'+mmv().p+'</span>':'');
+    if(m)h+='<div class="stamp"><div class="mw">'+mascotSVG(m.t)+'</div><b>#'+m.t+'</b>'+(m.a!=null?'<small>'+m.a+' '+escHTML(q.unit)+'</small>':'')+'</div>';
+    else if(lk)h+='<div class="lk" data-lock="'+me.locks[i]+'">'+Math.ceil((me.locks[i]-Date.now())/1000)+'</div>';
+    h+='</div>';
+  });
+  return h+'</div></div>';
+}
+function fitCard(){
+  var g=$('grid');if(!g)return;
+  var s=me.size,cw=g.clientWidth/s,ch=g.clientHeight/s,k=Math.min(cw,ch*1.25);
+  g.style.setProperty('--se',Math.max(18,Math.min(48,k*0.21))+'px');
+  var sc=Math.max(11,Math.min(26,k*0.112));g.style.setProperty('--sc',sc+'px');
+  // shrink text until every square fits
+  for(var guard=0;guard<12;guard++){
+    var over=[].some.call(g.children,function(c){return !c.classList.contains('done')&&c.scrollHeight>c.clientHeight+1}); // stamped squares are an overlay
+    if(!over)break;sc-=1;if(sc<9)break;g.style.setProperty('--sc',sc+'px');
+  }
+}
+window.addEventListener('resize',function(){fitCard()});
+function meHTML(compact){
+  var h=compact?'<div class="me">':'<div class="me"><div class="mehead"><div class="mw">'+mascotSVG(me.n)+'</div><div><div class="t">I\'m number <b>'+me.n+'</b>!</div><div class="s">私は'+me.n+'番。もちの情報で答えよう！<br>Answer with your mochi\'s info.</div></div></div>';
+  if(!me.profile)return h+'</div>';
+  var groups=[],gi={};me.profile.forEach(function(p){var k=p.pack||'x';if(gi[k]==null){gi[k]=groups.length;groups.push({en:p.packEn,jp:p.packJp,emoji:p.packEmoji,items:[]})}groups[gi[k]].items.push(p)});
+  groups.forEach(function(g){
+  if(g.en)h+='<div class="ghead"><span>'+(g.emoji||'')+'</span>'+escHTML(g.en)+(g.jp?' <small>'+escHTML(g.jp)+'</small>':'')+'</div>';
+  h+='<div class="pgrid">';
+  g.items.forEach(function(p){
+    h+='<div class="pc"><div class="h"><span>'+p.emoji+'</span>'+escHTML(p.title)+'</div>';
+    if(p.sentence)h+='<div class="sent"><span>'+(p.e||'')+'</span>'+escHTML(p.sentence)+'</div>';
+    else{
+      h+='<div class="yn">✓ <b>'+escHTML(p.yes)+'</b>　✗ <i>'+escHTML(p.no)+'</i></div><div class="chips">';
+      p.chips.forEach(function(c){h+='<span class="ch'+(c.on?' on':'')+'">'+c.e+' '+escHTML(c.t)+(c.n!=null?' <em>'+(c.u?c.n+c.u:'×'+c.n)+'</em>':'')+'</span>'});
+      h+='</div>';
+      var nums=p.chips.filter(function(c){return c.on&&c.n!=null});
+      if(nums.length)h+='<div class="yn" style="margin-top:6px">'+nums.map(function(c){return escHTML(c.s)}).join('<br>')+'</div>';
+    }
+    h+='</div>';
+  });
+  h+='</div>';
+  });
+  return h+'</div>';
+}
+function endHTML(){
+  var r=st&&st.results,mine=null;
+  if(r)r.rank.forEach(function(x){if(x.n===me.n)mine=x});
+  if(!r)return '<div class="center"><div class="place" style="font-size:clamp(34px,8vw,64px)">👀 Look at the big screen!</div><div class="msg" style="font-size:22px">大画面を見よう！</div></div>';
+  var h='<div class="center"><div class="msg">Look at the big screen! 大画面を見よう！</div><div class="hero">'+mascotSVG(me.n)+'</div>';
+  if(mine){
+    if(mine.b){
+      var medal=['🥇','🥈','🥉'][mine.b-1]||'🎉';
+      if(r.mode==='first')h+='<div class="place">🏆 YOU WIN!</div><div class="msg">ビンゴ！あなたの勝ち！</div>';
+      else if(r.mode==='most')h+='<div class="place">'+medal+' '+ordinal(mine.b)+' place</div><div class="msg">'+mine.l+' line'+(mine.l>1?'s':'')+' · '+mine.b+'位</div>';
+      else h+='<div class="place">'+medal+' '+ordinal(mine.b)+' BINGO!</div><div class="msg">'+ordinal(mine.b)+'にビンゴ！</div>';
+    }else h+='<div class="place" style="font-size:clamp(30px,8vw,56px)">So close! あと少し！</div>';
+    h+='<div class="statrow"><div><b>'+mine.l+'</b>BINGO lines</div><div><b>'+mine.f+'</b>squares ✓</div></div>';
+    var aw=[];if(r.mostLines&&r.mostLines.n===me.n)aw.push('⭐ Most lines — '+r.mostLines.l+'!');if(r.wanted&&r.wanted.n===me.n)aw.push('🔍 Most Wanted — found '+r.wanted.c+' times!');
+    if(aw.length)h+='<div class="statrow">'+aw.map(function(a){return '<div>'+a+'</div>'}).join('')+'</div>';
+  }
+  return h+'<div class="msg">Good job! お疲れ様！</div></div>';
+}
+function ordinal(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
+
+// ── TIMER ──
+function tickT(){
+  var el=$('tmr');if(!el)return;
+  if(phaseNow()!=='play'||!st){el.textContent='';return}
+  if(st.paused&&st.left!=null){var s0=Math.ceil(st.left/1000);el.textContent='⏸ '+Math.floor(s0/60)+':'+String(s0%60).padStart(2,'0');return}
+  if(deadline==null){el.textContent='∞';return}
+  var s=Math.max(0,Math.ceil((deadline-Date.now())/1000));
+  el.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');el.classList.toggle('low',s<=30);
+}
+setInterval(function(){
+  tickT();
+  // unlock countdowns
+  document.querySelectorAll('.lk').forEach(function(el){var t=+el.dataset.lock,l=Math.ceil((t-Date.now())/1000);if(l<=0)render();else el.textContent=l});
+},500);
+
+// ── CLAIM SHEET ──
+function openSheet(i){
+  if(phaseNow()!=='play'||!me)return;
+  var q=me.card[i];if(!q||q.free||me.marks[i])return;
+  if(me.locks&&me.locks[i]>Date.now())return;
+  var m=mmv();if(m.s==='talk'&&((m.asked||[]).indexOf(i)>=0||m.turn!==me.n||m.done))return;
+  if(m.s==='match'||m.s==='bye')return;
+  var c=committed();if(c!=null&&c!==i){i=c;q=me.card[i]} // you picked a square — you must ask that one
+  sheetSq=i;entryAns=null;sheetMsg='';sheetBad=false;
+  $('sheet').classList.add('on');renderSheet();
+  if(canAsk())sendAsking(i);
+}
+function closeSheet(){sheetSq=null;var s=$('sheet');if(s)s.classList.remove('on')}
+function userClose(){if(canAsk()&&committed()!=null)return;closeSheet()} // once a square is picked, the asker must ask it (no peeking at the answer and backing out)
+// the square this asker already picked in this turn (the big screen's copy, or the one just sent)
+function committed(){var m=mmv();if(!canAsk())return null;if(m.asking!=null)return m.asking;if(_askSent.sq!=null&&_askSent.turnAt===m.turnAt&&_askSent.talkAt===m.at)return _askSent.sq;return null}
+var _askSent={sq:null,at:0};
+function sendAsking(sq){var m=mmv();_askSent={sq:sq,at:Date.now(),turnAt:m.turnAt,talkAt:m.at};pub('asking',{did:did,gameId:me.gameId,sq:sq})}
+function canAsk(){var m=mmv();return m.s==='talk'&&!m.done&&m.turn===(me&&me.n)}
+function renderSheet(){
+  if(sheetSq==null)return;
+  var q=me.card[sheetSq],help=me.help||'full',m=mmv(),live=canAsk();
+  entryNum=live?String(m.p):'';
+  var h='<div class="sh-top full"><div class="e">'+q.e+'</div><div><div class="f">'+(live?'🗣️ ASK #'+m.p+' · '+m.p+'番に聞こう':'YOUR SQUARE · マス')+'</div><div class="jp">'+escHTML(me.cardJp?q.condJp:'')+'</div></div>'+(live?'<div class="lock1">🔒 Ask this one!<small>このマスを聞こう</small></div>':'<button class="x" onclick="userClose()">✕</button>')+'</div>';
+  h+='<div><div class="askbox"><div class="l">① ASK · 質問しよう</div>';
+  if(help==='none')h+='<div class="q" style="color:var(--dim)">Make the question yourself!<br><span style="font-size:.75em">自分で質問を作ろう！</span></div>';
+  else{h+='<div class="q">'+frameHTML(q.q,help)+'</div>'}
+  h+='</div>';
+  if(q.info)h+='<div class="askbox" style="margin-top:8px"><div class="l">② THEN ASK · 次に聞こう</div><div class="q">'+(help==='none'?'<span style="color:var(--dim)">'+(q.unit==='years'?'How long…?':'How many…?')+'</span>':frameHTML(q.q2,help))+'</div></div>';
+  h+='</div><div>';
+  if(live)h+='<div class="partner"><div class="mw">'+mascotSVG(m.p)+'</div><div>Ask <b>#'+m.p+'</b><div class="lbl2" style="margin:0">'+m.p+'番に聞こう · try '+(m.tries+1)+' / '+(m.max||3)+'</div></div></div>';
+  else h+='<div class="partner" style="border-color:var(--line)"><div>'+(m.s==='talk'?'✓ Your turn is done. 自分の番は終わり':'👀 Find your partner and tap <b style="font-size:inherit">FOUND</b> first!<br><span class="lbl2">まず相手を見つけて「FOUND」を押そう</span>')+'</div></div>';
+  if(q.info&&live){
+    h+='<div class="lbl2" style="margin-top:10px">Their answer · 相手の答え ('+escHTML(q.unit)+')</div><div class="ans">';
+    for(var v=q.min;v<=q.max;v++)h+='<button class="'+(entryAns===v?'on':'')+'" onclick="pickAns('+v+')">'+v+'</button>';
+    h+='</div>';
+  }
+  h+='</div>';
+  var ready=live&&(!q.info||entryAns!=null)&&!_claimWait;
+  h+='<div class="full"><div class="fb'+(sheetBad?' bad':'')+'">'+sheetMsg+'</div><div class="ynrow"><button class="big-btn nobtn" '+(live&&!_claimWait?'':'disabled')+' onclick="doNo()">✗ NO <small>いいえ</small></button><button class="big-btn claim" '+(ready?'':'disabled')+' onclick="doClaim()">'+(_claimWait?'…':'✓ YES <small>はい</small>')+'</button></div></div>';
+  $('sh').innerHTML=h;
+}
+function pickAns(v){entryAns=v;sheetMsg='';sheetBad=false;renderSheet()}
+function doNo(){
+  if(!canAsk()||sheetSq==null||!me)return;
+  var m=mmv(),n=m.p,sq=sheetSq;
+  pub('no',{did:did,gameId:me.gameId,sq:sq,target:n});_pend.no={sq:sq,n:n,tries:m.tries||0,at:m.at};
+  m.tries=(m.tries||0)+1;m.asked=(m.asked||[]).concat([sq]);m.turn=n; // switch now; the projector confirms
+  closeSheet();tSfxNo();render();
+}
+function doClaim(){
+  if(!canAsk()||_claimWait)return;
+  _claimWait=true;renderSheet();
+  pub('claim',{did:did,gameId:me.gameId,sq:sheetSq,target:mmv().p,ans:entryAns});
+  setTimeout(function(){if(_claimWait){_claimWait=false;sheetMsg='No reply — try again · もう一度';sheetBad=true;renderSheet()}},6000);
+}
+// a wrong YES / wrong number: big "check again" for a moment, then back to the same question to fix it (no penalty)
+function checkAgain(why){var ov=$('ov');ov.dataset.t='';ov.innerHTML='<div style="font-size:70px">🔁</div><div style="font-family:var(--disp);font-weight:800;font-size:clamp(28px,6vw,46px);color:var(--yellow);padding:0 20px">Check again!</div><div class="msg" style="font-size:20px">'+why[0].replace(/^🔁 Check again! /,'')+'<br>'+why[1]+'</div>';
+  ov.classList.add('on');ov.onclick=function(){ov.classList.remove('on')};clearTimeout(_toastT);_toastT=setTimeout(function(){ov.classList.remove('on')},1800)}
+var _toastT=null;
+function notice(icon,en,jp){
+  var ov=$('ov');ov.dataset.t='';ov.innerHTML='<div style="font-size:70px">'+icon+'</div><div style="font-family:var(--disp);font-weight:800;font-size:clamp(22px,5vw,32px);color:var(--yellow);padding:0 20px">'+en+'</div><div class="msg">'+jp+'</div>';
+  ov.classList.add('on');ov.onclick=function(){ov.classList.remove('on')};clearTimeout(_toastT);_toastT=setTimeout(function(){ov.classList.remove('on')},3200);
+}
+function toast(html){
+  var ov=$('ov');ov.dataset.t='';ov.innerHTML='<div style="font-size:70px">🙅</div><div style="font-family:var(--disp);font-weight:800;font-size:clamp(22px,5vw,34px);color:var(--red);padding:0 20px">'+html+'</div><div class="msg">Square locked for a few seconds · 少し待ってね</div>';
+  ov.classList.add('on');ov.onclick=function(){ov.classList.remove('on')};
+  clearTimeout(_toastT);_toastT=setTimeout(function(){ov.classList.remove('on')},2400);
+}
+
+// ── BIG MOMENTS ──
+function showBingo(place){
+  var cols=['var(--pink)','var(--yellow)','var(--green)','var(--blue)','var(--orange)'];
+  var ov=$('ov');ov.dataset.t='';
+  ov.innerHTML='<div class="bw">'+'BINGO!'.split('').map(function(c,i){return '<span style="color:'+cols[i%5]+';animation-delay:'+i*0.06+'s">'+c+'</span>'}).join('')+'</div>'+
+    '<div class="hero" style="height:clamp(120px,26vh,220px);width:clamp(104px,23vh,190px)">'+mascotSVG(me.n)+'</div>'+
+    '<div style="font-family:var(--disp);font-weight:800;font-size:clamp(24px,6vw,40px);color:var(--yellow)">'+(place?ordinal(place)+' BINGO!':'ANOTHER LINE!')+'</div><div class="msg">Keep going! もっとラインを作ろう！</div>';
+  ov.classList.add('on');ov.onclick=function(){ov.classList.remove('on')};
+  var c=['#ff5d8f','#ffd23f','#3ddc97','#4cc9f0','#9b5de5'];
+  for(var i=0;i<40;i++){var d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'vw';d.style.background=c[i%5];d.style.animationDuration=(1.5+Math.random()*1.5)+'s';document.body.appendChild(d);setTimeout(function(el){return function(){el.remove()}}(d),3500)}
+  clearTimeout(_toastT);_toastT=setTimeout(function(){ov.classList.remove('on')},3000);
+}
+function countdown(){
+  var ov=$('ov'),n=3;ov.dataset.t='';ov.classList.add('on');ov.onclick=null;
+  var step=function(){
+    if(n>0){ov.innerHTML='<div class="cdn">'+n+'</div>';n--;setTimeout(step,850)}
+    else{ov.innerHTML='<div class="cdn" style="color:var(--pink)">GO!</div><div class="msg">Ask in English! 英語で聞こう！</div>';tab='card';setTimeout(function(){ov.classList.remove('on');render()},800)}
+  };step();
+}
+
+// ── INIT ──
+render();
+(function(){var sc=document.createElement('script');sc.src='https://cdn.ably.com/lib/ably.min-2.js';sc.onload=initAbly;document.head.appendChild(sc)})();
+</script>
+</body>
+</html>
