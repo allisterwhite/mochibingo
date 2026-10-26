@@ -974,11 +974,24 @@ function answerFor(st,sq){
   else if(l2&&a.type==='setNum')thenFacts=numUnit(v[sq.i],a.unit(it));
   return {yes:m,yn:!!(a.yes&&!(a.type==='setNum'&&a.single)),lines:L.filter(Boolean).map(fix).map(grammarMark),then:l2&&grammarMark(fix(l2)),facts:facts,thenFacts:thenFacts};
 }
+// ── LISTEN & PICK: open questions (How tall…? When…? Where…? What time…?) have no ✓/✗ — the asker taps what they heard ──
+function isPick(a){return (a.type==='one'&&!a.yes)||(a.type==='setNum'&&!!a.single)}
+function actualItem(st,a){var v=st[a.id];return a.type==='setNum'?+Object.keys(v)[0]:v}
+function pickLabel(a,it){var x=String(it[0]);if(/^\d+$/.test(x)&&String(a.cond(it)).indexOf(x+' cm')>=0)x+=' cm';return x}
+// 4 choices: the card's target, what the partner will really say, and others from the same question — kept for the whole talk
+function pickChoices(p,sqIdx,q){
+  var sq=p.card[sqIdx],a=ATTR_BY_ID[sq.a],act=actualItem(q.stats,a);
+  p.mm.choices=p.mm.choices||{};var key=sqIdx+':'+q.n;
+  if(!p.mm.choices[key]){var set=[sq.i];if(set.indexOf(act)<0)set.push(act);
+    shuffle(a.items.map(function(x,i){return i}).filter(function(i){return set.indexOf(i)<0})).slice(0,Math.max(0,Math.min(4,a.items.length)-set.length)).forEach(function(i){set.push(i)});
+    p.mm.choices[key]=shuffle(set)}
+  return p.mm.choices[key].map(function(i){return {i:i,label:pickLabel(a,a.items[i]),e:a.items[i][2]||a.emoji}});
+}
 // ── CARDS ──
 function squareView(sq){
   if(sq.free)return {free:true};
   var a=ATTR_BY_ID[sq.a],it=a.items[sq.i];
-  var v={e:it[2],cond:a.cond(it),condJp:a.condJp(it),q:a.q(it),info:!!sq.info};
+  var v={e:it[2],cond:a.cond(it),condJp:a.condJp(it),q:a.q(it),info:!!sq.info};if(isPick(a)){v.pick=true;v.target=sq.i}
   if(a.open)v.open=a.open;
   if(sq.info){v.q2=a.q2(it);v.unit=a.unit(it);v.min=a.min;v.max=a.max}
   return v;
@@ -1223,7 +1236,10 @@ function onNo(d){
   p.lastSeen=Date.now();p.on=true;
   var sq=p.card[d.sq];if(!sq||sq.free||p.marks[d.sq])return;
   var t=+d.target,tp=byNum(t);if(!tp||tp===p||!tp.stats)return;
+  // a ✗ NO when the partner's answer was really YES → "Check again!" (no try used, same question stays open)
+  if(myTurn(p)&&p.mm.p===t&&matches(tp.stats,sq.a,sq.i)){pub('no-result',{did:p.did,sq:d.sq,ok:false,reason:'checkno',gameId:gameId});return}
   var tr=talkTry(p,t,d.sq);
+  pub('no-result',{did:p.did,sq:d.sq,ok:true,gameId:gameId});
   if(tr){p.st=p.st||{};p.st.asked=(p.st.asked||0)+1;p.st.no=(p.st.no||0)+1;tp.st=tp.st||{};tp.st.answered=(tp.st.answered||0)+1}
   p.noFrom=p.noFrom||{};var nf=p.noFrom[d.sq]=p.noFrom[d.sq]||[];if(nf.indexOf(t)<0)nf.push(t);
   logNo(p,d,t,tp,sq);
@@ -1352,6 +1368,7 @@ function mmView(p){
   if(m.s==='bye'){v.p=m.p;v.got=m.got;v.pgot=m.pgot;return v}
   if(m.s!=='look'&&q){v.p=q.n;v.at=m.at;v.lostMs=LOST_AFTER_MS;v.found=!!m.found;v.pfound=!!q.mm.found;v.lost=!!m.lost||!!q.mm.lost;
     if(m.s==='talk'){v.tries=m.tries;v.max=TRIES_PER_TALK;v.asked=Object.keys(m.asked).map(Number);v.done=!!m.done;v.pdone=!!q.mm.done;v.turn=m.turn;v.turnAt=m.turnAt||0;v.ptries=q.mm.tries;v.asking=m.asking==null?null:m.asking;
+      if(m.turn===p.n&&m.asking!=null&&p.card[m.asking]&&isPick(ATTR_BY_ID[p.card[m.asking].a]))v.choices=pickChoices(p,m.asking,q);
       // answerer: the square the asker is asking right now + what to say
       if(m.turn===q.n&&q.mm.asking!=null){var sq=q.card[q.mm.asking];if(sq){var sv=squareView(sq);sv.ans=answerFor(p.stats,sq);v.q=sv}}}}
   else v.s='look';
@@ -1389,6 +1406,15 @@ function onClaim(d){
   if(!tp||!tp.stats)return reply(false,'nobody');
   var talking=p.mm&&p.mm.s==='talk'&&p.mm.p===t; // matched partners are always allowed (matching already checked the rules)
   if(p.unique&&!p.reuse&&!talking){for(var k in p.marks)if(p.marks[k].t===t)return reply(false,'used')}
+  var A=ATTR_BY_ID[sq.a];
+  if(d.pick!=null&&isPick(A)&&talking){
+    var act=actualItem(tp.stats,A);
+    if(+d.pick!==act)return reply(false,'checkpick'); // that's not what they said → listen again (no penalty)
+    if(act!==sq.i){ // heard right, but it isn't the card's answer → counts as a NO
+      var tr=talkTry(p,t,d.sq);if(tr){p.st=p.st||{};p.st.asked=(p.st.asked||0)+1;p.st.no=(p.st.no||0)+1;tp.st=tp.st||{};tp.st.answered=(tp.st.answered||0)+1}
+      p.noFrom=p.noFrom||{};var nf=p.noFrom[d.sq]=p.noFrom[d.sq]||[];if(nf.indexOf(t)<0)nf.push(t);
+      reply(false,'notmatch',{heard:pickLabel(A,A.items[act])});if(tr)afterTurn(p);saveGame();return}
+  }
   var ok=matches(tp.stats,sq.a,sq.i);
   if(ok&&sq.info)ok=(+d.ans===answerOf(tp.stats,sq.a,sq.i));
   if(!ok){var numWrong=sq.info&&matches(tp.stats,sq.a,sq.i);return reply(false,numWrong?'wrongnum':'checkagain')}
@@ -1621,7 +1647,7 @@ function ruleSteps(){
   return [
     ['🍡','Get your mochi','Tap your tablet. Your <b>number</b> is your name in this game.','タブレットをタップしてもちをもらう。番号がこのゲームでの名前。'],
     ['🔍','Find your partner','Your tablet says <b>"Find #12!"</b> — #12 is looking for you too. <b>"Are you number 12?"</b> Found them? You <b>both</b> tap <b>🤝 FOUND</b>.','「#12を探せ！」相手もあなたを探している。見つけたら2人とも「🤝 FOUND」を押す。'],
-    ['💬','Take turns','<b>🗣️ Asker:</b> tap a square and ask the question on your screen. <b>👂 Answerer:</b> your screen shows your answer — say it! YES → tap <b>✓ YES</b>, NO → tap <b>✗ NO</b>, then switch. Up to <b>3 questions each</b> — a YES ends your asking.','聞く人：マスを押して画面の質問をする。答える人：画面に出る答えを言う。はい→「✓ YES」、いいえ→「✗ NO」、そして交代。1人3問まで。'],
+    ['💬','Take turns','<b>🗣️ Asker:</b> tap a square and ask the question on your screen. <b>👂 Answerer:</b> your screen shows your answer — say it! YES → tap <b>✓ YES</b>, NO → tap <b>✗ NO</b>. What / Where / When questions: tap <b>what you heard</b>. Then switch. Up to <b>3 questions each</b> — a YES ends your asking.','聞く人：マスを押して画面の質問をする。答える人：画面に出る答えを言う。はい→「✓ YES」、いいえ→「✗ NO」。What/Where/Whenの質問は聞いた答えを選ぶ。そして交代。1人3問まで。'],
     ['⏭️','Next partner','When you are both done, tap <b>👍 NEXT</b>. Your tablet finds your next partner. <b>"Looking for a mochi…"</b> = wait a moment.','2人とも終わったら「👍 NEXT」を押す。次の相手が出る。「Looking…」は少し待とう。'],
     settings.unique?['👥','One classmate per square','Use a <b>different</b> person for every square. You meet each classmate <b>once</b> — later your tablet may let you meet again.','1マスに1人ずつ。同じ人とは1回だけ（あとでまた会えるかも）。']
                    :['👥','Meet everyone','You meet each classmate <b>once</b> — later your tablet may let you meet again.','同じ人とは1回だけ（あとでまた会えるかも）。'],

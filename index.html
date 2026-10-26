@@ -192,6 +192,12 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
 #ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:40;background:rgba(18,10,38,.86);text-align:center}
 #ov.on{display:flex}
 .lock1{font-weight:800;font-size:14px;color:var(--yellow);text-align:right;line-height:1.1}.lock1 small{display:block;font-size:11px;color:var(--dim);font-weight:500}
+.picks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pk{display:flex;align-items:center;gap:8px;justify-content:center;font-weight:800;font-size:clamp(20px,3.4vw,28px);background:var(--panel2);border:3px solid var(--line);border-radius:14px;padding:10px 8px;color:var(--text)}
+.pk span{font-size:1.1em}
+.pk.on{border-color:var(--yellow);background:rgba(255,210,63,.18);box-shadow:0 0 0 4px rgba(255,210,63,.35),0 0 22px rgba(255,210,63,.55)}
+.ans button.on{box-shadow:0 0 0 3px rgba(255,210,63,.4),0 0 16px rgba(255,210,63,.5)}
+.ans-a.yes,.ans-a.no{border-color:var(--yellow);background:rgba(255,210,63,.07)}
 .rulesfab{position:fixed;left:12px;bottom:12px;z-index:30;background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:8px 14px;font-weight:800;font-size:16px;color:var(--text)}
 .bw{display:flex;gap:4px;font-family:var(--disp);font-weight:800;font-size:clamp(64px,16vw,130px);line-height:1}
 .bw span{display:inline-block;animation:letter .6s cubic-bezier(.3,1.8,.5,1) both;text-shadow:0 6px 0 rgba(0,0,0,.4)}
@@ -371,6 +377,7 @@ function initAbly(){
     _ch.subscribe('you',function(m){if(m.data.did===did){joined=true;probeWait=false;onYou(m.data)}});
     _ch.subscribe('probe-reply',function(m){if(m.data.did===did){try{sessionStorage.removeItem('mb_num')}catch(e){}probe=m.data;probeWait=false;if(m.data.lost){joined=false;me=null}render()}});
     _ch.subscribe('claim-result',function(m){if(m.data.did===did)onClaimResult(m.data)});
+    _ch.subscribe('no-result',function(m){if(m.data.did===did)onNoResult(m.data)});
     _ch.subscribe('kick',function(m){if(m.data.did===did){try{sessionStorage.removeItem('mb_num')}catch(e){}joined=false;me=null;probe=null;closeSheet();render()}});
     _ch.subscribe('notice',function(m){if(m.data.did==='*'&&m.data.kind==='reuse-all'&&me){me.reuse=true;render();notice('🔓','Teacher: everyone can ask classmates again!','先生より：同じ人にもう一度聞いてもOK！')}
       if(m.data.did===did&&m.data.kind==='reuse'){if(me)me.reuse=true;render();notice('🔓','You can meet your classmates one more time!','同じ人ともう1回会えるよ！ビンゴを目指そう')}
@@ -415,6 +422,7 @@ function onYou(d){
     else if(m.s==='bye'&&old.s!=='bye'){closeSheet()}
   }
   if(sheetSq!=null&&!_claimWait&&!(m.s==='talk'&&m.turn===d.n&&!m.done))closeSheet(); // not your turn any more
+  if(sheetSq!=null&&!_claimWait&&m.s==='talk'&&m.turn===d.n)setTimeout(renderSheet,0); // e.g. the answer choices just arrived
   if(sheetSq==null&&m.s==='talk'&&m.turn===d.n&&!m.done&&m.asking!=null&&d.phase==='play')setTimeout(function(){if(sheetSq==null&&committed()!=null)openSheet(committed())},0);
   if(d.phase!==(st&&st.phase)&&st)st.phase=d.phase;
   if(m.s==='match'&&old&&old.s!=='match')tab='card';
@@ -442,11 +450,13 @@ function onClaimResult(d){
     if(d.newLine)showBingo(d.place);
     else if(d.unlocked&&!wasReuse)notice('🔓','You can ask classmates again!','もう一度同じ人に聞いてもOK！ビンゴを目指そう');
   }else{
-    var why={wrongnum:['🔁 Check again! Ask the number one more time.','もう一度確認しよう！数字をもう一度聞こう'],checkagain:['🔁 Check again! Did they say YES?','もう一度確認しよう！本当に「はい」？'],nomatch:['✗ Not a match! Check and ask again.','違うみたい。もう一度聞こう！'],used:['You already used #'+entryNum+' for a square!','その人はもう使った。'],
+    var why={checkpick:['🔁 Check again! Listen to #'+mmv().p+' one more time.','もう一度よく聞こう！'],notmatch:['✗ Not a match — #'+mmv().p+' said: '+(d.heard||''),'ちがいました（'+(d.heard||'')+'）'],wrongnum:['🔁 Check again! Ask the number one more time.','もう一度確認しよう！数字をもう一度聞こう'],checkagain:['🔁 Check again! Did they say YES?','もう一度確認しよう！本当に「はい」？'],nomatch:['✗ Not a match! Check and ask again.','違うみたい。もう一度聞こう！'],used:['You already used #'+entryNum+' for a square!','その人はもう使った。'],
       self:["That's you! Find a classmate.",'それは自分の番号！'],nobody:['There is no #'+entryNum+' in this game.',entryNum+'番はいません。'],
       locked:['Wait a moment…','少し待って…'],notturn:['Wait — it\'s #'+(mmv().p)+'\'s turn to ask.','相手の番です。'],done:['Already done!','もう完了！'],closed:['The game is not running.','ゲーム中ではありません。']}[d.reason]||['Try again','もう一度'];
     sheetMsg=why[0]+'<br><span class="jp" style="font-weight:500">'+why[1]+'</span>';sheetBad=true;
-    if(d.reason==='wrongnum'||d.reason==='checkagain'){tSfxNo();if(d.reason==='wrongnum')entryAns=null;renderSheet();checkAgain(why)}
+    if(d.reason==='checkpick'){tSfxNo();_pick=null;entryAns=null;renderSheet();checkAgain(why)}
+    else if(d.reason==='wrongnum'||d.reason==='checkagain'){tSfxNo();if(d.reason==='wrongnum')entryAns=null;renderSheet();checkAgain(why)}
+    else if(d.reason==='notmatch'){tSfxNo();closeSheet();render();notice('✗','Not a match — #'+mmv().p+' said: '+escHTML(d.heard||''),'ちがいました · 次は相手の番')}
     else if(d.reason==='nomatch'){tSfxNo();closeSheet();render();toast(sheetMsg)}else{tSfxNo();renderSheet();var s=$('sh');s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake')}
   }
 }
@@ -511,7 +521,7 @@ function ruleSteps(){
   return [
     ['🍡','Get your mochi','Your <b>number</b> is your name in this game.','番号がこのゲームでの名前。'],
     ['🔍','Find your partner','Your tablet says <b>"Find #12!"</b> — #12 is looking for you too. <b>"Are you number 12?"</b> Found them? You <b>both</b> tap <b>🤝 FOUND</b>.','「#12を探せ！」相手もあなたを探している。見つけたら2人とも「🤝 FOUND」を押す。'],
-    ['💬','Take turns','<b>🗣️ Asker:</b> tap a square and ask the question on your screen. <b>👂 Answerer:</b> your screen shows your answer — say it! YES → tap <b>✓ YES</b>, NO → tap <b>✗ NO</b>, then switch. Up to <b>3 questions each</b> — a YES ends your asking.','聞く人：マスを押して画面の質問をする。答える人：画面に出る答えを言う。はい→「✓ YES」、いいえ→「✗ NO」、そして交代。1人3問まで。'],
+    ['💬','Take turns','<b>🗣️ Asker:</b> tap a square and ask the question on your screen. <b>👂 Answerer:</b> your screen shows your answer — say it! YES → tap <b>✓ YES</b>, NO → tap <b>✗ NO</b>. What / Where / When questions: tap <b>what you heard</b>. Then switch. Up to <b>3 questions each</b> — a YES ends your asking.','聞く人：マスを押して画面の質問をする。答える人：画面に出る答えを言う。はい→「✓ YES」、いいえ→「✗ NO」。What/Where/Whenの質問は聞いた答えを選ぶ。そして交代。1人3問まで。'],
     ['⏭️','Next partner','When you are both done, tap <b>👍 NEXT</b>. Your tablet finds your next partner. <b>"Looking for a mochi…"</b> = wait a moment.','2人とも終わったら「👍 NEXT」を押す。次の相手が出る。「Looking…」は少し待とう。'],
     uq?['👥','One classmate per square','Use a <b>different</b> person for every square. You meet each classmate <b>once</b> — later your tablet may let you meet again.','1マスに1人ずつ。同じ人とは1回だけ（あとでまた会えるかも）。']
       :['👥','Meet everyone','You meet each classmate <b>once</b> — later your tablet may let you meet again.','同じ人とは1回だけ（あとでまた会えるかも）。'],
@@ -681,7 +691,7 @@ function openSheet(i){
   var m=mmv();if(m.s==='talk'&&((m.asked||[]).indexOf(i)>=0||m.turn!==me.n||m.done))return;
   if(m.s==='match'||m.s==='bye')return;
   var c=committed();if(c!=null&&c!==i){i=c;q=me.card[i]} // you picked a square — you must ask that one
-  sheetSq=i;entryAns=null;sheetMsg='';sheetBad=false;
+  sheetSq=i;entryAns=null;_pick=null;sheetMsg='';sheetBad=false;
   $('sheet').classList.add('on');renderSheet();
   if(canAsk())sendAsking(i);
 }
@@ -705,23 +715,47 @@ function renderSheet(){
   h+='</div><div>';
   if(live)h+='<div class="partner"><div class="mw">'+mascotSVG(m.p)+'</div><div>Ask <b>#'+m.p+'</b><div class="lbl2" style="margin:0">'+m.p+'番に聞こう · try '+(m.tries+1)+' / '+(m.max||3)+'</div></div></div>';
   else h+='<div class="partner" style="border-color:var(--line)"><div>'+(m.s==='talk'?'✓ Your turn is done. 自分の番は終わり':'👀 Find your partner and tap <b style="font-size:inherit">FOUND</b> first!<br><span class="lbl2">まず相手を見つけて「FOUND」を押そう</span>')+'</div></div>';
-  if(q.info&&live){
-    h+='<div class="lbl2" style="margin-top:10px">Their answer · 相手の答え ('+escHTML(q.unit)+')</div><div class="ans">';
+  if(q.pick&&live){ // listen & pick: tap what you heard, it glows, then CONFIRM
+    h+='<div class="lbl2" style="margin-top:10px">👂 What did #'+m.p+' say? · 相手の答えは？</div>';
+    if(!m.choices)h+='<div class="lbl2">…</div>';
+    else h+='<div class="picks">'+m.choices.map(function(c){return '<button class="pk'+(_pick===c.i?' on':'')+'" onclick="choosePick('+c.i+')"><span>'+c.e+'</span>'+escHTML(c.label)+'</button>'}).join('')+'</div>';
+  }
+  if(q.info&&live&&(!q.pick||_pick===q.target)){
+    h+='<div class="lbl2" style="margin-top:10px">'+(q.pick?'② ':'')+'Their answer · 相手の答え ('+escHTML(q.unit)+')</div><div class="ans">';
     for(var v=q.min;v<=q.max;v++)h+='<button class="'+(entryAns===v?'on':'')+'" onclick="pickAns('+v+')">'+v+'</button>';
     h+='</div>';
   }
   h+='</div>';
   var ready=live&&(!q.info||entryAns!=null)&&!_claimWait;
+  if(q.pick){var needNum=q.info&&_pick===q.target,okp=live&&_pick!=null&&(!needNum||entryAns!=null)&&!_claimWait;
+    h+='<div class="full"><div class="fb'+(sheetBad?' bad':'')+'">'+sheetMsg+'</div><div class="ynrow"><button class="big-btn claim" '+(okp?'':'disabled')+' onclick="doPick()">'+(_claimWait?'…':'✓ CONFIRM <small>決定</small>')+'</button></div></div>';
+    $('sh').innerHTML=h;return}
   h+='<div class="full"><div class="fb'+(sheetBad?' bad':'')+'">'+sheetMsg+'</div><div class="ynrow"><button class="big-btn nobtn" '+(live&&!_claimWait?'':'disabled')+' onclick="doNo()">✗ NO <small>いいえ</small></button><button class="big-btn claim" '+(ready?'':'disabled')+' onclick="doClaim()">'+(_claimWait?'…':'✓ YES <small>はい</small>')+'</button></div></div>';
   $('sh').innerHTML=h;
 }
 function pickAns(v){entryAns=v;sheetMsg='';sheetBad=false;renderSheet()}
+var _pick=null;
+function choosePick(i){_pick=i;if(!(me.card[sheetSq].info&&i===me.card[sheetSq].target))entryAns=null;sheetMsg='';sheetBad=false;renderSheet()}
+function doPick(){
+  if(!canAsk()||_claimWait||_pick==null)return;
+  _claimWait=true;renderSheet();
+  pub('claim',{did:did,gameId:me.gameId,sq:sheetSq,target:mmv().p,pick:_pick,ans:entryAns});
+  setTimeout(function(){if(_claimWait){_claimWait=false;sheetMsg='No reply — try again · もう一度';sheetBad=true;renderSheet()}},6000);
+}
 function doNo(){
   if(!canAsk()||sheetSq==null||!me)return;
   var m=mmv(),n=m.p,sq=sheetSq;
+  // wait for the big screen: it knows the partner's real answer, so a mis-tapped NO becomes "Check again!"
+  _claimWait=true;renderSheet();
   pub('no',{did:did,gameId:me.gameId,sq:sq,target:n});_pend.no={sq:sq,n:n,tries:m.tries||0,at:m.at};
-  m.tries=(m.tries||0)+1;m.asked=(m.asked||[]).concat([sq]);m.turn=n; // switch now; the projector confirms
-  closeSheet();tSfxNo();render();
+  clearTimeout(_noT);_noT=setTimeout(function(){if(_claimWait){_claimWait=false;sheetMsg='No reply — try again · もう一度';sheetBad=true;renderSheet()}},6000);
+}
+var _noT=null;
+function onNoResult(d){
+  if(!me||sheetSq==null||d.sq!==sheetSq)return;
+  _claimWait=false;_pend.no=null;clearTimeout(_noT);
+  if(d.ok){var m=mmv();m.tries=(m.tries||0)+1;m.asked=(m.asked||[]).concat([d.sq]);m.turn=m.p;closeSheet();tSfxNo();render();return}
+  tSfxNo();renderSheet();checkAgain(['🔁 Check again! Did they really say NO?','もう一度確認しよう！本当に「いいえ」？']);
 }
 function doClaim(){
   if(!canAsk()||_claimWait)return;
