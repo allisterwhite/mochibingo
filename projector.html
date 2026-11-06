@@ -141,6 +141,14 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
 .mcard button{background:rgba(0,0,0,.3);border:2px solid var(--line);border-radius:10px;padding:4px 7px;font-size:13px;font-weight:800}
 .mcard button:hover{border-color:var(--yellow)}
 .mcard.alertc{border-color:var(--pink)}
+.apbtn{background:none;border:0;color:var(--dim);opacity:.35;font-size:12px;padding:2px 6px;margin-left:6px;border-radius:8px;cursor:pointer;vertical-align:middle}
+.apbtn:hover,.apbtn.on{opacity:.8}.apbtn.on{outline:1px dashed var(--dim)}
+.apbtn sup{font-size:9px;margin-left:1px}
+.apbar{grid-column:1/-1;display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px;color:var(--dim);opacity:.75;margin-left:6px;font-family:var(--body);font-weight:600}
+.apbar span{background:rgba(0,0,0,.25);border-radius:8px;padding:1px 6px}
+.apbar b{margin-left:4px;cursor:pointer}
+.apsel{outline:2px dashed var(--dim);outline-offset:2px}
+#mgrBox .mrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));justify-content:stretch}
 #slam .roll{font-size:min(30vw,260px);animation:shake .12s infinite}
 @keyframes shake{0%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}100%{transform:rotate(-4deg)}}
 /* credits */
@@ -1617,7 +1625,7 @@ function canMatchAll(card,others){ // bipartite matching: every square gets a di
   return true;
 }
 function buildCard(me){
-  var others=playerList().filter(function(p){return p!==me&&p.stats});
+  var others=playerList().filter(function(p){return p!==me&&p.stats&&!isApart(me,p)});
   var size=settings.size,N=size*size;
   var freeIdx=(settings.free&&size%2===1)?Math.floor(N/2):-1;
   var need=N-(freeIdx>=0?1:0);
@@ -1692,7 +1700,7 @@ function winnableLines(card,marks,others){
 }
 function unusedOthers(p){
   var used={};for(var k in p.marks)if(p.marks[k].t!=null)used[p.marks[k].t]=1;
-  return playerList().filter(function(o){return o!==p&&o.stats&&!used[o.n]});
+  return playerList().filter(function(o){return o!==p&&o.stats&&!used[o.n]&&!isApart(p,o)});
 }
 function lineOpen(p){return allLineIds().some(function(id){return !lineCells(id).every(function(x){return p.marks[x]})})}
 // no line can be finished with classmates you haven't used yet → flag it for the teacher (the 🔓 button counts them); no automatic unlock
@@ -1721,6 +1729,7 @@ function partnerOf(p){var m=p.mm;if(!m||m.p==null)return null;var q=byNum(m.p);r
 function playing(p){return p.on!==false&&p.stats&&p.card&&p.card.length}
 function canMeet(a,b){
   if(a===b||!playing(b))return false;
+  if(isApart(a,b))return false;                              // teacher keeps these two apart
   if(a.avoid===b.n||b.avoid===a.n)return false;              // just failed to find each other
   var c=metCount(a,b);
   if(c<Math.min(a.round||1,b.round||1))return true; // BOTH must be cleared to meet again (one more meeting per clearance)
@@ -2156,7 +2165,7 @@ function saveGame(){
   _svT=setTimeout(function(){_svT=null;
     try{
       if(phase==='setup'||phase==='end'){localStorage.removeItem('mb_save');return}
-      localStorage.setItem('mb_save',JSON.stringify({t:Date.now(),players:players,phase:phase,gameId:gameId,left:timeLeft(),paused:pausedLeft!=null,bingoOrder:bingoOrder,foundCount:foundCount,settings:settings,customQs:customQs,customPacks:customPacks,allReuse:allReuse}));
+      localStorage.setItem('mb_save',JSON.stringify({t:Date.now(),players:players,phase:phase,gameId:gameId,left:timeLeft(),paused:pausedLeft!=null,bingoOrder:bingoOrder,foundCount:foundCount,settings:settings,customQs:customQs,customPacks:customPacks,allReuse:allReuse,apart:apart}));
     }catch(e){}
   },400);
 }
@@ -2169,7 +2178,7 @@ function resumeGame(){
   (s.customQs||[]).forEach(function(d){if(!customQs.some(function(x){return x.id===d.id}))customQs.push(d)});
   (s.customPacks||[]).forEach(function(d){if(!customPacks.some(function(x){return x.id===d.id}))customPacks.push(d)});
   rebuildAttrs();
-  players=s.players;settings=s.settings;gameId=s.gameId;allReuse=!!s.allReuse;bingoOrder=s.bingoOrder||[];foundCount=s.foundCount||{};
+  players=s.players;settings=s.settings;gameId=s.gameId;allReuse=!!s.allReuse;if(s.apart)apart=s.apart;saveApart();bingoOrder=s.bingoOrder||[];foundCount=s.foundCount||{};
   phase=s.phase;if(phase==='rules'){phase='rules';setTimeout(startPlay,500)}
   if(phase==='play'){if(s.left==null){endsAt=0;pausedLeft=null}else{pausedLeft=s.left;endsAt=0}} // resume paused
   playerList().forEach(function(p){p.on=false;p.lastSeen=0;setLook(p)});lostAlerts=[];
@@ -2274,9 +2283,9 @@ function setOpt(k,v){settings[k]=v;if(k==='size'&&v%2===0)settings.free=false;sa
 function renderLobby(){
   var ps=playerList().sort(function(a,b){return a.n-b.n});
   $('lobbyGrid').innerHTML=ps.map(function(p){
-    return '<div class="lob'+(p.on?'':' off')+'"><div class="mw">'+mascotSVG(p.n)+'</div><button class="x" title="Remove" onclick="removePlayer(\''+p.did+'\')">✕</button></div>';
+    return '<div class="lob'+(p.on?'':' off')+(_apartMode&&_apartSel===p.did?' apsel':'')+'"'+(_apartMode?' onclick="apartTap(\''+p.did+'\')" style="cursor:pointer"':'')+'><div class="mw">'+mascotSVG(p.n)+'</div><button class="x" title="Remove" onclick="removePlayer(\''+p.did+'\')">✕</button></div>';
   }).join('')||'<div class="note" style="grid-column:1/-1;text-align:center;padding:30px">Waiting for tablets… 待機中</div>';
-  $('lobbyCount').textContent=ps.length+' joined · 参加中';
+  $('lobbyCount').innerHTML=ps.length+' joined · 参加中'+apartBtn()+apartBar();
   var need=squaresNeeded(),have=enabledAttrs().length;
   var mp=minPlayers(),ok=ps.length>=mp&&have>=need;
   $('startBtn').disabled=!ok;
@@ -2673,7 +2682,7 @@ function sfxFanfare(level){ // 1 = winner
 function toggleMusic(){_musicOn=!_musicOn;if(MUS.gain&&_ac){var g=MUS.gain.gain,t=_ac.currentTime;g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);g.linearRampToValueAtTime(_musicOn?1.0:0,t+0.25)}$('musicBtn').textContent=_musicOn?'🔊 Music: ON':'🔇 Music: OFF';updateMusic();if(phase!=='setup')renderCtrl()}
 
 // ── FAIL-SAFE: every square on every card must have a mochi (other than you) who matches it ──
-function holders(p,sq){return playerList().filter(function(o){return o!==p&&o.stats&&matches(o.stats,sq.a,sq.i)})}
+function holders(p,sq){return playerList().filter(function(o){return o!==p&&o.stats&&!isApart(p,o)&&matches(o.stats,sq.a,sq.i)})}
 function onCard(p,a,i){return p.card.some(function(s){return !s.free&&s.a===a&&s.i===i})}
 function pickReplacement(p,old){
   var c=[];
@@ -2688,7 +2697,7 @@ function pickReplacement(p,old){
 function uniquePossible(p){ // remaining squares, each to a classmate not already used
   var used={};for(var k in p.marks)if(p.marks[k].t!=null)used[p.marks[k].t]=1;
   var rest=p.card.filter(function(s,i){return !s.free&&!p.marks[i]});
-  var others=playerList().filter(function(o){return o!==p&&o.stats&&!used[o.n]});
+  var others=playerList().filter(function(o){return o!==p&&o.stats&&!used[o.n]&&!isApart(p,o)});
   return canMatchAll(rest,others);
 }
 var _repairLog=[];
@@ -2723,6 +2732,35 @@ function auditCards(){
   return bad;
 }
 
+// ── KEEP APART (teacher only, deliberately low-key): pairs of mochis the match-maker never puts together ──
+// Stored by tablet id (did), so a pair survives a re-rolled number or a reload. Kept 3 h (one lesson), then forgotten.
+var apart=[],_apartMode=false,_apartSel=null;
+(function(){try{var a=JSON.parse(localStorage.getItem('mb_apart')||'null');if(a&&Date.now()-a.t<3*3600e3)apart=a.pairs||[]}catch(e){}})();
+function saveApart(){try{localStorage.setItem('mb_apart',JSON.stringify({t:Date.now(),pairs:apart}))}catch(e){}}
+function isApart(a,b){if(!a||!b||!apart.length)return false;for(var i=0;i<apart.length;i++){var x=apart[i];if((x[0]===a.did&&x[1]===b.did)||(x[0]===b.did&&x[1]===a.did))return true}return false}
+function apartBtn(){return '<button class="apbtn'+(_apartMode?' on':'')+'" title="Keep two mochis apart" onclick="event.stopPropagation();toggleApart()">✕'+(apart.length?'<sup>'+apart.length+'</sup>':'')+'</button>'}
+function apartNum(did){var p=players[did];return p?'#'+p.n:'—'}
+function apartBar(){
+  if(!_apartMode)return '';
+  return '<div class="apbar">'+(_apartSel?'+ ? ':'tap 2 · ')+apart.map(function(x,i){return '<span>'+apartNum(x[0])+'·'+apartNum(x[1])+'<b onclick="event.stopPropagation();removeApart('+i+')">✕</b></span>'}).join('')+'</div>';
+}
+function toggleApart(){_apartMode=!_apartMode;_apartSel=null;rerenderApart()}
+function rerenderApart(){if(phase==='setup')renderLobby();if($('mgr').classList.contains('on'))renderMgr()}
+function apartTap(did){
+  if(!_apartMode||!players[did])return false;
+  if(!_apartSel){_apartSel=did}
+  else if(_apartSel===did){_apartSel=null}
+  else{var a=players[_apartSel],b=players[did];if(!isApart(a,b)){apart.push([a.did,b.did]);saveApart();applyApart(a,b)}_apartSel=null}
+  rerenderApart();return true;
+}
+function removeApart(i){apart.splice(i,1);saveApart();rerenderApart();if(phase==='play')matchmake()}
+// a new pair during the game: un-match them if they're only FINDING each other (a talk already going finishes normally),
+// then quietly swap any square that only the other one could answer
+function applyApart(a,b){
+  if(phase!=='rules'&&phase!=='play')return;
+  if(phase==='play'&&a.mm&&b.mm&&a.mm.s==='match'&&a.mm.p===b.n&&b.mm.p===a.n){clearLost(a.n,b.n);setLook(a);setLook(b);sendYou(a);sendYou(b)}
+  repairCards(true);saveGame();if(phase==='play'){matchmake();renderMM()}
+}
 // ── MOCHI MANAGER (during the game) ──
 function openMgr(){$('mgr').classList.add('on');renderMgr()}
 function closeMgr(){$('mgr').classList.remove('on')}
@@ -2738,10 +2776,10 @@ function mgrStatus(p){
 }
 function renderMgr(){
   var ps=playerList().sort(function(a,b){return a.n-b.n}),play=phase==='play';
-  $('mgrBox').innerHTML='<h2>👥 Mochis <small class="jp" style="font-size:14px">'+ps.length+' in the game'+(play?' · '+(function(c){return '💬 '+(c.talk/2|0)+' talking · 🔍 '+(c.match/2|0)+' finding · ⏳ '+c.look+' waiting'})(mmCounts()):'')+'</small><button class="x" onclick="closeMgr()">✕</button></h2>'+
+  $('mgrBox').innerHTML='<h2>👥 Mochis <small class="jp" style="font-size:14px">'+ps.length+' in the game'+(play?' · '+(function(c){return '💬 '+(c.talk/2|0)+' talking · 🔍 '+(c.match/2|0)+' finding · ⏳ '+c.look+' waiting'})(mmCounts()):'')+'</small>'+apartBtn()+'<button class="x" onclick="closeMgr()">✕</button></h2>'+apartBar()+
     '<div class="note" style="grid-column:1/-1">🔄 Rematch = send a mochi (and its partner) back to look for someone new. ✕ = remove a mochi whose student has left — squares only that mochi could answer are swapped automatically.<br>🔄 再マッチ：相手を変える。✕：いなくなった生徒のもちを外す（そのもちしか答えられないマスは自動で入れ替わります）。</div>'+
     '<div class="mrow">'+ps.map(function(p){var st=mgrStatus(p),busy=play&&p.on&&p.mm&&p.mm.s!=='look',al=play&&p.mm&&p.mm.s==='match'&&(p.mm.lost||(partnerOf(p)&&partnerOf(p).mm.lost));
-      return '<div class="mcard'+(p.on?'':' off')+(al?' alertc':'')+'"><div class="mw">'+mascotSVG(p.n)+'</div><div class="ms">'+st[0]+'<small>'+st[1]+'</small></div>'+
+      return '<div class="mcard'+(p.on?'':' off')+(al?' alertc':'')+(_apartMode&&_apartSel===p.did?' apsel':'')+'"'+(_apartMode?' onclick="apartTap(\''+p.did+'\')" style="cursor:pointer"':'')+'><div class="mw">'+mascotSVG(p.n)+'</div><div class="ms">'+st[0]+'<small>'+st[1]+'</small></div>'+
         (busy?'<button title="Rematch" onclick="rematch('+p.n+')">🔄</button>':'')+'<button title="Remove" onclick="mgrRemove(\''+p.did+'\')">✕</button></div>'}).join('')+'</div>';
 }
 setInterval(function(){if(phase==='play'&&$('mgr').classList.contains('on'))renderMgr()},2000);
