@@ -62,6 +62,35 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
 .ghdr .myq{flex:1;min-width:420px;margin:0}
 .packgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:10px;align-items:start}
 .packgrid .pack{margin:0}
+#packList.packgrid{grid-template-columns:repeat(auto-fill,minmax(300px,1fr));align-items:stretch}
+.gcat{border:2px solid var(--line);border-radius:16px;padding:12px 14px;background:rgba(0,0,0,.15);cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:border-color .15s,background .15s}
+.gcat:hover{border-color:var(--yellow)}
+.gcat.on{border-color:var(--green);background:rgba(61,220,151,.12)}
+.gcat.locked{opacity:.4}
+.gcat.mine{border-style:dashed}
+.gc-h{display:flex;align-items:center;gap:10px}
+.gc-h .ge{font-size:30px}
+.gc-h .gn{flex:1;font-family:var(--disp);font-size:19px;font-weight:800;line-height:1.15}
+.gc-h .gn small{display:block;font-family:var(--body);font-size:14px;color:var(--dim);font-weight:700;margin-top:2px}
+.gc-h .gtick{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--green);flex-shrink:0}
+.gcat.on .gtick{border-color:var(--green);background:rgba(61,220,151,.2)}
+.gex{font-weight:800;font-size:16px;line-height:1.3}
+.gexj{font-size:13px;color:var(--dim)}
+.gq{align-self:flex-start;margin-top:auto;background:var(--panel2);border:2px solid var(--line);border-radius:10px;padding:5px 10px;font-size:13px;font-weight:800;color:var(--text)}
+.gq:hover{border-color:var(--yellow)}
+.pq-ex{grid-column:1/-1;background:rgba(0,0,0,.2);border-radius:12px;padding:10px 14px;font-weight:800;font-size:18px}
+.pq-ex .jp{font-size:14px;color:var(--dim);font-weight:600;margin-top:2px}
+.pq-list{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:8px;max-height:62vh;overflow-y:auto}
+.pq-item{display:flex;align-items:center;gap:10px;text-align:left;background:var(--panel2);border:2px solid var(--line);border-radius:12px;padding:8px 10px;color:var(--dim2)}
+.pq-item.on{background:rgba(61,220,151,.14);border-color:var(--green);color:var(--text)}
+.pq-item.mine{border-style:dashed}
+.pq-item .e{font-size:24px}
+.pq-item .t{flex:1;display:flex;flex-direction:column;gap:1px}
+.pq-item .t b{font-size:15px}
+.pq-item .t small{font-size:12px;color:var(--dim)}
+.pq-item .t i{font-style:normal;font-size:11px;color:var(--dim)}
+.pq-item .tk{font-weight:900;color:var(--green);width:18px}
+.pq-item .ed{padding:2px 6px;border-radius:8px;background:rgba(0,0,0,.3)}
 .lvhead{grid-column:1/-1;font-family:var(--disp);font-size:20px;margin:8px 0 -2px;color:var(--yellow)}
 .lvhead small{font-family:var(--body);font-size:13px;color:var(--dim);margin-left:10px;font-weight:600}
 .gsum{margin-top:14px;padding:12px;border-radius:14px;background:rgba(0,0,0,.2);border:2px dashed var(--line);cursor:pointer;font-weight:800;line-height:1.5}
@@ -393,6 +422,8 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
         <div class="row" style="margin-bottom:10px"><span class="lbl">Card size</span><span id="sizeBtns" class="row"></span></div>
         <div class="row" style="margin-bottom:10px"><span class="lbl">Question help<br><small class="jp">質問のヒント</small></span><span id="helpBtns" class="row"></span></div>
         <div class="row" style="margin-bottom:10px"><span class="lbl">Answer help<br><small class="jp">答えのヒント</small></span><span id="ansBtns" class="row"></span></div>
+        <div class="row" style="margin-bottom:10px"><span class="lbl">Question 日本語<br><small class="jp">質問の和訳</small></span><span id="qJpBtns" class="row"></span></div>
+        <div class="row" style="margin-bottom:10px"><span class="lbl">Answer 日本語<br><small class="jp">答えの和訳</small></span><span id="aJpBtns" class="row"></span></div>
         <div class="row" style="margin-bottom:10px"><span class="lbl">How to win<br><small class="jp">勝ち方</small></span><span id="winBtns" class="row"></span></div>
         <div class="row" style="margin-bottom:6px"><span class="lbl">Timer<br><small class="jp">タイマー</small></span><span id="timerBox" class="row"></span></div>
         <div id="toggles"></div>
@@ -415,7 +446,7 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
   </div>
   <div class="tabpane full" id="tab-grammar">
     <div class="ghdr">
-      <div><h2>📚 Grammar <small>文法 · up to 3 grammar points, then pick the questions</small></h2><div class="note" id="attrCount" style="font-size:15px"></div></div>
+      <div><h2>📚 Grammar <small>文法 · tap up to 5 grammar points · 📋 to choose the questions</small></h2><div class="note" id="attrCount" style="font-size:15px"></div></div>
       <div class="myq">
         <div class="t">✏️ My questions<small>Make your own, or import a list · 自分で作る・読み込む</small></div>
         <button class="opt on" onclick="openEditor()">＋ New question</button>
@@ -445,6 +476,7 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
 </div>
 
 <div class="modal" id="qed" onclick="if(event.target===this)closeEditor()"><div class="mbox" id="qedBox"></div></div>
+<div class="modal" id="pq" onclick="if(event.target===this)closePackQs()"><div class="mbox" id="pqBox" style="grid-template-columns:1fr;width:min(1000px,100%)"></div></div>
 <div class="modal" id="mgr" onclick="if(event.target===this)closeMgr()"><div class="mbox" id="mgrBox" style="grid-template-columns:1fr"></div></div>
 <div id="demo"></div>
 <div id="pop"></div>
@@ -544,27 +576,36 @@ function sfxEnd(){[784,659,523,392].forEach(function(f,i){tone(f,i*.16,.35,'tria
 //        one = exactly one value
 // q = yes/no question for a square ([..] = target grammar); q2 = follow-up (info squares); open = open question
 var PACKS=[
-  {id:'basic',en:'Basics',jp:'基本',emoji:'🌱',lv:1},
-  {id:'past',en:'Past tense',jp:'過去形',emoji:'⏪',lv:1},
-  {id:'future',en:'Future',jp:'未来',emoji:'⏩',lv:1},
-  {id:'comp',en:'Comparatives (-er / more)',jp:'比較級',emoji:'📊',lv:1},
-  {id:'asas',en:'as ~ as',jp:'同等比較',emoji:'🟰',lv:1},
-  {id:'super',en:'Superlatives (the -est / most)',jp:'最上級',emoji:'🏆',lv:1},
-  {id:'inf',en:'want to / infinitives',jp:'不定詞',emoji:'🎯',lv:1},
-  {id:'gerund',en:'Gerunds (-ing)',jp:'動名詞',emoji:'🔁',lv:1},
-  {id:'must',en:'have to / should',jp:'義務 (have to)',emoji:'📋',lv:1},
-  {id:'perfect',en:'Present perfect',jp:'現在完了',emoji:'🧭',lv:2},
-  {id:'passive',en:'Passive voice',jp:'受け身',emoji:'📦',lv:2},
-  {id:'rel',en:'Relative pronouns (who / that)',jp:'関係代名詞',emoji:'🔗',lv:2},
-  {id:'ppc',en:'Present perfect continuous',jp:'現在完了進行形',emoji:'⏳',lv:2},
-  {id:'indq',en:'know how to / indirect questions',jp:'疑問詞+to・間接疑問文',emoji:'❓',lv:2},
-  {id:'let',en:'make / let / help + person + verb',jp:'使役動詞',emoji:'🎮',lv:2},
-  {id:'if',en:'If I were / had… would',jp:'仮定法過去',emoji:'💭',lv:2},
-  {id:'wish',en:'I wish',jp:'仮定法 (I wish)',emoji:'🌠',lv:2},
-  {id:'used',en:'used to',jp:'過去の習慣 (used to)',emoji:'🕰️',lv:3},
-  {id:'pastperf',en:'Past perfect',jp:'過去完了',emoji:'⏮️',lv:3}
+  // ex = textbook-style example ([..] = the grammar) · exj = its Japanese
+  {id:'basic',en:'Basics',jp:'基本（Do you / Can you）',emoji:'🌱',ex:'[Do] you [like] sushi? — Yes, I [do].',exj:'寿司は好き？ — うん、好き。'},
+  {id:'past',en:'Past tense',jp:'過去形',emoji:'⏪',ex:'I [went] to Kyoto last summer.',exj:'去年の夏、京都に行った。'},
+  {id:'future',en:'Future (will / be going to)',jp:'未来表現',emoji:'⏩',ex:"I'm [going to] visit my grandmother this weekend.",exj:'今週末、祖母を訪ねる予定だ。'},
+  {id:'comp',en:'Comparatives (-er / more)',jp:'比較級',emoji:'📊',ex:'Tom is [taller than] Ken.',exj:'トムはケンより背が高い。'},
+  {id:'asas',en:'as ~ as',jp:'同等比較',emoji:'🟰',ex:'My bag is [as heavy as] yours.',exj:'私のかばんはあなたのと同じくらい重い。'},
+  {id:'super',en:'Superlatives (the -est / most)',jp:'最上級',emoji:'🏆',ex:'Mt. Fuji is [the highest] mountain in Japan.',exj:'富士山は日本で一番高い山だ。'},
+  {id:'inf',en:'want to / infinitives',jp:'不定詞',emoji:'🎯',ex:'I [want to be] a doctor in the future.',exj:'私は将来、医者になりたい。'},
+  {id:'gerund',en:'Gerunds (-ing)',jp:'動名詞',emoji:'🔁',ex:'My hobby is [taking] pictures.',exj:'私の趣味は写真を撮ることだ。'},
+  {id:'must',en:'have to / should',jp:'助動詞（義務）',emoji:'📋',ex:'You [have to] finish your homework today.',exj:'今日中に宿題を終えなければならない。'},
+  {id:'perfect',en:'Present perfect',jp:'現在完了',emoji:'🧭',ex:'I [have been] to Okinawa twice.',exj:'私は沖縄に2回行ったことがある。'},
+  {id:'ppc',en:'Present perfect continuous',jp:'現在完了進行形',emoji:'⏳',ex:'I [have been studying] English for five years.',exj:'私は5年間ずっと英語を勉強している。'},
+  {id:'passive',en:'Passive voice',jp:'受動態',emoji:'📦',ex:'This book [will be read] by lots of people.',exj:'この本はたくさんの人に読まれるだろう。'},
+  {id:'part',en:'Participles',jp:'分詞',emoji:'🔥',ex:'We kept the fire [burning] all night.',exj:'私たちは一晩中火を燃やし続けた。'},
+  {id:'rel',en:'Relatives (who / which / whose)',jp:'関係詞',emoji:'🔗',ex:'This is the boy [who] hit a home run.',exj:'これがホームランを打った少年だ。'},
+  {id:'conj',en:'Conjunctions',jp:'接続詞',emoji:'🧩',ex:'I [wonder if] he is at home today.',exj:'彼は今日家にいるのかなあ。'},
+  {id:'neg',en:'Negatives',jp:'否定',emoji:'🚫',ex:"I [don't] know Spanish [at all].",exj:'私はスペイン語を全く知らない。'},
+  {id:'ques',en:'Questions (tags, How many / much / soon)',jp:'疑問文',emoji:'❔',ex:"You didn't call her last night, [did you]?",exj:'昨日の夜、彼女に電話しなかったよね？'},
+  {id:'indq',en:'Indirect questions / how to',jp:'間接疑問・疑問詞+to',emoji:'❓',ex:'Do you know [why he is] absent from school?',exj:'彼がなぜ学校を休んでいるか知っていますか。'},
+  {id:'excl',en:'Exclamations & imperatives',jp:'感嘆文・命令文',emoji:'❗',ex:'[How] beautiful this garden [is]!',exj:'この庭はなんて美しいのだろう！'},
+  {id:'it',en:'it / there (pronouns)',jp:'形式主語 it など',emoji:'🌀',ex:'[It took] me a week [to] learn how to swim.',exj:'泳ぎ方を覚えるのに1週間かかった。'},
+  {id:'prep',en:'Prepositions',jp:'前置詞',emoji:'📍',ex:'This bag is [made of] leather.',exj:'このかばんは革でできている。'},
+  {id:'let',en:'make / let / help + person + verb',jp:'使役動詞',emoji:'🎮',ex:'My mother [made] me clean my room.',exj:'母は私に部屋を掃除させた。'},
+  {id:'if',en:'If I were / had… would',jp:'仮定法過去',emoji:'💭',ex:'[If] I [were] a bird, I [would] fly to you.',exj:'もし私が鳥だったら、あなたのところへ飛んでいくのに。'},
+  {id:'wish',en:'I wish',jp:'仮定法（I wish）',emoji:'🌠',ex:'I [wish] I [could] speak French.',exj:'フランス語が話せたらいいのに。'},
+  {id:'used',en:'used to',jp:'過去の習慣（used to）',emoji:'🕰️',ex:'I [used to] live in Osaka.',exj:'私は以前大阪に住んでいた。'},
+  {id:'pastperf',en:'Past perfect',jp:'過去完了',emoji:'⏮️',ex:'When I got to the station, the train [had] already [left].',exj:'駅に着いた時、電車はもう出てしまっていた。'},
+  {id:'chat',en:'Colloquial expressions',jp:'口語表現',emoji:'💬',ex:"[What's up?] — [Nothing much.]",exj:'どうしたの？ — 別に何も。'},
+  {id:'idiom',en:'Idioms',jp:'イディオム・慣用表現',emoji:'🧠',ex:"I can't [put up with] his bad manners.",exj:'私は彼の行儀の悪さに我慢できない。'}
 ];
-var PACK_LEVELS={1:['Junior high 1–2 review','中学1・2年の復習'],2:['Junior high 3','中学3年'],3:['High school','高校']};
 function brk1(phrase){var p=phrase.split(' ');return '['+p[0]+']'+(p.length>1?' '+p.slice(1).join(' '):'')}
 function nplural(n,one,many){return n===1?one:many}
 var ATTRS=[
@@ -1363,6 +1404,699 @@ ATTRS=ATTRS.concat([
    cond:function(it){return 'had finished '+(it[3]?'their ':'')+it[0]+' before dinner'},condJp:function(it){return '昨日の夕食前に'+it[1]+'を終えていた'},
    q:function(it){return '[Had] you [finished] '+(it[3]?'your ':'')+it[0]+' before dinner yesterday?'},me:function(it){return 'I [had finished] '+(it[3]?'my ':'')+it[0]+' before dinner.'}},YHAD)
 ]);
+// ── EXPANSION 2 (Nov 2026, from the JTE's list): 9 more grammar points + extra questions for Passive / Relatives / Indirect questions ──
+// JP fields (all optional): qj(it) question · q2j(it) follow-up · oj open question · yj / nj short answers (string or fn) · aj(it,n) full answer · pj(it) Japanese under a pick choice
+function PLJ(s){return String(s).replace(/[\[\]]/g,'')}
+function J(o,j){for(var k in j)o[k]=j[k];return o}
+function yourToTheir(s){return String(s).replace(/\byour\b/g,'their').replace(/\byourself\b/g,'themselves')}
+function yourToMy(s){return String(s).replace(/\byour\b/g,'my').replace(/\byourself\b/g,'myself')}
+var YJSO='うん、そう。',NJSO='ううん、違う。';
+ATTRS=ATTRS.concat([
+  // ── PASSIVE (extra) ──
+  J(A({id:'p_interested',pack:'passive',type:'set',rate:.3,emoji:'🎻',title:'Are you interested in ___? (things)',
+   items:[['classical music','クラシック音楽','🎻'],['history','歴史','🏯'],['space','宇宙','🚀'],['fashion','ファッション','👗'],['robots','ロボット','🤖'],['cars','車','🚗']],
+   cond:function(it){return 'is interested in '+it[0]},condJp:function(it){return it[1]+'に興味がある'},
+   q:function(it){return '[Are] you [interested] in '+it[0]+'?'},me:function(it){return "I'm [interested] in "+it[0]+'.'}},YAM),
+   {qj:function(it){return it[1]+'に[興味がある]？'},yj:'うん、[興味がある]。',nj:'ううん、[興味はない]。'}),
+  J(A({id:'p_satisfied',pack:'passive',type:'set',rate:.3,emoji:'😌',title:'Are you satisfied with ___?',
+   items:[['your test results','テストの結果','💯'],['your lunch today','今日のお昼ご飯','🍱'],['your phone','スマホ','📱'],['your hairstyle','髪型','💇'],['your English','自分の英語','🔤'],['your room','部屋','🛏️']],
+   cond:function(it){return 'is satisfied with '+yourToTheir(it[0])},condJp:function(it){return it[1]+'に満足している'},
+   q:function(it){return '[Are] you [satisfied] with '+it[0]+'?'},me:function(it){return "I'm [satisfied] with "+yourToMy(it[0])+'.'}},YAM),
+   {qj:function(it){return it[1]+'に[満足してる]？'},yj:'うん、[満足してる]。',nj:'ううん、[満足してない]。'}),
+  J(A({id:'p_willbe',pack:'passive',type:'set',rate:.3,emoji:'📅',title:'Will you be ___ today?',
+   items:[['given homework','宿題を[出される]','📝'],['picked up by your parents','親に[迎えに来てもらう]','🚗'],['praised by a teacher','先生に[ほめられる]','👏'],['asked to help at home','家の手伝いを[頼まれる]','🧹'],['scolded by someone','誰かに[怒られる]','😤'],['taken to juku by car','車で塾に[送ってもらう]','✏️']],
+   cond:function(it){return 'will be '+yourToTheir(it[0])+' today'},condJp:function(it){return '今日'+PLJ(it[1])},
+   q:function(it){return '[Will] you [be '+it[0].split(' ')[0]+']'+it[0].slice(it[0].indexOf(' '))+' today?'},me:function(it){return "I'll [be "+it[0].split(' ')[0]+']'+yourToMy(it[0].slice(it[0].indexOf(' ')))+' today.'}},YWILL),
+   {qj:function(it){return '今日、'+it[1]+'？'},yj:'うん、[そうなると思う]。',nj:'ううん、[ならないと思う]。'}),
+
+  // ── RELATIVES (extra) ──
+  J({id:'r_country',pack:'rel',type:'one',emoji:'🌏',title:'What is a country whose food you like?',
+   items:[['Italy','イタリア','🍝'],['Korea','韓国','🥘'],['Thailand','タイ','🍜'],['India','インド','🍛'],['France','フランス','🥐'],['Mexico','メキシコ','🌮'],['China','中国','🥟'],['Vietnam','ベトナム','🍲']],
+   cond:function(it){return 'likes the food of '+it[0]},condJp:function(it){return it[1]+'の料理が好き'},
+   q:function(){return '[What] is a country [whose] food you like?'},me:function(it){return it[0]+' is a country [whose] food I like.'}},
+   {qj:function(){return '[料理が好きな]国はどこ？'},aj:function(it){return it[1]+'は私が[料理を好きな]国。'}}),
+  J({id:'r_sport',pack:'rel',type:'one',emoji:'🏅',title:"What is a sport that you're good at?",
+   items:[['soccer','サッカー','⚽'],['baseball','野球','⚾'],['tennis','テニス','🎾'],['swimming','水泳','🏊'],['basketball','バスケ','🏀'],['volleyball','バレー','🏐'],['table tennis','卓球','🏓'],['running','ランニング','🏃']],
+   cond:function(it){return 'is good at '+it[0]},condJp:function(it){return it[1]+'が得意'},
+   q:function(){return "[What] is a sport [that] you're good at?"},me:function(it){return cap(it[0])+" is a sport [that] I'm good at."}},
+   {qj:function(){return '[得意な]スポーツは何？'},aj:function(it){return it[1]+'は私が[得意な]スポーツ。'}}),
+
+  // ── INDIRECT QUESTIONS (extra) ──
+  J(A({id:'k_cost',pack:'indq',type:'set',rate:.3,emoji:'💴',title:'Do you know how much ___ costs?',
+   items:[['a shinkansen ticket to Tokyo','東京までの新幹線の切符','🚄'],['a ticket to Disneyland','ディズニーランドのチケット','🏰'],['a new phone','新しいスマホ','📱'],['a school uniform','制服','👔'],['a bike','自転車','🚲'],['a concert ticket','コンサートのチケット','🎫']],
+   cond:function(it){return 'knows how much '+it[0]+' costs'},condJp:function(it){return it[1]+'がいくらか知っている'},
+   q:function(it){return '[Do] you know [how much] '+it[0]+' [costs]?'},me:function(it){return 'I know [how much] '+it[0]+' [costs].'}},YDO),
+   {qj:function(it){return it[1]+'が[いくらか]知ってる？'},yj:'うん、[知ってる]。',nj:'ううん、[知らない]。'}),
+
+  // ── PARTICIPLES ──
+  J(A({id:'pt_keep',pack:'part',type:'set',rate:.3,emoji:'🔥',title:'Do you keep ___ running all night?',
+   items:[['the air conditioner','エアコン','❄️','running'],['the heater','暖房','🔥','running'],['a fan','扇風機','🌀','running'],['music','音楽','🎵','playing'],['the radio','ラジオ','📻','playing'],['a night light','常夜灯','💡','on']],
+   cond:function(it){return 'keeps '+it[0]+' '+it[3]+' all night'},condJp:function(it){return '一晩中'+it[1]+'をつけっぱなしにする'},
+   q:function(it){return '[Do] you [keep] '+it[0]+' ['+it[3]+'] all night?'},me:function(it){return 'I [keep] '+it[0]+' ['+it[3]+'] all night.'}},YDO),
+   {qj:function(it){return '一晩中'+it[1]+'を[つけっぱなしにする]？'},yj:'うん、[つけっぱなし]。',nj:'ううん、[消す]。'}),
+  J(A({id:'pt_kept',pack:'part',type:'set',rate:.3,emoji:'⏳',title:'Have you ever kept ___ waiting?',
+   items:[['a friend','友達','🤝'],['your mother','お母さん','👩'],['a teacher','先生','🧑‍🏫'],['your family','家族','👪'],['your coach','コーチ','📣'],['a bus driver','バスの運転手','🚌']],
+   cond:function(it){return 'has kept '+yourToTheir(it[0])+' waiting'},condJp:function(it){return it[1]+'を待たせたことがある'},
+   q:function(it){return '[Have] you ever [kept] '+it[0]+' [waiting]?'},me:function(it){return "I've [kept] "+yourToMy(it[0])+' [waiting].'}},YHAVE),
+   {qj:function(it){return it[1]+'を[待たせた]ことある？'},yj:'うん、[ある]。',nj:'ううん、[ない]。'}),
+  J(A({id:'pt_heard',pack:'part',type:'set',rate:.3,emoji:'👂',title:'Have you ever heard your name called ___?',
+   items:[['from behind','後ろから','🔙'],['in a dream','夢の中で','💭'],['at a station','駅で','🚉'],['on the radio','ラジオで','📻'],['in a store','お店で','🏪'],['in a hospital','病院で','🏥']],
+   cond:function(it){return 'has heard their name called '+it[0]},condJp:function(it){return it[1]+'名前を呼ばれたことがある'},
+   q:function(it){return '[Have] you ever [heard] your name [called] '+it[0]+'?'},me:function(it){return "I've [heard] my name [called] "+it[0]+'.'}},YHAVE),
+   {qj:function(it){return it[1]+'名前を[呼ばれる]のを聞いたことある？'},yj:'うん、[ある]。',nj:'ううん、[ない]。'}),
+  J(A({id:'pt_seen',pack:'part',type:'set',rate:.3,emoji:'👀',title:'Have you ever seen ___?',
+   items:[['a cat catching a mouse','猫がネズミを捕まえている','🐈','a cat','catching a mouse'],['a dog swimming','犬が泳いでいる','🐕','a dog','swimming'],['a bird building a nest','鳥が巣を作っている','🪺','a bird','building a nest'],['a fish jumping','魚が跳ねている','🐟','a fish','jumping'],['a monkey eating a banana','猿がバナナを食べている','🐒','a monkey','eating a banana'],['a horse running on a beach','馬が浜辺を走っている','🐴','a horse','running on a beach']],
+   cond:function(it){return 'has seen '+it[0]},condJp:function(it){return it[1]+'のを見たことがある'},
+   q:function(it){return '[Have] you ever [seen] '+it[3]+' '+brk1(it[4])+'?'},me:function(it){return "I've [seen] "+it[3]+' '+brk1(it[4])+'.'}},YHAVE),
+   {qj:function(it){return it[1].replace(/ている$/,'[ている]')+'のを見たことある？'},yj:'うん、[ある]。',nj:'ううん、[ない]。'}),
+  J(A({id:'pt_have',pack:'part',type:'set',rate:.3,emoji:'💇',title:'Did you have your ___ this month?',
+   items:[['hair cut','髪を切ってもらった','💇','hair','cut'],['photo taken','写真を撮ってもらった','📸','photo','taken'],['bike fixed','自転車を直してもらった','🚲','bike','fixed'],['eyes checked','目を検査してもらった','👁️','eyes','checked'],['teeth checked','歯を診てもらった','🦷','teeth','checked'],['phone repaired','スマホを修理してもらった','📱','phone','repaired']],
+   cond:function(it){return 'had their '+it[0]+' this month'},condJp:function(it){return '今月'+it[1]},
+   q:function(it){return '[Did] you [have] your '+it[3]+' ['+it[4]+'] this month?'},me:function(it){return 'I [had] my '+it[3]+' ['+it[4]+'] this month.'}},YDID),
+   {qj:function(it){return '今月'+it[1].replace(/てもらった$/,'[てもらった]')+'？'},yj:'うん、[してもらった]。',nj:'ううん、[してない]。'}),
+  J(A({id:'pt_left',pack:'part',type:'set',rate:.3,emoji:'🚰',title:'Have you ever left ___ running?',
+   items:[['the water','水','🚰'],['the bath water','お風呂のお湯','🛁'],['the TV','テレビ','📺'],['the air conditioner','エアコン','❄️'],['the shower','シャワー','🚿'],['a game','ゲーム','🎮']],
+   cond:function(it){return 'has left '+it[0]+' running'},condJp:function(it){return it[1]+'を出しっぱなし・つけっぱなしにしたことがある'},
+   q:function(it){return '[Have] you ever [left] '+it[0]+' [running]?'},me:function(it){return "I've [left] "+it[0]+' [running].'}},YHAVE),
+   {qj:function(it){return it[1]+'を[出しっぱなし・つけっぱなし]にしたことある？'},yj:'うん、[ある]。',nj:'ううん、[ない]。'}),
+  J(A({id:'pt_letter',pack:'part',type:'set',rate:.35,emoji:'✉️',title:'Can you read a letter written in ___?',
+   items:[['English','英語','🔤'],['Korean','韓国語','🇰🇷'],['Chinese','中国語','🀄'],['French','フランス語','🥐'],['Spanish','スペイン語','🌮'],['old Japanese','古文','📜']],
+   cond:function(it){return 'can read a letter written in '+it[0]},condJp:function(it){return it[1]+'で書かれた手紙が読める'},
+   q:function(it){return '[Can] you read a letter [written] in '+it[0]+'?'},me:function(it){return 'I can read a letter [written] in '+it[0]+'.'}},YCAN),
+   {qj:function(it){return it[1]+'で[書かれた]手紙が読める？'},yj:'うん、[読める]。',nj:'ううん、[読めない]。'}),
+  J(A({id:'pt_food',pack:'part',type:'set',rate:.35,emoji:'🍳',title:'Do you like food cooked by your ___?',
+   items:[['mother','お母さん','👩'],['father','お父さん','👨'],['grandmother','おばあちゃん','👵'],['best friend','親友','🤝'],['brother','兄弟','👦'],['sister','姉妹','👧']],
+   cond:function(it){return 'likes food cooked by their '+it[0]},condJp:function(it){return it[1]+'が作った料理が好き'},
+   q:function(it){return '[Do] you like food [cooked] by your '+it[0]+'?'},me:function(it){return 'I like food [cooked] by my '+it[0]+'.'}},YDO),
+   {qj:function(it){return it[1]+'[が作った]料理は好き？'},yj:'うん、好き。',nj:'ううん、好きじゃない。'}),
+  J(A({id:'pt_excited',pack:'part',type:'set',rate:.3,emoji:'🤩',title:'Are you excited about ___?',
+   items:[['winter vacation','冬休み','⛄'],['the school trip','修学旅行','🚄'],['Christmas','クリスマス','🎄'],['the next game','次の試合','🏆'],['graduation','卒業','🎓'],['your birthday','誕生日','🎂']],
+   cond:function(it){return 'is excited about '+yourToTheir(it[0])},condJp:function(it){return it[1]+'にワクワクしている'},
+   q:function(it){return '[Are] you [excited] about '+it[0]+'?'},me:function(it){return "I'm [excited] about "+yourToMy(it[0])+'.'}},YAM),
+   {qj:function(it){return it[1]+'に[ワクワクしてる]？'},yj:'うん、[ワクワクしてる]。',nj:'ううん、[そうでもない]。'}),
+
+  // ── CONJUNCTIONS ──
+  J({id:'cj_when',pack:'conj',type:'one',emoji:'🏠',title:'When you come home, what do you do first?',
+   items:[['wash my hands','手を洗う','🧼','washes their hands'],['eat a snack','おやつを食べる','🍪','eats a snack'],['take a nap','昼寝する','😴','takes a nap'],['play games','ゲームをする','🎮','plays games'],['do homework','宿題をする','📝','does homework'],['take a bath','お風呂に入る','🛁','takes a bath']],
+   cond:function(it){return it[3]+' first when they come home'},condJp:function(it){return '帰ったらまず'+it[1]},
+   q:function(){return '[When] you come home, what do you do first?'},me:function(it){return 'I '+it[0]+' first [when] I come home.'}},
+   {qj:function(){return '家に帰っ[たら]、まず何をする？'},aj:function(it){return '家に帰っ[たら]、まず'+it[1]+'。'}}),
+  J(A({id:'cj_if',pack:'conj',type:'set',rate:.35,emoji:'☀️',title:"If it's sunny tomorrow, will you ___?",
+   items:[['go to the park','公園に行く','🌳'],['play soccer','サッカーをする','⚽'],['go cycling','サイクリングに行く','🚲'],['go to the beach','海に行く','🏖️'],['go shopping','買い物に行く','🛍️'],['have a picnic','ピクニックをする','🧺']],
+   cond:function(it){return "will "+it[0]+" if it's sunny tomorrow"},condJp:function(it){return '明日晴れたら'+it[1]},
+   q:function(it){return "[If] it's sunny tomorrow, will you "+it[0]+'?'},me:function(it){return "[If] it's sunny tomorrow, I'll "+it[0]+'.'}},YWILL),
+   {qj:function(it){return '明日晴れ[たら]、'+it[1]+'？'},yj:'うん、[そうする]。',nj:'ううん、[しない]。'}),
+  J(A({id:'cj_wonder',pack:'conj',type:'set',rate:.35,emoji:'🤔',title:'Do you sometimes wonder if ___?',
+   items:[['aliens exist','宇宙人はいる','👽'],['ghosts are real','おばけは本当にいる','👻'],['your pet loves you','ペットに好かれている','🐶'],["you'll be famous",'自分は有名になる','⭐'],['your teacher has a pet','先生はペットを飼っている','🧑‍🏫'],['it will snow tomorrow','明日雪が降る','❄️']],
+   cond:function(it){return 'wonders if '+it[0].replace("you'll","they'll").replace(/\byour\b/,'their').replace(/\byou\b/,'them')},condJp:function(it){return it[1]+'のかなと思う'},
+   q:function(it){return '[Do] you sometimes [wonder if] '+it[0]+'?'},me:function(it){return 'I sometimes [wonder if] '+it[0].replace("you'll","I'll").replace(/\byour\b/,'my').replace(/\byou\b/,'me')+'.'}},YDO),
+   {qj:function(it){return it[1]+'[のかな]って思うことある？'},yj:'うん、[ある]。',nj:'ううん、[ない]。'}),
+  J(A({id:'cj_sothat',pack:'conj',type:'set',rate:.3,emoji:'⏰',title:"Do you ___ so that you won't be late?",
+   items:[['set two alarms','目覚ましを2つかける','⏰','sets two alarms'],['run to school','学校まで走る','🏃','runs to school'],['go to bed early','早く寝る','🛏️','goes to bed early'],['take an early train','早い電車に乗る','🚃','takes an early train'],['pack your bag at night','夜にかばんの準備をする','🎒','packs their bag at night'],['skip breakfast','朝ごはんを抜く','🍞','skips breakfast']],
+   cond:function(it){return it[3]+" so that they won't be late"},condJp:function(it){return '遅刻しないように'+it[1]},
+   q:function(it){return '[Do] you '+it[0]+" [so that] you won't be late?"},me:function(it){return 'I '+yourToMy(it[0])+" [so that] I won't be late."}},YDO),
+   {qj:function(it){return '遅刻しない[ように]'+it[1]+'？'},yj:YJSO,nj:NJSO}),
+  J({id:'cj_because',pack:'conj',type:'one',emoji:'🥱',title:'Why are you tired today?',
+   items:[['I stayed up late','夜更かしした','🌙'],['I had P.E.','体育があった','🤸'],['I ran to school','学校まで走った','🏃'],['I had club practice','部活があった','⚽'],['I played games all night','一晩中ゲームをした','🎮'],['I studied for a test','テスト勉強をした','📖']],
+   cond:function(it){return 'is tired because '+it[0].replace(/^I /,'they ')},condJp:function(it){return it[1]+'から疲れている'},
+   q:function(){return "[Why] are you tired today?"},me:function(it){return "[Because] "+it[0]+'.'}},
+   {qj:function(){return '今日は[なんで]疲れてるの？'},aj:function(it){return it[1]+'[から]。'},pj:function(it){return it[1]}}),
+  J(A({id:'cj_while',pack:'conj',type:'set',rate:.35,emoji:'🎧',title:'Do you ___ while you study?',
+   items:[['listen to music','音楽を聴く','🎧','listens to music'],['eat snacks','お菓子を食べる','🍪','eats snacks'],['watch TV','テレビを見る','📺','watches TV'],['use your phone','スマホを使う','📱','uses their phone'],['talk with friends','友達と話す','💬','talks with friends'],['drink tea','お茶を飲む','🍵','drinks tea']],
+   cond:function(it){return it[3]+' while studying'},condJp:function(it){return '勉強しながら'+it[1]},
+   q:function(it){return '[Do] you '+it[0]+' [while] you study?'},me:function(it){return 'I '+yourToMy(it[0])+' [while] I study.'}},YDO),
+   {qj:function(it){return '勉強し[ながら]'+it[1]+'？'},yj:YJSO,nj:NJSO}),
+  J(A({id:'cj_evenif',pack:'conj',type:'set',rate:.3,emoji:'🌧️',title:'Do you go to school even if ___?',
+   items:[['you have a cold','風邪をひいていても','🤧','they have a cold'],["it's snowing",'雪が降っていても','❄️',"it's snowing"],["you're very sleepy",'とても眠くても','😪',"they're very sleepy"],['there is a typhoon','台風が来ていても','🌀','there is a typhoon'],["you didn't do your homework",'宿題をしていなくても','📝',"they didn't do their homework"]],
+   cond:function(it){return 'goes to school even if '+it[3]},condJp:function(it){return it[1]+'学校に行く'},
+   q:function(it){return '[Do] you go to school [even if] '+it[0]+'?'},me:function(it){return 'I go to school [even if] '+it[0].replace("you're","I'm").replace(/\byou\b/,'I').replace(/\byour\b/,'my')+'.'}},YDO),
+   {qj:function(it){return it[1].replace(/ても$/,'[ても]')+'学校に行く？'},yj:'うん、[行く]。',nj:'ううん、[行かない]。'}),
+  J(A({id:'cj_both',pack:'conj',type:'set',rate:.35,emoji:'✌️',title:'Can you ___ both A and B?',
+   items:[['speak','英語も中国語も話せる','🗣️','English','Chinese'],['play','ギターもピアノも弾ける','🎸','the guitar','the piano'],['cook','和食も洋食も作れる','🍳','Japanese food','Western food'],['ride','自転車も一輪車も乗れる','🚲','a bike','a unicycle'],['write','ひらがなもカタカナも速く書ける','✍️','hiragana','katakana fast'],['swim','クロールも平泳ぎもできる','🏊','crawl','breaststroke']],
+   cond:function(it){return 'can '+it[0]+' both '+it[3]+' and '+it[4]},condJp:function(it){return it[1]},
+   q:function(it){return '[Can] you '+it[0]+' [both] '+it[3]+' [and] '+it[4]+'?'},me:function(it){return 'I can '+it[0]+' [both] '+it[3]+' [and] '+it[4]+'.'}},YCAN),
+   {qj:function(it){return it[1].replace(/も/g,'[も]')+'？'},yj:'うん、[どっちもできる]。',nj:'ううん、[できない]。'}),
+  J({id:'cj_soon',pack:'conj',type:'one',emoji:'🌅',title:'What do you do as soon as you wake up?',
+   items:[['check my phone','スマホを見る','📱','checks their phone'],['drink water','水を飲む','💧','drinks water'],['open the curtains','カーテンを開ける','🪟','opens the curtains'],['wash my face','顔を洗う','🧼','washes their face'],['eat breakfast','朝ごはんを食べる','🍞','eats breakfast'],['go back to sleep','二度寝する','😴','goes back to sleep']],
+   cond:function(it){return it[3]+' as soon as they wake up'},condJp:function(it){return '起きたらすぐ'+it[1]},
+   q:function(){return 'What do you do [as soon as] you wake up?'},me:function(it){return 'I '+it[0]+' [as soon as] I wake up.'}},
+   {qj:function(){return '起き[たらすぐ]何をする？'},aj:function(it){return '起き[たらすぐ]'+it[1]+'。'}}),
+
+  // ── NEGATIVES ──
+  J(A({id:'n_atall',pack:'neg',type:'set',rate:.4,emoji:'🗣️',title:'Do you speak ___?',
+   items:[['Spanish','スペイン語','🌮'],['French','フランス語','🥐'],['Korean','韓国語','🇰🇷'],['Chinese','中国語','🀄'],['German','ドイツ語','🥨'],['Italian','イタリア語','🍝']],
+   cond:function(it){return 'speaks a little '+it[0]},condJp:function(it){return it[1]+'を少し話せる'},
+   q:function(it){return '[Do] you speak '+it[0]+'?'},yes:'Yes, a little.',no:function(it){return "No, I [don't] speak "+it[0]+' [at all].'},
+   me:function(it){return 'I speak a little '+it[0]+'.'}}),
+   {qj:function(it){return it[1]+'は話せる？'},yj:'うん、少し。',nj:function(it){return 'ううん、'+it[1]+'は[全然]話せ[ない]。'}}),
+  J(A({id:'n_no',pack:'neg',type:'set',rate:.4,emoji:'👛',title:'Do you have any ___ with you now?',
+   items:[['money','お金','💴'],['tissues','ティッシュ','🧻'],['snacks','お菓子','🍬'],['pens','ペン','🖊️'],['stickers','シール','⭐'],['gum','ガム','🍬']],
+   cond:function(it){return 'has some '+it[0]+' with them now'},condJp:function(it){return '今'+it[1]+'を持っている'},
+   q:function(it){return '[Do] you have [any] '+it[0]+' with you now?'},yes:'Yes, I do.',no:function(it){return 'No, I have [no] '+it[0]+' with me now.'},
+   me:function(it){return 'I have some '+it[0]+' with me now.'}}),
+   {qj:function(it){return '今、'+it[1]+'持ってる？'},yj:'うん、持ってる。',nj:function(it){return 'ううん、今'+it[1]+'は[全然]持って[ない]。'}}),
+  J({id:'n_neither',pack:'neg',type:'one',emoji:'🙅',title:"I don't like getting up early. How about you?",
+   items:[['Neither do I.','私も好きじゃない。','🙅'],['Really? I like it!','本当？私は好き！','😄']],
+   cond:function(it){return 'says "'+it[0]+'"'},condJp:function(it){return '「'+it[1]+'」と答える'},
+   q:function(){return "I [don't] like getting up early. How about you?"},me:function(it){return it[0]==='Neither do I.'?'[Neither] do I.':it[0]}},
+   {qj:function(){return '私は早起きが好き[じゃない]。あなたは？'},aj:function(it){return it[0]==='Neither do I.'?'[私も]好きじゃない。':it[1]}}),
+  J(A({id:'n_think',pack:'neg',type:'set',rate:.35,emoji:'🌦️',title:'Do you think it will ___ tomorrow?',
+   items:[['rain','雨が降る','🌧️'],['snow','雪が降る','❄️'],['be sunny','晴れる','☀️'],['be hot','暑くなる','🥵'],['be windy','風が強くなる','🌬️'],['be cold','寒くなる','🥶']],
+   cond:function(it){return 'thinks it will '+it[0]+' tomorrow'},condJp:function(it){return '明日'+it[1]+'と思う'},
+   q:function(it){return '[Do] you think it will '+it[0]+' tomorrow?'},yes:'Yes, I think so.',no:"No, I [don't think] so.",
+   me:function(it){return 'I think it will '+it[0]+' tomorrow.'}}),
+   {qj:function(it){return '明日'+it[1]+'と思う？'},yj:'うん、そう思う。',nj:'ううん、そう[は思わない]。'}),
+  J(A({id:'n_ever',pack:'neg',type:'set',rate:.35,emoji:'🚫',title:'Do you ever ___?',
+   items:[['skip breakfast','朝ごはんを抜く','🍞','skip breakfast','skips breakfast'],['forget your homework','宿題を忘れる','📝','forget my homework','forgets their homework'],['sleep in class','授業中に寝る','😴','sleep in class','sleeps in class'],['sing in the bath','お風呂で歌う','🛁','sing in the bath','sings in the bath'],['talk in your sleep','寝言を言う','💤','talk in my sleep','talks in their sleep'],['eat ice cream in winter','冬にアイスを食べる','🍦','eat ice cream in winter','eats ice cream in winter']],
+   cond:function(it){return 'sometimes '+it[4]},condJp:function(it){return 'たまに'+it[1]},
+   q:function(it){return '[Do] you [ever] '+it[0]+'?'},yes:'Yes, sometimes.',no:function(it){return 'No, I [never] '+it[3]+'.'},
+   me:function(it){return 'I sometimes '+it[3]+'.'}}),
+   {qj:function(it){return 'たまに'+it[1]+'ことある？'},yj:'うん、たまに。',nj:'ううん、[一度もない]。'}),
+  J({id:'n_out',pack:'neg',type:'one',emoji:'🚶',title:'How often do you go out on weekends?',
+   items:[['often','よく','🔁','週末は[よく]出かける。'],['sometimes','時々','🔂','週末は[時々]出かける。'],['rarely','めったに〜ない','🐢','週末は[めったに]出かけ[ない]。'],['never','全く〜ない','🚫','週末は[全く]出かけ[ない]。']],
+   cond:function(it){return it[0]+' goes out on weekends'},condJp:function(it){return '週末に出かける：'+it[1]},
+   q:function(){return '[How often] do you go out on weekends?'},me:function(it){return 'I ['+it[0]+'] go out on weekends.'}},
+   {qj:function(){return '週末は[どのくらい]出かける？'},aj:function(it){return it[3]}}),
+  J({id:'n_cook',pack:'neg',type:'one',emoji:'🍳',title:'How often do you cook?',
+   items:[['often','よく','🔁','[よく]料理する。'],['sometimes','時々','🔂','[時々]料理する。'],['rarely','めったに〜ない','🐢','[めったに]料理し[ない]。'],['never','全く〜ない','🚫','[全く]料理し[ない]。']],
+   cond:function(it){return it[0]+' cooks'},condJp:function(it){return '料理する：'+it[1]},
+   q:function(){return '[How often] do you cook?'},me:function(it){return 'I ['+it[0]+'] cook.'}},
+   {qj:function(){return '[どのくらい]料理する？'},aj:function(it){return it[3]}}),
+  J(A({id:'n_little',pack:'neg',type:'set',rate:.3,emoji:'⌛',title:'Do you have little ___ these days?',
+   items:[['little free time','自由な時間がほとんどない','⏳'],['little money','お金がほとんどない','💸'],['few chances to speak English','英語を話す機会がほとんどない','🗣️'],['few days off','休みの日がほとんどない','📅'],['little time to sleep','寝る時間がほとんどない','😪']],
+   cond:function(it){return 'has '+it[0]+' these days'},condJp:function(it){return '最近'+it[1]},
+   q:function(it){return '[Do] you have '+brk1(it[0])+' these days?'},me:function(it){return 'I have '+brk1(it[0])+' these days.'}},YDO),
+   {qj:function(it){return '最近、'+it[1].replace('ほとんどない','[ほとんどない]')+'？'},yj:'うん、[ほとんどない]。',nj:'ううん、[けっこうある]。'}),
+  J(A({id:'n_notyet',pack:'neg',type:'set',rate:.4,emoji:'⌛',title:'Have you finished ___ yet?',
+   items:[['your homework','宿題','📝'],['the book you are reading','読んでいる本','📖'],['your lunch','お昼ご飯','🍱'],['your summer homework','夏休みの宿題','🌻'],['your New Year cards','年賀状','💌'],['the drama you are watching','見ているドラマ','📺']],
+   cond:function(it){return 'has finished '+yourToTheir(it[0]).replace('you are','they are')},condJp:function(it){return it[1]+'をもう終えた'},
+   q:function(it){return '[Have] you finished '+it[0]+' [yet]?'},yes:'Yes, I have.',no:'No, [not yet].',
+   me:function(it){return "I've [already] finished "+yourToMy(it[0]).replace('you are','I am')+'.'}}),
+   {qj:function(it){return it[1]+'は[もう]終わった？'},yj:'うん、[もう]終わった。',nj:'ううん、[まだ]。'}),
+
+  // ── QUESTIONS ──
+  J(A({id:'q_tag',pack:'ques',type:'set',rate:.4,emoji:'😉',title:"You like ___, don't you?",
+   items:[['sushi','寿司','🍣'],['dogs','犬','🐶'],['music','音楽','🎵'],['summer','夏','🌻'],['video games','ゲーム','🎮'],['rainy days','雨の日','🌧️']],
+   cond:function(it){return 'likes '+it[0]},condJp:function(it){return it[1]+'が好き'},
+   q:function(it){return 'You like '+it[0]+", [don't you]?"},me:function(it){return 'I like '+it[0]+'.'}},YDO),
+   {qj:function(it){return it[1]+'、好き[だよね]？'},yj:'うん、好き。',nj:'ううん、好きじゃない。'}),
+  J(A({id:'q_tagcan',pack:'ques',type:'set',rate:.35,emoji:'💪',title:"You can ___, can't you?",
+   items:[['swim','泳げる','🏊'],['cook','料理できる','🍳'],['ski','スキーができる','⛷️'],['ride a unicycle','一輪車に乗れる','🚲'],['play the piano','ピアノが弾ける','🎹'],['whistle','口笛が吹ける','🎶']],
+   cond:function(it){return 'can '+it[0]},condJp:function(it){return it[1]},
+   q:function(it){return 'You can '+it[0]+", [can't you]?"},me:function(it){return 'I can '+it[0]+'.'}},YCAN),
+   {qj:function(it){return it[1]+'[よね]？'},yj:'うん、できる。',nj:'ううん、できない。'}),
+  J(A({id:'q_didnt',pack:'ques',type:'set',rate:.4,emoji:'🌙',title:"You didn't ___ last night, did you?",
+   items:[['study','勉強','📚','studied','勉強した','勉強しなかった'],['watch TV','テレビ','📺','watched TV','テレビを見た','テレビを見なかった'],['call anyone','電話','📞','called someone','誰かに電話した','誰にも電話しなかった'],['play games','ゲーム','🎮','played games','ゲームをした','ゲームをしなかった'],['eat dessert','デザート','🍰','ate dessert','デザートを食べた','デザートを食べなかった'],['go out','外出','🚶','went out','出かけた','出かけなかった']],
+   cond:function(it){return it[3]+' last night'},condJp:function(it){return '昨日の夜'+it[4]},
+   q:function(it){return "You didn't "+it[0]+' last night, [did you]?'},yes:'[Yes], I did.',no:"[No], I didn't.",
+   me:function(it){return 'I '+it[3]+' last night.'}}),
+   {qj:function(it){return '昨日の夜、'+it[5]+'[よね]？'},yj:'[ううん]、したよ。',nj:'[うん]、しなかった。'}),
+  J(A({id:'q_isnt',pack:'ques',type:'set',rate:.4,emoji:'🎉',title:"___ is fun, isn't it?",
+   items:[['English class','英語の授業','🔤'],['P.E.','体育','🤸'],['karaoke','カラオケ','🎤'],['camping','キャンプ','⛺'],['math','数学','➗'],['cooking','料理','🍳']],
+   cond:function(it){return 'thinks '+it[0]+' is fun'},condJp:function(it){return it[1]+'は楽しいと思う'},
+   q:function(it){return (it[0]==='P.E.'?it[0]:cap(it[0]))+" is fun, [isn't it]?"},yes:'Yes, it is.',no:"No, it isn't.",
+   me:function(it){return (it[0]==='P.E.'?it[0]:cap(it[0]))+' is fun.'}}),
+   {qj:function(it){return it[1]+'って楽しい[よね]？'},yj:'うん、楽しい。',nj:'ううん、そうでもない。'}),
+  J(A({id:'q_shall',pack:'ques',type:'set',rate:.35,emoji:'🤝',title:"Let's ___ after school, shall we?",
+   items:[['play basketball','バスケしよう','🏀','バスケしたい'],['go to karaoke','カラオケに行こう','🎤','カラオケに行きたい'],['study together','一緒に勉強しよう','📚','一緒に勉強したい'],['go to a café','カフェに行こう','☕','カフェに行きたい'],['walk home together','一緒に歩いて帰ろう','🚶','一緒に歩いて帰りたい'],['have a cup of tea','お茶しよう','🍵','お茶したい']],
+   cond:function(it){return 'wants to '+it[0]+' after school'},condJp:function(it){return '放課後'+it[3]},
+   q:function(it){return "Let's "+it[0]+' after school, [shall we]?'},yes:"Yes, let's!",no:"Sorry, I can't.",
+   me:function(it){return "Let's "+it[0]+'!'}}),
+   {qj:function(it){return '放課後、'+it[1]+'[か]？'},yj:'うん、[そうしよう]！',nj:'ごめん、無理。'}),
+  J({id:'q_kind',pack:'ques',type:'one',emoji:'🎶',title:'What kind of music do you like?',
+   items:[['J-pop','J-POP','🎤'],['K-pop','K-POP','💃'],['rock','ロック','🎸'],['anime songs','アニソン','📺'],['classical music','クラシック','🎻'],['hip-hop','ヒップホップ','🎧'],['jazz','ジャズ','🎷']],
+   cond:function(it){return 'likes '+it[0]},condJp:function(it){return it[1]+'が好き'},
+   q:function(){return '[What kind of] music do you like?'},me:function(it){return 'I like '+it[0]+'.'}},
+   {qj:function(){return '[どんな]音楽が好き？'},aj:function(it){return it[1]+'が好き。'}}),
+  J({id:'q_sleep',pack:'ques',type:'one',emoji:'😴',title:'How many hours do you sleep?',
+   items:[['5 hours','5時間','😵'],['6 hours','6時間','🥱'],['7 hours','7時間','😪'],['8 hours','8時間','😴'],['9 hours','9時間','🛌']],
+   cond:function(it){return 'sleeps '+it[0]+' a night'},condJp:function(it){return '毎晩'+it[1]+'寝る'},
+   q:function(){return '[How many hours] do you sleep?'},me:function(it){return 'I sleep '+it[0]+'.'}},
+   {qj:function(){return '[何時間]寝る？'},aj:function(it){return it[1]+'寝る。'}}),
+  J({id:'q_allow',pack:'ques',type:'one',emoji:'💴',title:'How much is your allowance?',
+   items:[['1,000 yen','千円','💴'],['2,000 yen','2千円','💴'],['3,000 yen','3千円','💴'],['5,000 yen','5千円','💴'],['10,000 yen','1万円','💰']],
+   cond:function(it){return 'gets '+it[0]+' a month'},condJp:function(it){return 'おこづかいが月'+it[1]},
+   q:function(){return '[How much] is your allowance?'},me:function(it){return "It's "+it[0]+' a month.'}},
+   {qj:function(){return 'おこづかいは[いくら]？'},aj:function(it){return '月'+it[1]+'。'}}),
+  J({id:'q_soon',pack:'ques',type:'one',emoji:'🚉',title:'How soon can you get to the station?',
+   items:[['in 5 minutes','5分で','⚡'],['in 10 minutes','10分で','🚲'],['in 15 minutes','15分で','🚶'],['in 30 minutes','30分で','🚌'],['in an hour','1時間で','🐢']],
+   cond:function(it){return 'can get to the station '+it[0]},condJp:function(it){return '駅まで'+it[1]+'行ける'},
+   q:function(){return '[How soon] can you get to the station?'},me:function(it){return 'I can get there '+it[0]+'.'}},
+   {qj:function(){return '駅まで[どのくらいで]行ける？'},aj:function(it){return it[1]+'行ける。'}}),
+
+  // ── EXCLAMATIONS & IMPERATIVES ──
+  J({id:'e_cat',pack:'excl',type:'one',emoji:'🐱',title:'Look at my cat! (What a ___ cat!)',
+   items:[['cute','かわいい','🐱'],['big','大きい','🐈'],['fluffy','ふわふわの','☁️'],['small','小さい','🐾'],['funny','おもしろい','😹']],
+   cond:function(it){return 'says "What a '+it[0]+' cat!"'},condJp:function(it){return '「なんて'+it[1]+'猫！」と言う'},
+   q:function(){return 'Look at my cat! What do you think?'},me:function(it){return '[What a] '+it[0]+' cat!'}},
+   {qj:function(){return '私の猫を見て！どう思う？'},aj:function(it){return '[なんて]'+it[1]+'猫[なんだ]！'}}),
+  J({id:'e_garden',pack:'excl',type:'one',emoji:'🌷',title:'Look at this garden! (How ___ it is!)',
+   items:[['beautiful','きれい','🌷','きれいな'],['big','大きい','🌳','大きい'],['colorful','カラフル','🌈','カラフルな'],['quiet','静か','🤫','静かな']],
+   cond:function(it){return 'says "How '+it[0]+' this garden is!"'},condJp:function(it){return '「この庭はなんて'+it[1]+'！」と言う'},
+   q:function(){return 'Look at this garden! What do you think?'},me:function(it){return '[How] '+it[0]+' this garden is!'}},
+   {qj:function(){return 'この庭を見て！どう思う？'},aj:function(it){return 'この庭は[なんて]'+it[3]+'[んだ]！'}}),
+  J({id:'e_food',pack:'excl',type:'one',emoji:'🍛',title:'How is the curry? (How ___ it is!)',
+   items:[['delicious','おいしい','😋'],['spicy','辛い','🌶️'],['hot','熱い','🔥'],['sweet','甘い','🍯']],
+   cond:function(it){return 'says "How '+it[0]+' it is!"'},condJp:function(it){return '「なんて'+it[1]+'んだ！」と言う'},
+   q:function(){return 'How is the curry?'},me:function(it){return '[How] '+it[0]+' it is!'}},
+   {qj:function(){return 'カレーはどう？'},aj:function(it){return '[なんて]'+it[1]+'[んだ]！'}}),
+  J({id:'e_sky',pack:'excl',type:'one',emoji:'🌌',title:'Look at the sky! (How ___ it is!)',
+   items:[['blue','青い','🔵'],['dark','暗い','🌑'],['beautiful','きれい','🌅'],['cloudy','曇っている','☁️']],
+   cond:function(it){return 'says "How '+it[0]+' the sky is!"'},condJp:function(it){return '「空がなんて'+it[1]+'！」と言う'},
+   q:function(){return 'Look at the sky! What do you think?'},me:function(it){return '[How] '+it[0]+' the sky is!'}},
+   {qj:function(){return '空を見て！どう思う？'},aj:function(it){return '空は[なんて]'+it[1]+'[んだ]！'}}),
+  J({id:'e_advice',pack:'excl',type:'one',emoji:'👩',title:'What does your mother always tell you?',
+   items:[['Clean your room!','部屋を片付けなさい！','🧹'],['Do your homework!','宿題をしなさい！','📝'],['Go to bed early!','早く寝なさい！','🛏️'],["Don't be late!",'遅れないで！','⏰'],['Be kind to other people!','他の人に優しくしなさい！','💗'],['Eat your vegetables!','野菜を食べなさい！','🥦']],
+   cond:function(it){return 'hears "'+it[0]+'" from their mother'},condJp:function(it){return 'お母さんに「'+it[1].replace('！','')+'」と言われる'},
+   q:function(){return 'What does your mother always tell you?'},me:function(it){return 'She always says, "'+brk1(it[0])+'"'}},
+   {qj:function(){return 'お母さんにいつも何て言われる？'},aj:function(it){return '「'+it[1].replace(/(なさい|ないで)！$/,'[$1]！')+'」'}}),
+  J({id:'e_teacher',pack:'excl',type:'one',emoji:'🧑‍🏫',title:'What does your teacher always say?',
+   items:[['Be quiet!','静かにしなさい！','🤫'],['Listen carefully!','よく聞きなさい！','👂'],['Open your textbooks!','教科書を開きなさい！','📖'],['Stand up!','起立！','🧍'],["Don't run in the hallway!",'廊下を走らないで！','🏃'],['Hurry up!','急ぎなさい！','⏩']],
+   cond:function(it){return 'hears "'+it[0]+'" from their teacher'},condJp:function(it){return '先生に「'+it[1].replace('！','')+'」と言われる'},
+   q:function(){return 'What does your teacher always say?'},me:function(it){return 'My teacher always says, "'+brk1(it[0])+'"'}},
+   {qj:function(){return '先生はいつも何て言う？'},aj:function(it){return '「'+it[1].replace(/(なさい|ないで)！$/,'[$1]！')+'」'}}),
+  J({id:'e_and',pack:'excl',type:'one',emoji:'💡',title:"What's your advice for learning English?",
+   items:[['Watch movies in English','英語で映画を見なさい','🎬'],['Read every day','毎日読みなさい','📖'],['Talk to the ALT','ALTと話しなさい','🗣️'],['Listen to English songs','英語の歌を聴きなさい','🎧'],['Keep a diary in English','英語で日記をつけなさい','📔']],
+   cond:function(it){return 'says "'+it[0]+', and you\'ll get better."'},condJp:function(it){return '「'+it[1]+'、そうすれば上手になる」と言う'},
+   q:function(){return "What's your advice for learning English?"},me:function(it){return brk1(it[0])+", [and] you'll get better."}},
+   {qj:function(){return '英語を学ぶアドバイスは？'},aj:function(it){return it[1]+'、[そうすれば]上手になるよ。'},pj:function(it){return it[1]}}),
+  J({id:'e_dont',pack:'excl',type:'one',emoji:'🚫',title:"What's a rule at your house?",
+   items:[["Don't use your phone at dinner!",'夕食中にスマホを使わないで！','📱'],["Don't come home late!",'遅く帰ってこないで！','🌙'],["Don't play games after 10!",'10時以降はゲームをしないで！','🎮'],["Don't eat in your room!",'部屋で食べないで！','🍔'],["Don't leave the lights on!",'電気をつけっぱなしにしないで！','💡']],
+   cond:function(it){return 'has the rule "'+it[0]+'"'},condJp:function(it){return '家のルールは「'+it[1].replace('！','')+'」'},
+   q:function(){return "What's a rule at your house?"},me:function(it){return '"'+it[0].replace("Don't","[Don't]")+'"'}},
+   {qj:function(){return '家のルールは何？'},aj:function(it){return '「'+it[1].replace(/ないで！$/,'[ないで]！')+'」'}}),
+  J(A({id:'e_lets',pack:'excl',type:'set',rate:.35,emoji:'🙌',title:"Let's ___ this weekend!",
+   items:[['go to karaoke','カラオケに行こう','🎤','カラオケに行きたい'],['play basketball','バスケしよう','🏀','バスケしたい'],['go to the beach','海に行こう','🏖️','海に行きたい'],['study together','一緒に勉強しよう','📚','一緒に勉強したい'],['watch a movie','映画を見よう','🎬','映画を見たい'],['go to a festival','お祭りに行こう','🏮','お祭りに行きたい']],
+   cond:function(it){return 'wants to '+it[0]+' this weekend'},condJp:function(it){return '今週末'+it[3]},
+   q:function(it){return "[Let's] "+it[0]+' this weekend!'},yes:"Sure! [Let's] do it!",no:"Sorry, I can't.",
+   me:function(it){return "[Let's] "+it[0]+'!'}}),
+   {qj:function(it){return '今週末、'+it[1].replace(/(しよう|こう|よう)$/,'[$1]')+'！'},yj:'いいね！[そうしよう]！',nj:'ごめん、無理。'}),
+
+  // ── IT / THERE ──
+  J({id:'it_takes',pack:'it',type:'one',emoji:'🏫',title:'How long does it take you to get to school?',
+   items:[['5 minutes','5分','⚡'],['10 minutes','10分','🚶'],['15 minutes','15分','🚲'],['20 minutes','20分','🚌'],['30 minutes','30分','🚃'],['an hour','1時間','🐢']],
+   cond:function(it){return 'takes '+it[0]+' to get to school'},condJp:function(it){return '学校まで'+it[1]+'かかる'},
+   q:function(){return 'How long does [it take] you to get to school?'},me:function(it){return '[It takes] me '+it[0]+' to get to school.'}},
+   {qj:function(){return '学校まで[どのくらい時間がかかる]？'},aj:function(it){return '学校まで'+it[1]+'[かかる]。'}}),
+  J({id:'it_took',pack:'it',type:'one',emoji:'🏊',title:'How long did it take you to learn to swim?',
+   items:[['a week','1週間','📅'],['two weeks','2週間','📅'],['a month','1か月','🗓️'],['half a year','半年','🗓️'],['a year','1年','🎂'],['two years','2年','🎂']],
+   cond:function(it){return 'took '+it[0]+' to learn to swim'},condJp:function(it){return '泳げるまで'+it[1]+'かかった'},
+   q:function(){return 'How long did [it take] you to learn to swim?'},me:function(it){return '[It took] me '+it[0]+' to learn to swim.'}},
+   {qj:function(){return '泳げるようになるのに[どのくらいかかった]？'},aj:function(it){return it[1]+'[かかった]。'}}),
+  J({id:'it_homework',pack:'it',type:'one',emoji:'📝',title:'How long does it take you to do your homework?',
+   items:[['30 minutes','30分','⏱️'],['an hour','1時間','⏰'],['an hour and a half','1時間半','⏰'],['two hours','2時間','😵'],['three hours','3時間','💀']],
+   cond:function(it){return 'takes '+it[0]+' to do homework'},condJp:function(it){return '宿題に'+it[1]+'かかる'},
+   q:function(){return 'How long does [it take] you to do your homework?'},me:function(it){return '[It takes] me '+it[0]+' to do my homework.'}},
+   {qj:function(){return '宿題に[どのくらい時間がかかる]？'},aj:function(it){return it[1]+'[かかる]。'}}),
+  J(A({id:'it_fun',pack:'it',type:'set',rate:.35,emoji:'😆',title:'Is it fun for you to ___?',
+   items:[['study English','英語を勉強する','🔤'],['play sports','スポーツをする','⚽'],['cook','料理する','🍳'],['sing karaoke','カラオケで歌う','🎤'],['draw pictures','絵を描く','🎨'],['read books','本を読む','📖']],
+   cond:function(it){return 'thinks it is fun to '+it[0]},condJp:function(it){return it[1]+'のは楽しい'},
+   q:function(it){return '[Is it] fun for you [to] '+it[0]+'?'},me:function(it){return '[It is] fun for me [to] '+it[0]+'.'}},YIS),
+   {qj:function(it){return it[1]+'[のは]楽しい？'},yj:'うん、楽しい。',nj:'ううん、楽しくない。'}),
+  J(A({id:'it_possible',pack:'it',type:'set',rate:.3,emoji:'🏋️',title:'Is it possible for you to ___?',
+   items:[['wake up at 5:00','5時に起きる','⏰'],['eat ten rice balls','おにぎりを10個食べる','🍙'],['run 10 km','10キロ走る','🏃'],['sleep for 12 hours','12時間寝る','😴'],['study for 5 hours','5時間勉強する','📚'],['stand on one leg for a minute','1分間片足で立つ','🦩']],
+   cond:function(it){return 'can '+it[0]},condJp:function(it){return it[1]+'ことができる'},
+   q:function(it){return '[Is it] possible for you [to] '+it[0]+'?'},me:function(it){return '[It is] possible for me [to] '+it[0]+'.'}},YIS),
+   {qj:function(it){return it[1]+'[ことは]できる？'},yj:'うん、できる。',nj:'ううん、無理。'}),
+  J(A({id:'it_danger',pack:'it',type:'set',rate:.4,emoji:'⚠️',title:"Do you think it's dangerous to ___?",
+   items:[['use a phone while walking','歩きスマホをする','📱'],['ride a bike at night','夜に自転車に乗る','🚲'],['swim in the sea alone','一人で海で泳ぐ','🌊'],['climb mountains in winter','冬に山に登る','🏔️'],['walk alone at night','夜一人で歩く','🌃'],['eat raw chicken','生の鶏肉を食べる','🍗']],
+   cond:function(it){return "thinks it's dangerous to "+it[0]},condJp:function(it){return it[1]+'のは危ないと思う'},
+   q:function(it){return "[Do] you think [it's] dangerous [to] "+it[0]+'?'},yes:'Yes, I do.',no:"No, I don't.",
+   me:function(it){return "I think [it's] dangerous [to] "+it[0]+'.'}}),
+   {qj:function(it){return it[1]+'[のは]危ないと思う？'},yj:'うん、思う。',nj:'ううん、思わない。'}),
+  J({id:'it_rain',pack:'it',type:'one',emoji:'🌧️',title:'What do you do when it rains?',
+   items:[['stay home','家にいる','🏠'],['read books','本を読む','📖'],['play games','ゲームをする','🎮'],['watch movies','映画を見る','🎬'],['go shopping','買い物に行く','🛍️'],['sleep','寝る','😴']],
+   cond:function(it){return 'likes to '+it[0]+' when it rains'},condJp:function(it){return '雨の日は'+it[1]},
+   q:function(){return 'What do you do when [it rains]?'},me:function(it){return 'When [it rains], I '+it[0]+'.'}},
+   {qj:function(){return '[雨が降ったら]何をする？'},aj:function(it){return '[雨が降ったら]'+it[1]+'。'}}),
+  J(A({id:'it_nouse',pack:'it',type:'set',rate:.35,emoji:'🥛',title:"Do you think there's no use ___?",
+   items:[['crying over spilled milk','こぼれたミルクを嘆く','🥛'],['worrying about tomorrow','明日のことを心配する','😟'],['studying the night before a test','テストの前の晩に勉強する','📚'],['arguing with your parents','親と言い争う','💢'],['waiting for a bus in the rain','雨の中でバスを待つ','🚌'],['saying sorry later','後で謝る','🙇']],
+   cond:function(it){return "thinks there's no use "+yourToTheir(it[0])},condJp:function(it){return it[1]+'のは無駄だと思う'},
+   q:function(it){return "[Do] you think [there's no use] "+it[0]+'?'},yes:'Yes, I do.',no:"No, I don't.",
+   me:function(it){return "I think [there's no use] "+yourToMy(it[0])+'.'}}),
+   {qj:function(it){return it[1]+'[のは無駄だ]と思う？'},yj:'うん、思う。',nj:'ううん、思わない。'}),
+  J(A({id:'it_easy',pack:'it',type:'set',rate:.35,emoji:'🧠',title:'Is it hard for you to ___?',
+   items:[['remember English words','英単語を覚える','🔤'],['get up on Monday','月曜日に起きる','😩'],['say no to friends','友達に断る','🙅'],['eat slowly','ゆっくり食べる','🐢'],['sit still for an hour','1時間じっと座る','🪑'],['speak in front of the class','クラスの前で話す','🎤']],
+   cond:function(it){return 'finds it hard to '+it[0]},condJp:function(it){return it[1]+'のは難しい'},
+   q:function(it){return '[Is it] hard for you [to] '+it[0]+'?'},me:function(it){return '[It is] hard for me [to] '+it[0]+'.'}},YIS),
+   {qj:function(it){return it[1]+'[のは]難しい？'},yj:'うん、難しい。',nj:'ううん、簡単。'}),
+
+  // ── PREPOSITIONS ──
+  J(A({id:'pr_tired',pack:'prep',type:'set',rate:.35,emoji:'😩',title:'Are you tired of ___?',
+   items:[['doing homework','宿題','📝'],['rainy days','雨の日','🌧️'],['eating the same lunch','同じお昼ご飯','🍱'],['winter','冬','⛄'],['hearing the same story','同じ話を聞くこと','🔁'],['taking tests','テスト','💯']],
+   cond:function(it){return 'is tired of '+it[0]},condJp:function(it){return it[1]+'にうんざりしている'},
+   q:function(it){return '[Are] you [tired of] '+it[0]+'?'},me:function(it){return "I'm [tired of] "+it[0]+'.'}},YAM),
+   {qj:function(it){return it[1]+'に[うんざりしてる]？'},yj:'うん、[うんざり]。',nj:'ううん、平気。'}),
+  J(A({id:'pr_forage',pack:'prep',type:'set',rate:.3,emoji:'📏',title:'Are you ___ for your age?',
+   items:[['tall','背が高い','🦒'],['short','背が低い','🐭'],['strong','力が強い','💪'],['mature','大人っぽい','🧑'],['young-looking','若く見える','👶']],
+   cond:function(it){return 'is '+it[0]+' for their age'},condJp:function(it){return '年のわりに'+it[1]},
+   q:function(it){return '[Are] you '+it[0]+' [for] your age?'},me:function(it){return "I'm "+it[0]+' [for] my age.'}},YAM),
+   {qj:function(it){return '年の[わりに]'+it[1]+'？'},yj:YJSO,nj:NJSO}),
+  J({id:'pr_madeof',pack:'prep',type:'one',emoji:'✏️',title:'What is your pencil case made of?',
+   items:[['cloth','布','🧵'],['leather','革','👜'],['plastic','プラスチック','🧴'],['metal','金属','🔩'],['wood','木','🪵'],['paper','紙','📄']],
+   cond:function(it){return 'has a pencil case made of '+it[0]},condJp:function(it){return '筆箱が'+it[1]+'でできている'},
+   q:function(){return 'What is your pencil case [made of]?'},me:function(it){return "It's [made of] "+it[0]+'.'}},
+   {qj:function(){return '筆箱は何[でできてる]？'},aj:function(it){return it[1]+'[でできてる]。'}}),
+  J({id:'pr_dressed',pack:'prep',type:'one',emoji:'👕',title:'What color are you usually dressed in on weekends?',
+   items:[['black','黒','⚫'],['white','白','⚪'],['blue','青','🔵'],['gray','グレー','🩶'],['red','赤','🔴'],['green','緑','🟢']],
+   cond:function(it){return 'is usually dressed in '+it[0]+' on weekends'},condJp:function(it){return '週末はたいてい'+it[1]+'の服'},
+   q:function(){return 'What color are you usually [dressed in] on weekends?'},me:function(it){return "I'm usually [dressed in] "+it[0]+'.'}},
+   {qj:function(){return '週末はたいてい何色の服[を着てる]？'},aj:function(it){return 'たいてい'+it[1]+'の服[を着てる]。'}}),
+  J(A({id:'pr_over',pack:'prep',type:'set',rate:.35,emoji:'☕',title:'Do you like talking with friends over ___?',
+   items:[['lunch','お昼ご飯を食べ','🍱'],['coffee','コーヒーを飲み','☕'],['a cup of tea','お茶を飲み','🍵'],['ice cream','アイスを食べ','🍦'],['dinner','夕食を食べ','🍽️'],['snacks','お菓子を食べ','🍪']],
+   cond:function(it){return 'likes talking with friends over '+it[0]},condJp:function(it){return it[1]+'ながら友達と話すのが好き'},
+   q:function(it){return '[Do] you like talking with friends [over] '+it[0]+'?'},me:function(it){return 'I like talking with friends [over] '+it[0]+'.'}},YDO),
+   {qj:function(it){return it[1]+'[ながら]友達と話すのは好き？'},yj:'うん、好き。',nj:'ううん、好きじゃない。'}),
+  J(A({id:'pr_for',pack:'prep',type:'set',rate:.4,emoji:'⚖️',title:'Are you for or against ___?',
+   items:[['school uniforms','制服','👔'],['homework on weekends','週末の宿題','📝'],['phones at school','学校でのスマホ','📱'],['a longer summer vacation','もっと長い夏休み','🌻'],['school on Saturdays','土曜授業','📅'],['a four-day school week','週4日の学校','🗓️']],
+   cond:function(it){return 'is for '+it[0]},condJp:function(it){return it[1]+'に賛成'},
+   q:function(it){return '[Are] you [for] '+it[0]+'?'},yes:"Yes, I'm [for] it.",no:"No, I'm [against] it.",
+   me:function(it){return "I'm [for] "+it[0]+'.'}}),
+   {qj:function(it){return it[1]+'に[賛成]？'},yj:'うん、[賛成]。',nj:'ううん、[反対]。'}),
+  J({id:'pr_by',pack:'prep',type:'one',emoji:'🕘',title:'By what time do you usually finish your homework?',
+   items:[['7 PM','夜7時','🕖'],['8 PM','夜8時','🕗'],['9 PM','夜9時','🕘'],['10 PM','夜10時','🕙'],['11 PM','夜11時','🕚']],
+   cond:function(it){return 'finishes homework by '+it[0]},condJp:function(it){return it[1]+'までに宿題を終える'},
+   q:function(){return '[By] what time do you usually finish your homework?'},me:function(it){return 'I usually finish it [by] '+it[0]+'.'}},
+   {qj:function(){return '宿題はたいてい[何時までに]終わらせる？'},aj:function(it){return 'たいてい'+it[1]+'[までに]終わらせる。'}}),
+  J(A({id:'pr_proud',pack:'prep',type:'set',rate:.35,emoji:'🏅',title:'Are you proud of ___?',
+   items:[['your school','学校','🏫'],['your town','町','🏘️'],['your family','家族','👪'],['your club','部活','⚽'],['yourself','自分','🙋'],['your English','自分の英語','🔤']],
+   cond:function(it){return 'is proud of '+yourToTheir(it[0])},condJp:function(it){return it[1]+'を誇りに思う'},
+   q:function(it){return '[Are] you [proud of] '+it[0]+'?'},me:function(it){return "I'm [proud of] "+yourToMy(it[0])+'.'}},YAM),
+   {qj:function(it){return it[1]+'を[誇りに思う]？'},yj:'うん、[思う]。',nj:'ううん、[思わない]。'}),
+  J(A({id:'pr_good',pack:'prep',type:'set',rate:.35,emoji:'🐾',title:'Are you good with ___?',
+   items:[['animals','動物','🐾'],['children','子ども','🧒'],['computers','パソコン','💻'],['numbers','数字','🔢'],['tools','道具','🔧'],['old people','お年寄り','👵']],
+   cond:function(it){return 'is good with '+it[0]},condJp:function(it){return it[1]+'の扱いが上手'},
+   q:function(it){return '[Are] you [good with] '+it[0]+'?'},me:function(it){return "I'm [good with] "+it[0]+'.'}},YAM),
+   {qj:function(it){return it[1]+'の[扱いが上手]？'},yj:'うん、[上手]。',nj:'ううん、[苦手]。'}),
+
+  // ── COLLOQUIAL EXPRESSIONS ──
+  J({id:'ch_up',pack:'chat',type:'one',emoji:'👋',title:"What's up?",
+   items:[['Nothing much.','特に何も。','😐'],['Not bad.','まあまあ。','🙂'],["I'm so tired.",'すごく疲れた。','🥱'],["I'm hungry.",'お腹すいた。','🍙'],['I have a test today.','今日テストなんだ。','📝'],["I'm happy today!",'今日はご機嫌！','😄']],
+   cond:function(it){return 'answers "'+it[0]+'"'},condJp:function(it){return '「'+it[1]+'」と答える'},
+   q:function(){return "[What's up]?"},me:function(it){return it[0]}},
+   {qj:function(){return '[最近どう]？／どうしたの？'},aj:function(it){return it[1]}}),
+  J({id:'ch_been',pack:'chat',type:'one',emoji:'🙌',title:'Long time no see! How have you been?',
+   items:[['Pretty good.','元気だよ。','🙂'],['Great!','すごく元気！','😄'],['Not bad.','まあまあかな。','😐'],['Busy!','忙しかった！','🏃'],['So-so.','ぼちぼち。','🤷']],
+   cond:function(it){return 'answers "'+it[0]+'"'},condJp:function(it){return '「'+it[1]+'」と答える'},
+   q:function(){return '[Long time no see]! How have you been?'},me:function(it){return it[0]}},
+   {qj:function(){return '[久しぶり]！元気だった？'},aj:function(it){return it[1]}}),
+  J(A({id:'ch_help',pack:'chat',type:'set',rate:.35,emoji:'🤲',title:'Can I help you with ___?',
+   items:[['your homework','宿題','📝'],['your bag','かばん','🎒'],['cleaning','掃除','🧹'],['cooking','料理','🍳'],['your English','英語','🔤'],['that box','その箱','📦']],
+   cond:function(it){return 'says "Yes, please." to help with '+yourToTheir(it[0])},condJp:function(it){return it[1]+'を手伝ってほしい'},
+   q:function(it){return '[Can I help you] with '+it[0]+'?'},yes:'[Yes, please]. Thanks!',no:"[No, thank you]. I'm OK.",
+   me:function(it){return 'Yes, please.'}}),
+   {qj:function(it){return it[1]+'、[手伝おうか]？'},yj:'[うん、お願い]。ありがとう！',nj:'[ううん、大丈夫]。'}),
+  J(A({id:'ch_makeit',pack:'chat',type:'set',rate:.35,emoji:'⏱️',title:'Can you make it to ___?',
+   items:[['school by 8:00 tomorrow','明日8時までに学校','🏫'],['the party on Saturday','土曜日のパーティー','🎉'],['karaoke after school','放課後のカラオケ','🎤'],['the game on Sunday','日曜日の試合','🏆'],['lunch with me tomorrow','明日のお昼ご飯','🍱']],
+   cond:function(it){return 'can make it to '+it[0].replace('with me','with you')},condJp:function(it){return it[1]+'に間に合う・来られる'},
+   q:function(it){return '[Can you make it] to '+it[0]+'?'},yes:'Yes, I can [make it]!',no:"Sorry, I can't [make it].",
+   me:function(it){return 'I can make it.'}}),
+   {qj:function(it){return it[1]+'に[来られる・間に合う]？'},yj:'うん、[行ける]！',nj:'ごめん、[行けない]。'}),
+  J({id:'ch_toobad',pack:'chat',type:'one',emoji:'🤒',title:'I have a fever.',
+   items:[["Oh, that's too bad.",'それはお気の毒に。','😢'],['Take care!','お大事に！','💊'],['Go home and rest.','帰って休んで。','🛏️'],['Get well soon!','早く良くなってね！','🍀']],
+   cond:function(it){return 'says "'+it[0]+'"'},condJp:function(it){return '「'+it[1]+'」と答える'},
+   q:function(){return 'I have a fever.'},me:function(it){return it[0]}},
+   {qj:function(){return '熱があるんだ。'},aj:function(it){return it[1]}}),
+  J({id:'ch_cheer',pack:'chat',type:'one',emoji:'📣',title:'I have a big test tomorrow.',
+   items:[['You can do it!','あなたならできる！','💪'],['Hang in there!','がんばって！','🔥'],['Good luck!','幸運を祈る！','🍀'],['Do your best!','ベストを尽くして！','⭐']],
+   cond:function(it){return 'says "'+it[0]+'"'},condJp:function(it){return '「'+it[1]+'」と答える'},
+   q:function(){return 'I have a big test tomorrow.'},me:function(it){return it[0]}},
+   {qj:function(){return '明日大事なテストがあるんだ。'},aj:function(it){return it[1]}}),
+  J({id:'ch_thanks',pack:'chat',type:'one',emoji:'🙏',title:'Thank you so much!',
+   items:[["You're welcome.",'どういたしまして。','😊'],['No problem.','いいよ、問題ないよ。','👌'],['Anytime!','いつでもどうぞ！','🙌'],['My pleasure.','喜んで。','💐']],
+   cond:function(it){return 'says "'+it[0]+'"'},condJp:function(it){return '「'+it[1]+'」と答える'},
+   q:function(){return 'Thank you so much!'},me:function(it){return it[0]}},
+   {qj:function(){return '本当にありがとう！'},aj:function(it){return it[1]}}),
+  J({id:'ch_sorry',pack:'chat',type:'one',emoji:'🏃',title:"Sorry I'm late!",
+   items:[["That's OK.",'いいよ。','👌'],['No problem.','問題ないよ。','🙂'],["Don't worry about it.",'気にしないで。','😌'],["You're always late!",'いつも遅いね！','😤']],
+   cond:function(it){return 'says "'+it[0]+'"'},condJp:function(it){return '「'+it[1]+'」と答える'},
+   q:function(){return "Sorry I'm late!"},me:function(it){return it[0]}},
+   {qj:function(){return '遅れてごめん！'},aj:function(it){return it[1]}}),
+  J(A({id:'ch_howabout',pack:'chat',type:'set',rate:.35,emoji:'🗓️',title:'How about ___ this weekend?',
+   items:[['going to the movies','映画に行く','🎬'],['eating ramen','ラーメンを食べる','🍜'],['playing tennis','テニスをする','🎾'],['going shopping','買い物に行く','🛍️'],['studying together','一緒に勉強する','📚']],
+   cond:function(it){return 'says yes to '+it[0]+' this weekend'},condJp:function(it){return '今週末'+it[1]+'のに賛成'},
+   q:function(it){return '[How about] '+it[0]+' this weekend?'},yes:'[Sounds good]!',no:"Sorry, I'm busy.",
+   me:function(it){return 'Sounds good!'}}),
+   {qj:function(it){return '今週末、'+it[1]+'の[はどう]？'},yj:'[いいね]！',nj:'ごめん、忙しい。'}),
+
+  // ── IDIOMS ──
+  J(A({id:'id_without',pack:'idiom',type:'set',rate:.4,emoji:'📵',title:'Can you do without ___ for a day?',
+   items:[['your phone','スマホ','📱'],['TV','テレビ','📺'],['rice','ごはん','🍚'],['music','音楽','🎵'],['games','ゲーム','🎮'],['sweets','甘いもの','🍰']],
+   cond:function(it){return 'can do without '+yourToTheir(it[0])+' for a day'},condJp:function(it){return '一日'+it[1]+'なしで過ごせる'},
+   q:function(it){return '[Can] you [do without] '+it[0]+' for a day?'},yes:'Yes, I can.',no:"No, I [can't do without] it!",
+   me:function(it){return 'I can [do without] '+yourToMy(it[0])+' for a day.'}}),
+   {qj:function(it){return '一日'+it[1]+'[なしで]過ごせる？'},yj:'うん、[過ごせる]。',nj:'ううん、[ないと無理]！'}),
+  J(A({id:'id_putup',pack:'idiom',type:'set',rate:.4,emoji:'😤',title:'Can you put up with ___?',
+   items:[['noisy people','うるさい人','📣'],['hot weather','暑い天気','🥵'],['cold weather','寒い天気','🥶'],['long lines','長い行列','🧍'],['a messy room','散らかった部屋','🧦'],['slow Wi-Fi','遅いWi-Fi','🐌']],
+   cond:function(it){return 'can put up with '+it[0]},condJp:function(it){return it[1]+'に我慢できる'},
+   q:function(it){return '[Can] you [put up with] '+it[0]+'?'},yes:'Yes, I can [put up with] it.',no:"No, I [can't stand] it!",
+   me:function(it){return 'I can [put up with] '+it[0]+'.'}}),
+   {qj:function(it){return it[1]+'に[我慢]できる？'},yj:'うん、[我慢]できる。',nj:'ううん、[耐えられない]！'}),
+  J(A({id:'id_mind',pack:'idiom',type:'set',rate:.35,emoji:'🎯',title:'Have you made up your mind about ___?',
+   items:[['your future job','将来の仕事','💼'],['your university','大学','🎓'],['your summer plans','夏の予定','🌻'],['your club next year','来年の部活','⚽'],['what to eat for lunch','お昼に何を食べるか','🍱']],
+   cond:function(it){return 'has made up their mind about '+yourToTheir(it[0])},condJp:function(it){return it[1]+'について決心した'},
+   q:function(it){return '[Have] you [made up your mind] about '+it[0]+'?'},yes:"Yes, I've [made up my mind].",no:'No, not yet.',
+   me:function(it){return "I've [made up my mind] about "+yourToMy(it[0])+'.'}}),
+   {qj:function(it){return it[1]+'について[決心した]？'},yj:'うん、[決めた]。',nj:'ううん、まだ。'}),
+  J(A({id:'id_look',pack:'idiom',type:'set',rate:.35,emoji:'🪴',title:'Do you look after ___?',
+   items:[['a pet','ペット','🐶'],['a little brother or sister','弟か妹','👶'],['plants','植物','🪴'],['your grandparents','祖父母','👵'],["a neighbor's dog",'近所の犬','🐕']],
+   cond:function(it){return 'looks after '+yourToTheir(it[0])},condJp:function(it){return it[1]+'の世話をしている'},
+   q:function(it){return '[Do] you [look after] '+it[0]+'?'},me:function(it){return 'I [look after] '+yourToMy(it[0])+'.'}},YDO),
+   {qj:function(it){return it[1]+'の[世話をしてる]？'},yj:'うん、[してる]。',nj:'ううん、[してない]。'}),
+  J(A({id:'id_depend',pack:'idiom',type:'set',rate:.4,emoji:'🤝',title:'Do you depend on ___?',
+   items:[['your parents for money','お金を親に','💴'],['your phone for directions','道案内をスマホに','🗺️'],['an alarm to wake up','起きるのを目覚ましに','⏰'],['your friends for homework','宿題を友達に','📝'],['your mother for lunch','お昼ご飯をお母さんに','🍱']],
+   cond:function(it){return 'depends on '+yourToTheir(it[0])},condJp:function(it){return it[1]+'頼っている'},
+   q:function(it){return '[Do] you [depend on] '+it[0]+'?'},me:function(it){return 'I [depend on] '+yourToMy(it[0])+'.'}},YDO),
+   {qj:function(it){return it[1]+'[頼ってる]？'},yj:'うん、[頼ってる]。',nj:'ううん、[頼ってない]。'}),
+  J({id:'id_bytheway',pack:'idiom',type:'one',emoji:'🐕',title:'By the way, who will look after your dog during your trip?',
+   items:[['my mother','母','👩'],['my grandmother','祖母','👵'],['my neighbor','近所の人','🏡'],['my brother','兄弟','👦'],['a pet hotel','ペットホテル','🏨']],
+   cond:function(it){return 'leaves their dog with '+it[0].replace('my','their')+' on trips'},condJp:function(it){return '旅行中は'+it[1]+'が犬の世話をする'},
+   q:function(){return '[By the way], who will [look after] your dog during your trip?'},me:function(it){return cap(it[0])+' will [look after] it.'}},
+   {qj:function(){return '[ところで]、旅行中は誰が犬の[世話をする]の？'},aj:function(it){return it[1]+'が[世話をする]。'}}),
+  J(A({id:'id_determined',pack:'idiom',type:'set',rate:.35,emoji:'🔥',title:'Are you determined to ___?',
+   items:[['pass the entrance exam','入試に合格する','🎓'],['win the next game','次の試合に勝つ','🏆'],['get up early every day','毎日早起きする','⏰'],['save money','お金を貯める','🐷'],['read 50 books this year','今年50冊本を読む','📚']],
+   cond:function(it){return 'is determined to '+it[0]},condJp:function(it){return it[1]+'と決心している'},
+   q:function(it){return '[Are] you [determined to] '+it[0]+'?'},me:function(it){return "I'm [determined to] "+it[0]+'.'}},YAM),
+   {qj:function(it){return it[1]+'と[決心してる]？'},yj:'うん、[決心してる]。',nj:'ううん、[そこまでは]。'}),
+  J(A({id:'id_giveup',pack:'idiom',type:'set',rate:.35,emoji:'🏳️',title:'Have you ever given up ___?',
+   items:[['playing the piano','ピアノ','🎹'],['a game halfway','ゲームを途中で','🎮'],['a club','部活','⚽'],['studying for a test','テスト勉強','📖'],['learning a language','語学','🗣️']],
+   cond:function(it){return 'has given up '+it[0]},condJp:function(it){return it[1]+'をあきらめたことがある'},
+   q:function(it){return '[Have] you ever [given up] '+it[0]+'?'},me:function(it){return "I've [given up] "+it[0]+'.'}},YHAVE),
+   {qj:function(it){return it[1]+'を[あきらめた]ことある？'},yj:'うん、ある。',nj:'ううん、ない。'}),
+  J(A({id:'id_runout',pack:'idiom',type:'set',rate:.4,emoji:'🪫',title:'Have you ever run out of ___?',
+   items:[['money','お金','💸'],['phone battery','スマホの充電','🪫'],['time in a test','テストで時間','⏰'],['ideas','アイデア','💡'],['shampoo','シャンプー','🧴']],
+   cond:function(it){return 'has run out of '+it[0]},condJp:function(it){return it[1]+'がなくなったことがある'},
+   q:function(it){return '[Have] you ever [run out of] '+it[0]+'?'},me:function(it){return "I've [run out of] "+it[0]+'.'}},YHAVE),
+   {qj:function(it){return it[1]+'が[なくなった]ことある？'},yj:'うん、ある。',nj:'ううん、ない。'})
+]);
+
+// ── JAPANESE for the built-in questions (casual 友達同士 style; [brackets] = the part that matches the target grammar) ──
+// qj question · q2j follow-up · oj open question · yj/nj short answers · aj(it,n) full answer (picks + numbers) · pj Japanese under a pick choice
+function bl(s){var m=String(s).match(/^(.*[がをにでは])([^がをにでは]+)$/);return m?m[1]+'['+m[2]+']':'['+s+']'}
+function jNai(s){s=String(s);
+  if(/する$/.test(s))return s.slice(0,-2)+'しない';if(/来る$/.test(s))return s.slice(0,-2)+'来ない';
+  if(/[いきしちにひみりぎじびぴえけせてねへめれげぜべぺ]る$/.test(s))return s.slice(0,-1)+'ない';
+  var M={'う':'わ','く':'か','ぐ':'が','す':'さ','つ':'た','ぬ':'な','ぶ':'ば','む':'ま','る':'ら'},e=s.slice(-1);
+  return M[e]?s.slice(0,-1)+M[e]+'ない':s+'ない'}
+function haveTo(s,end){return jNai(s).replace(/ない$/,'[な'+(end||'きゃいけない')+']')}
+var JPT={
+  // BASICS
+  like:{qj:function(it){return it[1]+'は[好き]？'},yj:'うん、[好き]。',nj:'ううん、[好きじゃない]。'},
+  can:{qj:function(it){return bl(it[1])+'？'},yj:'うん、[できる]。',nj:'ううん、[できない]。'},
+  height:{qj:function(){return '身長は[どのくらい]？'},aj:function(it){return '身長は'+it[0]+'cm。'}},
+  birthday:{qj:function(){return '誕生日は[いつ]？'},aj:function(it){return '誕生日は'+it[1]+'。'}},
+  from:{qj:function(){return '[どこ]出身？'},aj:function(it){return it[1]+'出身。'}},
+  sport:{qj:function(){return '好きなスポーツは[何]？'},aj:function(it){return '好きなスポーツは'+it[1]+'。'}},
+  pets:{qj:function(it){return it[1]+'を[飼ってる]？'},q2j:function(it){return it[1]+'を[何匹]飼ってる？'},yj:'うん、[飼ってる]。',nj:'ううん、[飼ってない]。',aj:function(it,n){return it[1]+'を'+n+(it[0]==='bird'?'羽':'匹')+'飼ってる。'}},
+  color:{qj:function(){return '好きな色は[何]？'},aj:function(it){return '好きな色は'+it[1]+'。'}},
+  family:{qj:function(it){return it[1]+'は[いる]？'},q2j:function(it){return it[1]+'は[何人]いる？'},yj:'うん、[いる]。',nj:'ううん、[いない]。',aj:function(it,n){return it[1]+'が'+n+'人いる。'}},
+  club:{qj:function(){return '[何部]に入ってる？'},aj:function(it){return it[1]+'に入ってる。'}},
+  commute:{qj:function(it){return it[1]+'学校に[来る]？'},oj:'[どうやって]学校に来る？',yj:YJSO,nj:NJSO},
+  // PAST
+  yesterday:{qj:function(it){return '昨日、'+bl(it[1])+'？'},oj:'昨日、[何をした]？',yj:'うん、[した]。',nj:'ううん、[してない]。'},
+  weekend:{qj:function(it){return '先週末、'+it[1]+'に[行った]？'},oj:'先週末、[どこに行った]？',yj:'うん、[行った]。',nj:'ううん、[行ってない]。'},
+  breakfast:{qj:function(it){return '朝ごはんに'+it[1]+'を[食べた]？'},oj:'朝ごはんに[何を食べた]？',yj:'うん、[食べた]。',nj:'ううん、[食べてない]。'},
+  getup:{qj:function(){return '今朝[何時に起きた]？'},aj:function(it){return '今朝は'+it[1]+'に[起きた]。'}},
+  bedtime:{qj:function(){return '昨日の夜、[何時に寝た]？'},aj:function(it){return '昨日の夜は'+it[1]+'に[寝た]。'}},
+  lastsummer:{qj:function(it){return '去年の夏、'+it[1]+'に[行った]？'},oj:'去年の夏、[どこに行った]？',yj:'うん、[行った]。',nj:'ううん、[行ってない]。'},
+  bought:{qj:function(it){return '先週、'+it[1]+'を[買った]？'},oj:'先週、[何を買った]？',yj:'うん、[買った]。',nj:'ううん、[買ってない]。'},
+  watched:{qj:function(it){return '昨日の夜、'+it[1]+'を[見た]？'},oj:'昨日の夜、[何を見た]？',yj:'うん、[見た]。',nj:'ううん、[見てない]。'},
+  vacation:{qj:function(it){return '夏休みに'+bl(it[1])+'？'},yj:'うん、[した]。',nj:'ううん、[してない]。'},
+  where7:{qj:function(it){return '昨日の夜7時、'+it[1]+'に[いた]？'},oj:'昨日の夜7時、[どこにいた]？',yj:'うん、[いた]。',nj:'ううん、[いなかった]。'},
+  // FUTURE
+  plan:{qj:function(it){return '今週末、'+it[1]+'[予定]？'},oj:'今週末、何をする[予定]？',yj:'うん、[その予定]。',nj:'ううん、[その予定はない]。'},
+  summer:{qj:function(it){return '来年の夏、'+it[1]+'に[行く]？'},oj:'来年の夏、どこに[行く]？',yj:'うん、[行く]。',nj:'ううん、[行かない]。'},
+  dinner:{qj:function(it){return '今夜の夕食に'+it[1]+'を[食べる]？'},oj:'今夜の夕食に何を[食べる]？',yj:'うん、[食べる]。',nj:'ううん、[食べない]。'},
+  job:{qj:function(it){return '将来'+it[1]+'に[なるつもり]？'},oj:'将来何に[なるつもり]？',yj:'うん、[そのつもり]。',nj:'ううん、[違う]。'},
+  buy:{qj:function(it){return '明日'+it[1]+'を[買う]？'},oj:'明日何を[買う]？',yj:'うん、[買う]。',nj:'ううん、[買わない]。'},
+  wakeup:{qj:function(){return '明日は何時に[起きる]？'},aj:function(it){return '明日は'+it[1]+'に[起きる]。'}},
+  tomorrow:{qj:function(it){return '明日'+bl(it[1])+'？'},yj:'うん、[そうする]。',nj:'ううん、[しない]。'},
+  afterschool:{qj:function(it){return '放課後、'+it[1]+(it[0]==='home'?'に帰る':'に行く')+'[予定]？'},oj:'放課後どこに行く[予定]？',yj:'うん、[その予定]。',nj:'ううん、[違う]。'},
+  trip:{qj:function(){return 'この冬、どこに行く[予定]？'},q2j:function(){return 'どのくらい滞在する[予定]？'},aj:function(it,n){return 'この冬は'+it[1]+'に行く[予定]。'+n+'日間滞在する[予定]。'}},
+  // PRESENT PERFECT
+  been:{qj:function(it){return it[1]+'に[行ったことある]？'},q2j:function(){return '[何回]行ったことある？'},yj:'うん、[ある]。',nj:'ううん、[ない]。',aj:function(it,n){return it[1]+'に'+n+'回[行ったことがある]。'}},
+  ever:{qj:function(it){return it[1]+'[ことある]？'},yj:'うん、[ある]。',nj:'ううん、[ない]。'},
+  live:{qj:function(){return 'どこに住んでる？'},q2j:function(it){return it[1]+'に[どのくらい]住んでる？'},aj:function(it,n){return it[1]+'に住んでる。ここに'+n+'年[住んでいる]。'}},
+  played:{qj:function(it){return it[1]+'をやってる？'},q2j:function(it){return it[1]+'を[どのくらい]やってる？'},yj:'うん、やってる。',nj:'ううん、やってない。',aj:function(it,n){return it[1]+'を'+n+'年[やっている]。'}},
+  had:{qj:function(it){return it[1]+'を持ってる？'},q2j:function(){return '[どのくらい]持ってる？'},yj:'うん、持ってる。',nj:'ううん、持ってない。',aj:function(it,n){return it[1]+'を'+n+'年[持っている]。'}},
+  eaten:{qj:function(it){return it[1]+'を[食べたことある]？'},yj:'うん、[ある]。',nj:'ううん、[ない]。'},
+  seen:{qj:function(it){return it[1]+'を[見たことある]？'},yj:'うん、[ある]。',nj:'ううん、[ない]。'},
+  learned:{qj:function(it){return it[1]+'を習ってる？'},q2j:function(it){return it[1]+'を[どのくらい]習ってる？'},yj:'うん、習ってる。',nj:'ううん、習ってない。',aj:function(it,n){return it[1]+'を'+n+'年[習っている]。'}},
+  tried:{qj:function(it){return it[1]+'を[やったことある]？'},yj:'うん、[ある]。',nj:'ううん、[ない]。'},
+  // COMPARATIVES
+  c_taller:{qj:function(it){return it[1]+'[より]背が高い？'},yj:'うん、[高い]。',nj:'ううん、[高くない]。'},
+  c_more:{qj:function(it){return '友達[より]'+it[1]+'？'},yj:YJSO,nj:NJSO},
+  c_faster:{qj:function(it){return '友達[より]'+it[1]+'？'},yj:'うん、[できる]。',nj:'ううん、[できない]。'},
+  c_harder:{qj:function(it){return it[1]+'は数学[より]難しい？'},yj:'うん、[難しい]。',nj:'ううん、[難しくない]。'},
+  c_better:{qj:function(it){return it[4]+'[より]'+it[1]+'の[ほうが]好き？'},yj:'うん、[好き]。',nj:NJSO},
+  c_family:{qj:function(it){return it[1].replace('より','[より]')+'？'},yj:YJSO,nj:NJSO},
+  c_interest:{qj:function(it){return it[1]+'は'+it[4]+'[より]面白いと思う？'},yj:'うん、[思う]。',nj:'ううん、[思わない]。'},
+  c_havemore:{qj:function(it){return '友達[より]'+it[1]+'が多い？'},yj:'うん、[多い]。',nj:'ううん、[多くない]。'},
+  c_betterat:{qj:function(it){return it[4]+'[より]'+it[1]+'の[ほうが]得意？'},yj:'うん、[得意]。',nj:NJSO},
+  // AS ~ AS
+  a_tall:{qj:function(it){return it[1]+'と[同じくらい]背が高い？'},yj:'うん、[同じくらい]。',nj:NJSO},
+  a_can:{qj:function(it){return it[1].replace('同じくらい','[同じくらい]')+'？'},yj:'うん、[できる]。',nj:'ううん、[できない]。'},
+  a_diff:{qj:function(it){return it[1]+'は数学と[同じくらい]難しい？'},yj:'うん、[同じくらい]難しい。',nj:'ううん、[そうでもない]。'},
+  a_adj:{qj:function(it){return 'お母さんと[同じくらい]'+it[1]+'？'},yj:YJSO,nj:NJSO},
+  a_much:{qj:function(it){return '友達と[同じくらい]'+it[1]+'？'},yj:YJSO,nj:NJSO},
+  a_early:{qj:function(it){return it[1]+'と[同じくらい]早く起きる？'},yj:YJSO,nj:NJSO},
+  a_like:{qj:function(it){return it[1]+'も'+it[4]+'と[同じくらい]好き？'},yj:'うん、[同じくらい]好き。',nj:NJSO},
+  a_town:{qj:function(it){return '住んでいる町は東京と[同じくらい]'+it[1]+'？'},yj:YJSO,nj:NJSO},
+  a_many:{qj:function(it){return '友達と[同じくらい]'+it[1]+'を持ってる？'},yj:'うん、持ってる。',nj:'ううん、持ってない。'},
+  // SUPERLATIVES
+  s_season:{qj:function(){return 'どの季節が[一番]好き？'},aj:function(it){return it[1]+'が[一番]好き。'}},
+  s_subject:{qj:function(){return 'どの教科が[一番]好き？'},aj:function(it){return it[1]+'が[一番]好き。'}},
+  s_food:{qj:function(){return '何の食べ物が[一番]好き？'},aj:function(it){return it[1]+'が[一番]好き。'}},
+  s_hard:{qj:function(){return '[一番]難しい教科は何？'},aj:function(it){return it[1]+'が[一番]難しい教科。'}},
+  s_tallest:{qj:function(){return '家族で[一番]背が高いのは誰？'},aj:function(it){return (it[0]==='me'?'私':it[1])+'が家族で[一番]背が高い。'}},
+  s_animal:{qj:function(){return 'どの動物が[一番]好き？'},aj:function(it){return it[1]+'が[一番]好き。'}},
+  s_fun:{qj:function(){return '[一番]楽しい学校行事は何？'},aj:function(it){return it[1]+'が[一番]楽しい。'}},
+  s_place:{qj:function(){return '日本で[一番]きれいな場所はどこ？'},aj:function(it){return it[1]+'が日本で[一番]きれいだと思う。'}},
+  s_family:{qj:function(it){return it[1].replace('一番','[一番]')+'？'},yj:YJSO,nj:NJSO},
+  // PASSIVE
+  p_born:{qj:function(it){return it[1]+'で[生まれた]？'},oj:'どこで[生まれた]？',yj:YJSO,nj:NJSO},
+  p_made:{qj:function(it){return it[1]+'は日本で[作られた]もの？'},yj:YJSO,nj:NJSO},
+  p_named:{qj:function(){return '誰に名前を[つけられた]？'},aj:function(it){return it[1]+'に名前を[つけられた]。'}},
+  p_spoken:{qj:function(it){return '家で'+it[1]+'は[話されてる]？'},yj:'うん、[話されてる]。',nj:'ううん、[話されてない]。'},
+  p_given:{qj:function(it){return '誕生日に'+it[1]+'を[もらった]？'},yj:'うん、[もらった]。',nj:'ううん、[もらってない]。'},
+  p_scolded:{qj:function(it){return '今週、'+it[1]+'に[怒られた]？'},yj:'うん、[怒られた]。',nj:'ううん、[怒られてない]。'},
+  p_invited:{qj:function(it){return '今年、'+it[1]+'に[招待された]？'},yj:'うん、[招待された]。',nj:'ううん、[されてない]。'},
+  p_known:{qj:function(){return '住んでいる町は何[で知られている]？'},aj:function(it){return '私の町は'+it[1]+'[で知られている]。'}},
+  p_used:{qj:function(it){return '家で毎日'+it[1]+'が[使われてる]？'},yj:'うん、[使われてる]。',nj:'ううん、[使われてない]。'},
+  // WANT TO / INFINITIVES
+  i_be:{qj:function(){return '何に[なりたい]？'},aj:function(it){return it[1]+'に[なりたい]。'}},
+  i_go:{qj:function(){return 'どこに[行きたい]？'},aj:function(it){return it[1]+'に[行きたい]。'}},
+  i_eat:{qj:function(){return '今夜何を[食べたい]？'},aj:function(it){return '今夜は'+it[1]+'が[食べたい]。'}},
+  i_buy:{qj:function(){return '何を[買いたい]？'},aj:function(it){return it[1]+'が[買いたい]。'}},
+  i_try:{qj:function(it){return it[1]+'を[やってみたい]？'},yj:'うん、[やってみたい]。',nj:'ううん、[やりたくない]。'},
+  i_hope:{qj:function(it){return it[1].replace(/たい$/,'[たい]')+'？'},yj:YJSO,nj:NJSO},
+  i_need:{qj:function(it){return '今日'+it[1]+'[必要がある]？'},yj:'うん、[ある]。',nj:'ううん、[ない]。'},
+  i_easy:{qj:function(it){return it[1]+'[のは]簡単？'},yj:'うん、簡単。',nj:'ううん、簡単じゃない。'},
+  i_why:{qj:function(){return 'なぜ英語を勉強してるの？'},aj:function(it){return it[1].replace('ため','[ため]')+'に英語を勉強してる。'}},
+  i_some:{qj:function(it){return '今、何か'+it[1].replace(/がある$/,'').replace(/(.+)(もの|物)$/,'[$1]$2').replace(/(.+)(こと)$/,'[$1]$2')+'ある？'},yj:'うん、ある。',nj:'ううん、ない。'},
+  // GERUNDS
+  g_good:{qj:function(it){return '['+it[1]+']が得意？'},yj:'うん、得意。',nj:'ううん、得意じゃない。'},
+  g_enjoy:{qj:function(it){return '['+it[1]+']は楽しい？'},yj:'うん、楽しい。',nj:'ううん、楽しくない。'},
+  g_finish:{qj:function(it){return '昨日、'+it[1].replace(/終えた$/,'[終えた]')+'？'},yj:'うん、終えた。',nj:'ううん、まだ。'},
+  g_interest:{qj:function(it){return '['+it[1]+']に興味がある？'},yj:'うん、ある。',nj:'ううん、ない。'},
+  g_forward:{qj:function(it){return '['+it[1]+']を楽しみにしてる？'},yj:'うん、楽しみ。',nj:'ううん、そうでもない。'},
+  g_afraid:{qj:function(it){return '['+it[1]+']が怖い？'},yj:'うん、怖い。',nj:'ううん、怖くない。'},
+  g_hobby:{qj:function(){return '趣味は何？'},aj:function(it){return '趣味は['+it[1]+']。'}},
+  g_weekend:{qj:function(){return '週末は何[をするのが]好き？'},aj:function(it){return '週末は['+it[1]+']が好き。'}},
+  g_before:{qj:function(it){return '寝る[前に]'+it[1]+'？'},yj:YJSO,nj:NJSO},
+  // HAVE TO / SHOULD
+  m_every:{qj:function(it){return '毎日'+haveTo(it[1])+'？'},yj:YJSO,nj:'ううん、[しなくていい]。'},
+  m_today:{qj:function(it){return '今日'+haveTo(it[1])+'？'},yj:YJSO,nj:'ううん、[しなくていい]。'},
+  m_wear:{qj:function(it){return '学校で'+it[1]+'を'+haveTo('身につける')+'？'},yj:YJSO,nj:'ううん、[しなくていい]。'},
+  m_dinner:{qj:function(it){return '夕食前に'+haveTo(it[1])+'？'},yj:YJSO,nj:'ううん、[しなくていい]。'},
+  m_did:{qj:function(it){return '昨日'+haveTo(it[1],'きゃいけなかった')+'？'},yj:YJSO,nj:'ううん、[しなくてよかった]。'},
+  m_will:{qj:function(it){return '来年'+haveTo(it[1],'きゃいけなくなる')+'？'},yj:'うん、[そうなる]。',nj:'ううん、[ならない]。'},
+  m_should:{qj:function(it){return 'もっと'+it[1]+'[べき]だと思う？'},yj:'うん、思う。',nj:'ううん、思わない。'},
+  m_home:{qj:function(){return '何時までに家に'+haveTo('帰る')+'？'},aj:function(it){return it[1]+'までに'+haveTo('帰る')+'。'}},
+  m_sat:{qj:function(it){return '土曜日に'+haveTo(it[1])+'？'},yj:YJSO,nj:'ううん、[しなくていい]。'},
+  // RELATIVES
+  r_friend:{qj:function(it){return '['+it[1]+']友達はいる？'},yj:'うん、いる。',nj:'ううん、いない。'},
+  r_family:{qj:function(it){return '家族に['+it[1]+']人はいる？'},yj:'うん、いる。',nj:'ううん、いない。'},
+  r_thing:{qj:function(it){return '['+it[1]+']ものを持ってる？'},yj:'うん、持ってる。',nj:'ううん、持ってない。'},
+  r_know:{qj:function(it){return '['+it[1]+']人を知ってる？'},yj:'うん、知ってる。',nj:'ううん、知らない。'},
+  r_anime:{qj:function(){return '[好きな]アニメは何？'},aj:function(it){return it[1]+'は私が[好きな]アニメ。'}},
+  r_respect:{qj:function(){return '[尊敬している]人は誰？'},aj:function(it){return it[1]+'は私が[尊敬している]人。'}},
+  r_place:{qj:function(){return '[行ってみたい]場所はどこ？'},aj:function(it){return it[1]+'は私が[行ってみたい]場所。'}},
+  r_cant:{qj:function(){return '[食べられない]食べ物は何？'},aj:function(it){return it[1]+'は私が[食べられない]食べ物。'}},
+  r_whose:{qj:function(it){return '['+it[1]+']友達はいる？'},yj:'うん、いる。',nj:'ううん、いない。'},
+  // PRESENT PERFECT CONTINUOUS
+  pc_play:{qj:function(it){return it[1]+'をやってる？'},q2j:function(){return '[どのくらいの間]やってる？'},yj:'うん、やってる。',nj:'ううん、やってない。',aj:function(it,n){return it[1]+'を'+n+'年間[ずっとやってる]。'}},
+  pc_learn:{qj:function(it){return it[1]+'を習ってる？'},q2j:function(){return '[どのくらいの間]習ってる？'},yj:'うん、習ってる。',nj:'ううん、習ってない。',aj:function(it,n){return it[1]+'を'+n+'年間[ずっと習ってる]。'}},
+  pc_using:{qj:function(it){return it[1]+'を持ってる？'},q2j:function(){return '[どのくらいの間]使ってる？'},yj:'うん、持ってる。',nj:'ううん、持ってない。',aj:function(it,n){return it[1]+'を'+n+'年間[ずっと使ってる]。'}},
+  pc_going:{qj:function(it){return it[1]+'に通ってる？'},q2j:function(){return '[どのくらいの間]通ってる？'},yj:'うん、通ってる。',nj:'ううん、通ってない。',aj:function(it,n){return it[1]+'に'+n+'年間[ずっと通ってる]。'}},
+  pc_collect:{qj:function(it){return it[1]+'を集めてる？'},q2j:function(){return '[どのくらいの間]集めてる？'},yj:'うん、集めてる。',nj:'ううん、集めてない。',aj:function(it,n){return it[1]+'を'+n+'年間[ずっと集めてる]。'}},
+  pc_live:{qj:function(){return 'どこに住んでる？'},q2j:function(it){return it[1]+'に[どのくらいの間]住んでる？'},aj:function(it,n){return it[1]+'に住んでる。ここに'+n+'年間[ずっと住んでる]。'}},
+  pc_lately:{qj:function(it){return it[1].replace('最近','[最近]')+'？'},yj:YJSO,nj:NJSO},
+  pc_since:{qj:function(it){return it[1].replace('今朝からずっと','[今朝からずっと]')+'？'},yj:YJSO,nj:NJSO},
+  pc_wear:{qj:function(it){return it[1]+'をつけてる？'},q2j:function(){return '[どのくらいの間]つけてる？'},yj:'うん、つけてる。',nj:'ううん、つけてない。',aj:function(it,n){return it[1]+'を'+n+'年間[ずっとつけてる]。'}},
+  // KNOW HOW TO / INDIRECT QUESTIONS
+  k_how:{qj:function(it){return '['+it[1]+']を知ってる？'},yj:'うん、知ってる。',nj:'ううん、知らない。'},
+  k_where:{qj:function(it){return it[1]+'が[どこにあるか]知ってる？'},yj:'うん、知ってる。',nj:'ううん、知らない。'},
+  k_when:{qj:function(it){return it[1]+'が[いつか]知ってる？'},yj:'うん、知ってる。',nj:'ううん、知らない。'},
+  k_who:{qj:function(it){return '['+it[1]+']を知ってる？'},yj:'うん、知ってる。',nj:'ううん、知らない。'},
+  k_long:{qj:function(it){return it[1]+'[どのくらいかかるか]知ってる？'},yj:'うん、知ってる。',nj:'ううん、知らない。'},
+  k_why:{qj:function(it){return '[なぜ]'+it[1]+'[のか]知ってる？'},yj:'うん、知ってる。',nj:'ううん、知らない。'},
+  k_what:{qj:function(it){return '['+it[1]+']知ってる？'},yj:'うん、知ってる。',nj:'ううん、知らない。'},
+  k_whereto:{qj:function(it){return '['+it[1]+']知ってる？'},yj:'うん、知ってる。',nj:'ううん、知らない。'},
+  k_means:{qj:function(it){return it[1]+'の[意味]を知ってる？'},yj:'うん、知ってる。',nj:'ううん、知らない。'},
+  // MAKE / LET / HELP
+  l_parents:{qj:function(it){return '親は'+it[1]+'を[許してくれる]？'},yj:'うん、[許してくれる]。',nj:'ううん、[許してくれない]。'},
+  l_make:{qj:function(it){return '親に'+it[1]+'を[させられる]？'},yj:'うん、[させられる]。',nj:'ううん、[させられない]。'},
+  l_teacher:{qj:function(it){return '先生は'+it[1]+'のを[許してくれる]？'},yj:'うん、[許してくれる]。',nj:'ううん、[許してくれない]。'},
+  l_help:{qj:function(it){return '家族が'+it[1]+'のを[手伝う]？'},yj:'うん、[手伝う]。',nj:'ううん、[手伝わない]。'},
+  l_happy:{qj:function(){return '何があなたを幸せに[する]？'},aj:function(it){return it[1]+'が私を幸せに[する]。'}},
+  l_tired:{qj:function(){return '何があなたを疲れ[させる]？'},aj:function(it){return it[1]+'が私を疲れ[させる]。'}},
+  l_weekend:{qj:function(){return '週末、親は何を[させてくれる]？'},aj:function(it){return '週末は親が'+it[1]+'のを[許してくれる]。'}},
+  l_laugh:{qj:function(){return '誰が一番あなたを笑わ[せる]？'},aj:function(it){return it[1]+'が一番私を笑わ[せる]。'}},
+  l_sleepy:{qj:function(it){return it[1]+'で眠く[なる]？'},yj:'うん、[なる]。',nj:'ううん、[ならない]。'},
+  // IF I WERE / HAD… WOULD
+  f_million:{qj:function(){return '[もし]100万円[あったら]、何を[買う]？'},aj:function(it){return '[もし]100万円[あったら]、'+it[1]+'を[買うだろう]。'}},
+  f_bird:{qj:function(){return '[もし]鳥[だったら]、どこへ飛んで[いく]？'},aj:function(it){return '[もし]鳥[だったら]、'+it[1]+'へ飛んで[いくだろう]。'}},
+  f_animal:{qj:function(){return '[もし]動物[だったら]、何に[なる]？'},aj:function(it){return '[もし]動物[だったら]、'+it[1]+'に[なるだろう]。'}},
+  f_time:{qj:function(){return '[もし]タイムマシンが[あったら]、どこに[行く]？'},aj:function(it){return '[もし]タイムマシンが[あったら]、'+it[1]+'に[行くだろう]。'}},
+  f_power:{qj:function(){return '[もし]超能力を[持てたら]、何が[いい]？'},aj:function(it){return '[もし]超能力を[持てたら]、'+it[1]+'が[いいな]。'}},
+  f_free:{qj:function(){return '[もし]明日休み[だったら]、何を[する]？'},aj:function(it){return '[もし]明日休み[だったら]、'+it[1]+'[だろう]。'}},
+  f_meet:{qj:function(){return '[もし]誰にでも[会えたら]、誰に[会う]？'},aj:function(it){return '[もし]誰にでも[会えたら]、'+it[1]+'に[会うだろう]。'}},
+  f_live:{qj:function(){return '[もし]どこにでも[住めたら]、どこに[住む]？'},aj:function(it){return '[もし]どこにでも[住めたら]、'+it[1]+'に[住むだろう]。'}},
+  f_teacher:{qj:function(it){return '[もし]先生[だったら]、'+it[1]+'？'},yj:'うん、[そうするだろう]。',nj:'ううん、[しないだろう]。'},
+  // I WISH
+  w_could:{qj:function(){return '何が[できたらいいのに]と思う？'},aj:function(it){return it[1].replace('たらいいのに','[たらいいのに]')+'。'},pj:function(it){return {'speak English well':'英語を上手に話す','play the piano':'ピアノを弾く','sing well':'上手に歌う','cook well':'上手に料理する','swim fast':'速く泳ぐ','draw well':'上手に絵を描く','dance well':'上手に踊る','ski':'スキーをする'}[it[0]]||''}},
+  w_had:{qj:function(){return '何が[あればいいのに]と思う？'},aj:function(it){return it[1]+'が[あればいいのに]。'}},
+  w_lived:{qj:function(){return 'どこに[住んでいたらいいのに]と思う？'},aj:function(it){return it[1]+'に[住んでいたらいいのに]。'}},
+  w_animal:{qj:function(){return '何の動物[だったらいいのに]と思う？'},aj:function(it){return it[1]+'[だったらいいのに]。'}},
+  w_were:{qj:function(it){return it[1].replace('たらいいのに','[たらいいのに]')+'と思う？'},yj:'うん、思う。',nj:'ううん、思わない。'},
+  w_youhad:{qj:function(it){return it[1]+'が[あればいいのに]と思う？'},yj:'うん、思う。',nj:'ううん、思わない。'},
+  w_school:{qj:function(it){return it[1].replace(/ばいいのに$/,'[ばいいのに]')+'と思う？'},yj:'うん、思う。',nj:'ううん、思わない。'},
+  w_youcould:{qj:function(it){return it[1].replace('たらいいのに','[たらいいのに]')+'と思う？'},yj:'うん、思う。',nj:'ううん、思わない。'},
+  w_today:{qj:function(it){return '今日が'+it[1]+'[だったらいいのに]と思う？'},yj:'うん、思う。',nj:'ううん、思わない。'},
+  // USED TO
+  u_play:{qj:function(it){return '[昔]よく'+it[1]+'で[遊んでた]？'},yj:'うん、よく遊んでた。',nj:'ううん、遊んでなかった。'},
+  u_like:{qj:function(it){return '[昔]'+it[1]+'が[好きだった]？'},yj:'うん、好きだった。',nj:'ううん、好きじゃなかった。'},
+  u_be:{qj:function(it){return it[1].replace('昔は','[昔は]')+'？'},yj:'うん、そうだった。',nj:'ううん、違った。'},
+  u_go:{qj:function(it){return '[昔]'+it[1]+'に[通ってた]？'},yj:'うん、通ってた。',nj:'ううん、通ってなかった。'},
+  u_have:{qj:function(it){return it[1].replace(/^昔(は)?/,'[昔$1]')+'？'},yj:YJSO,nj:NJSO},
+  u_live:{qj:function(){return '[昔]どこに[住んでいた]？'},aj:function(it){return '[昔は]'+it[1]+'に[住んでいた]。'}},
+  u_wantbe:{qj:function(){return '[昔]何に[なりたかった]？'},aj:function(it){return '[昔は]'+it[1]+'に[なりたかった]。'}},
+  u_snack:{qj:function(){return '[昔]大好きだったお菓子は何？'},aj:function(it){return '[昔は]'+it[1]+'が[大好きだった]。'}},
+  u_bed:{qj:function(){return '[昔は]何時に[寝ていた]？'},aj:function(it){return '[昔は]'+it[1]+'に[寝ていた]。'}},
+  // PAST PERFECT
+  pp_been:{qj:function(it){return '高校より前に'+it[1]+'に[行ったことがあった]？'},yj:'うん、[あった]。',nj:'ううん、[なかった]。'},
+  pp_already:{qj:function(it){return '今日学校に着いた時、[もう]'+it[1].replace(/ていた$/,'[ていた]')+'？'},yj:'うん、[もう済ませてた]。',nj:'ううん、[まだだった]。'},
+  pp_learned:{qj:function(it){return '10歳になる前に'+it[1]+'ことが[できていた]？'},yj:'うん、[できていた]。',nj:'ううん、[できなかった]。'},
+  pp_seen:{qj:function(it){return '6歳になる前に'+it[1]+'を[見たことがあった]？'},yj:'うん、[あった]。',nj:'ううん、[なかった]。'},
+  pp_eaten:{qj:function(it){return 'この学校に来る前に'+it[1]+'を[食べたことがあった]？'},yj:'うん、[あった]。',nj:'ううん、[なかった]。'},
+  pp_jhs:{qj:function(it){return '中学より前に'+it[1]+'[ことがあった]？'},yj:'うん、[あった]。',nj:'ううん、[なかった]。'},
+  pp_lived:{qj:function(){return 'ここに来る前はどこに[住んでいた]？'},aj:function(it){return 'ここに来る前は'+it[1]+'に[住んでいた]。'}},
+  pp_started:{qj:function(){return '中学より前に何を[始めていた]？'},aj:function(it){return '中学より前に'+it[1]+'を[始めていた]。'}},
+  pp_dinner:{qj:function(it){return '昨日の夕食前に'+it[1]+'を[終えていた]？'},yj:'うん、[終えていた]。',nj:'ううん、[終えていなかった]。'}
+};
+ATTRS.forEach(function(a){var j=JPT[a.id];if(j)for(var k in j)if(a[k]==null)a[k]=j[k]});
+
 var ATTR_BY_ID={};ATTRS.forEach(function(a){ATTR_BY_ID[a.id]=a});
 // ── END GRAMMAR ──
 
@@ -1457,6 +2191,11 @@ function customToAttr(d){
   if(d.kind!=='one'){a.yes=d.yes;a.no=d.no}
   if(d.kind==='one'){if(d.open)a.open=d.open;if(d.yes&&hasBlank(d.q)){a.yes=d.yes;a.no=d.no}}
   if(d.kind==='setNum'){a.q2=function(it){return fillP(d.q2,it)};a.unit=function(){return d.unit}}
+  var fj=function(pt,it,n){return String(pt).replace(/_{2,}/g,(it&&(it[1]||it[0]))||'').replace(/\{n\}/g,n==null?2:n)};
+  if(d.qJp)a.qj=function(it){return fj(d.qJp,it)};
+  if(d.q2Jp)a.q2j=function(it){return fj(d.q2Jp,it)};
+  if(d.meJp)a.aj=function(it,n){return fj(d.meJp,it,n)};
+  if(d.yesJp)a.yj=d.yesJp;if(d.noJp)a.nj=d.noJp;
   return a;
 }
 function rebuildAttrs(){
@@ -1470,9 +2209,9 @@ loadCustom();rebuildAttrs();
 
 
 // ── STATE (var = inspectable from devtools/tests) ──
-var DEFAULT_SETTINGS={ver:2,tabSfx:true,ansHelp:'full',win:'first',attrs:['like','can','height','birthday','from','sport','pets','color','family','club','commute','yesterday','weekend','breakfast','getup','bedtime','lastsummer','bought','watched','vacation','where7'],size:4,free:false,cardJp:false,timerOn:true,help:'full',timerMin:10,unique:true,board:true};
+var MAX_PACKS=5; // grammar points per game (was 3 until Nov 2026)
+var DEFAULT_SETTINGS={ver:2,qJp:'full',aJp:'full',tabSfx:true,ansHelp:'full',win:'first',attrs:['like','can','height','birthday','from','sport','pets','color','family','club','commute','yesterday','weekend','breakfast','getup','bedtime','lastsummer','bought','watched','vacation','where7'],size:4,free:false,cardJp:false,timerOn:true,help:'full',timerMin:10,unique:true,board:true};
 var settings=loadSettings();
-var MAX_PACKS=3; // grammar points per game
 var players={};        // did -> player
 var phase='setup';     // setup | rules | play | end
 var gameId=0;
@@ -1493,9 +2232,10 @@ function loadSettings(){
   if(s)for(var k in o)if(s[k]!==undefined)o[k]=s[k];
   o.attrs=(o.attrs||[]).filter(function(id){return ATTR_BY_ID[id]});
   if(!o.attrs.length)o.attrs=DEFAULT_SETTINGS.attrs.slice();
-  // older saved settings may have more than 3 grammar points on — keep the first 3
-  var keep=[];o.attrs=o.attrs.filter(function(id){var pk=ATTR_BY_ID[id].pack;if(keep.indexOf(pk)<0){if(keep.length>=3)return false;keep.push(pk)}return true});
+  // older saved settings may have more grammar points on than allowed — keep the first MAX_PACKS
+  var keep=[];o.attrs=o.attrs.filter(function(id){var pk=ATTR_BY_ID[id].pack;if(keep.indexOf(pk)<0){if(keep.length>=MAX_PACKS)return false;keep.push(pk)}return true});
   if(o.cardJp==null)o.cardJp=false;
+  if(['full','gram','all'].indexOf(o.qJp)<0)o.qJp='full';if(['full','gram','all'].indexOf(o.aJp)<0)o.aJp='full';
   if(['first','most'].indexOf(o.win)<0)o.win='first';if(['slow','normal','fast'].indexOf(o.pace)<0)o.pace='normal';
   if(s&&!(s.ver>=2)){o.ver=2;o.size=4;o.free=false} // 5 Oct: 4×4 became the default
   if(s&&s.timerOn==null&&s.timerMin===0){o.timerOn=false;o.timerMin=10} // old "∞" button
@@ -1544,9 +2284,9 @@ function buildProfile(st){
     var v=st[a.id];
     if(a.type==='one'){var it=a.items[v];o.sentence=PL(a.me(it));o.e=it[2]}
     else if(a.type==='setNum'&&a.single){var k=+Object.keys(v)[0];o.sentence=PL(a.me(a.items[k],v[k]));o.e=a.items[k][2]}
-    else if(a.type==='set'&&a.items.length===1&&a.items[0][0]===''){var on1=v.indexOf(0)>=0;o.sentence=PL(on1?a.yes+' '+a.me(a.items[0]):a.no);o.e=on1?'✅':'❌'}
+    else if(a.type==='set'&&a.items.length===1&&a.items[0][0]===''){var on1=v.indexOf(0)>=0;o.sentence=PL(on1?ynv(a,'yes',a.items[0])+' '+a.me(a.items[0]):ynv(a,'no',a.items[0]));o.e=on1?'✅':'❌'}
     else{
-      o.yes=PL(a.yes);o.no=PL(a.no);
+      o.yes=PL(ynv(a,'yes',a.items[0]));o.no=PL(ynv(a,'no',a.items[0]));
       o.chips=a.items.map(function(it,i){
         var on=a.type==='set'?v.indexOf(i)>=0:v[i]!=null;
         return {e:it[2],t:it[0],on:on,n:a.type==='setNum'&&on?v[i]:null,u:a.type==='setNum'&&a.unit(it)==='years'?' yrs':'',s:on?PL(a.type==='setNum'?a.me(it,v[i]):a.me(it)):null};
@@ -1569,17 +2309,22 @@ function grammarMark(s){
   if(m=s.match(/^My (.+?) (is|was) (.*)$/))return 'My '+m[1]+' ['+m[2]+'] '+m[3];
   return s;
 }
+// yes / no answers can be a function of the item ("No, I don't speak French at all.")
+function ynv(a,k,it){var v=a[k];return typeof v==='function'?v(it):v}
+function jpv(a,k,it,n){var v=a[k];if(v==null)return null;return typeof v==='function'?v(it,n):v}
 // what the ANSWERER should say for a square (shown on their tablet only while it's being asked)
 function answerFor(st,sq){
-  var a=ATTR_BY_ID[sq.a],it=a.items[sq.i],v=st[a.id],m=matches(st,a.id,sq.i),L=[],l2=null;
-  // the SHORT natural answer only ("Yes, I did." — no repeating the whole sentence)
-  if(a.type==='set')L=[m?a.yes:a.no];
+  var a=ATTR_BY_ID[sq.a],it=a.items[sq.i],v=st[a.id],m=matches(st,a.id,sq.i),L=[],l2=null,JL=[],j2=null;
+  var jsplit=function(x){return String(x).split('。').filter(function(y){return y.trim()}).map(function(y){return y+'。'})};
+  // the SHORT natural answer only ("Yes, I did." — no repeating the whole sentence) + its Japanese
+  if(a.type==='set'){L=[ynv(a,m?'yes':'no',it)];JL=[jpv(a,m?'yj':'nj',it)]}
   else if(a.type==='setNum'){
-    if(a.single){var k=+Object.keys(v)[0],parts=String(a.me(a.items[k],v[k])).split(/\.\s+/).map(function(x,i,arr){return i<arr.length-1?x+'.':x});L=[parts[0]];if(m&&parts[1])l2=parts.slice(1).join(' ')}
-    else if(m){L=[a.yes];l2=a.me(it,v[sq.i])}else L=[a.no];
+    if(a.single){var k=+Object.keys(v)[0],parts=String(a.me(a.items[k],v[k])).split(/\.\s+/).map(function(x,i,arr){return i<arr.length-1?x+'.':x});L=[parts[0]];if(m&&parts[1])l2=parts.slice(1).join(' ');
+      var jp=jpv(a,'aj',a.items[k],v[k]);if(jp){var jps=jsplit(jp);JL=[jps[0]];if(m&&jps.length>1)j2=jps.slice(1).join('')}}
+    else if(m){L=[ynv(a,'yes',it)];l2=a.me(it,v[sq.i]);JL=[jpv(a,'yj',it)];j2=jpv(a,'aj',it,v[sq.i])}else{L=[ynv(a,'no',it)];JL=[jpv(a,'nj',it)]}
   }else{
     var act=a.items[v];
-    L=a.yes?[m?a.yes:a.no]:[a.me(act)];
+    if(a.yes){L=[ynv(a,m?'yes':'no',it)];JL=[jpv(a,m?'yj':'nj',it)]}else{L=[a.me(act)];JL=[jpv(a,'aj',act)]}
   }
   var fix=function(x){return String(x).replace(/\.\.$/,'.')};
   // facts-only help: the key info without the sentence
@@ -1587,7 +2332,8 @@ function answerFor(st,sq){
   if(a.type==='one'&&!a.yes){var A=a.items[v];facts=(A[2]||'')+' '+A[0]+(/^\d+$/.test(A[0])&&String(a.cond(A)).indexOf(A[0]+' cm')>=0?' cm':'')}
   else if(a.type==='setNum'&&a.single){var K=+Object.keys(v)[0];facts=(a.items[K][2]||'')+' '+a.items[K][0];if(l2)thenFacts=numUnit(v[K],a.unit(a.items[K]))}
   else if(l2&&a.type==='setNum')thenFacts=numUnit(v[sq.i],a.unit(it));
-  return {yes:m,yn:!!(a.yes&&!(a.type==='setNum'&&a.single)),lines:L.filter(Boolean).map(fix).map(grammarMark),then:l2&&grammarMark(fix(l2)),facts:facts,thenFacts:thenFacts};
+  return {yes:m,yn:!!(a.yes&&!(a.type==='setNum'&&a.single)),lines:L.filter(Boolean).map(fix).map(grammarMark),then:l2&&grammarMark(fix(l2)),facts:facts,thenFacts:thenFacts,
+    jlines:JL.filter(Boolean),jthen:j2||null};
 }
 // ── LISTEN & PICK: open questions (How tall…? When…? Where…? What time…?) have no ✓/✗ — the asker taps what they heard ──
 function isPick(a){return (a.type==='one'&&!a.yes)||(a.type==='setNum'&&!!a.single)}
@@ -1600,7 +2346,7 @@ function pickChoices(p,sqIdx,q){
   if(!p.mm.choices[key]){var set=[sq.i];if(set.indexOf(act)<0)set.push(act);
     shuffle(a.items.map(function(x,i){return i}).filter(function(i){return set.indexOf(i)<0})).slice(0,Math.max(0,Math.min(4,a.items.length)-set.length)).forEach(function(i){set.push(i)});
     p.mm.choices[key]=shuffle(set)}
-  return p.mm.choices[key].map(function(i){return {i:i,label:pickLabel(a,a.items[i]),e:a.items[i][2]||a.emoji}});
+  return p.mm.choices[key].map(function(i){var it=a.items[i],lab=pickLabel(a,it),j=a.pj?a.pj(it):it[1];if(!j||j===it[0]||/^[\d:]+$/.test(j))j='';return {i:i,label:lab,e:it[2]||a.emoji,j:j}});
 }
 // ── CARDS ──
 function squareView(sq){
@@ -1608,7 +2354,8 @@ function squareView(sq){
   var a=ATTR_BY_ID[sq.a],it=a.items[sq.i];
   var v={e:it[2],cond:a.cond(it),condJp:a.condJp(it),q:a.q(it),info:!!sq.info};if(isPick(a)){v.pick=true;v.target=sq.i}
   if(a.open)v.open=a.open;
-  if(sq.info){v.q2=a.q2(it);v.unit=a.unit(it);v.min=a.min;v.max=a.max}
+  v.qj=a.qj?a.qj(it):'';if(a.oj)v.oj=a.oj;
+  if(sq.info){v.q2=a.q2(it);v.q2j=a.q2j?a.q2j(it):'';v.unit=a.unit(it);v.min=a.min;v.max=a.max}
   return v;
 }
 function canMatchAll(card,others){ // bipartite matching: every square gets a different classmate
@@ -1976,7 +2723,7 @@ setInterval(function(){
 },5000);
 function minPlayers(){return settings.unique?settings.size+1:3} // one-per-classmate: a full line needs this many DIFFERENT classmates, plus you
 function youMsg(p){
-  return {did:p.did,n:p.n,gameId:gameId,phase:phase,size:settings.size,help:settings.help,ansHelp:settings.ansHelp||'full',mm:mmView(p),win:settings.win,unique:!!p.unique,reuse:!!p.reuse,cardJp:!!settings.cardJp,
+  return {did:p.did,n:p.n,gameId:gameId,phase:phase,size:settings.size,help:settings.help,ansHelp:settings.ansHelp||'full',qJp:settings.qJp||'full',aJp:settings.aJp||'full',mm:mmView(p),win:settings.win,unique:!!p.unique,reuse:!!p.reuse,cardJp:!!settings.cardJp,
     card:p.card.map(squareView),marks:p.marks,locks:p.locks,lines:p.lines,bingoAt:p.bingoAt};
 }
 function mmView(p){
@@ -2190,7 +2937,7 @@ function resumeGame(){
 // ── RENDER: setup ──
 function selectedPacks(){var out=[];enabledAttrs().forEach(function(a){if(out.indexOf(a.pack)<0)out.push(a.pack)});return out}
 function packRoom(pk){var s=selectedPacks();return s.indexOf(pk)>=0||s.length<MAX_PACKS}
-function packFullMsg(){myqMsg('<span style="color:var(--red)">Max '+MAX_PACKS+' grammar points per game — turn one off first. 文法は1ゲーム3つまで。</span>')}
+function packFullMsg(){myqMsg('<span style="color:var(--red)">Max '+MAX_PACKS+' grammar points per game — turn one off first. 文法は1ゲーム'+MAX_PACKS+'つまで。</span>')}
 function timerHint(){
   if(settings.win==='first')return 'First BINGO wins: the game ends on its own — keep the timer as a safety net';
   return 'Most BINGOs, 20–30 students: '+({3:'3×3 ≈ 8–10 min',4:'4×4 ≈ 12–15 min',5:'5×5 ≈ 18–20 min'})[settings.size];
@@ -2198,35 +2945,33 @@ function timerHint(){
 function squaresNeeded(){return settings.size*settings.size-((settings.free&&settings.size%2)?1:0)}
 function renderSetup(){
   // packs
-  var h='',lastLv=null;
+  var h='';
   PACKS.forEach(function(pk){
     var as=ATTRS.filter(function(a){return a.pack===pk.id});
     if(!as.length)return;
-    var lv=pk.lv||'mine';
-    if(lv!==lastLv){lastLv=lv;var L=PACK_LEVELS[lv]||['Your packs','自作パック'];h+='<div class="lvhead">'+L[0]+'<small>'+L[1]+'</small></div>'}
-    var locked=!packRoom(pk.id);
-    var onN=as.filter(function(a){return settings.attrs.indexOf(a.id)>=0}).length;
-    h+='<div class="pack'+(locked?'" style="opacity:.45" title="Max 3 grammar points per game':'')+'"><div class="pack-h"><span style="font-size:24px">'+pk.emoji+'</span><span class="t">'+pk.en+'<small>'+pk.jp+'</small></span>'+
-      '<button class="opt'+(onN===as.length?' on':'')+'" onclick="togglePack(\''+pk.id+'\')">'+(onN===as.length?'✓ All':onN?onN+' / '+as.length:'Off')+'</button></div><div class="row">';
-    as.forEach(function(a){
-      h+='<button class="chip'+(settings.attrs.indexOf(a.id)>=0?' on':'')+(a.custom?' mine':'')+'" onclick="toggleAttr(\''+a.id+'\')">'+a.emoji+' '+escHTML(a.title)+(a.custom?'<span class="ed" title="Edit" onclick="event.stopPropagation();openEditor(\''+a.id+'\')">✎</span>':'')+'</button>';
-    });
-    h+='</div></div>';
+    var onN=as.filter(function(a){return settings.attrs.indexOf(a.id)>=0}).length,locked=!packRoom(pk.id);
+    var ex=pk.ex,exj=pk.exj;if(!ex){var a0=as[0];ex=a0.q(a0.items[0]);exj=a0.qj?a0.qj(a0.items[0]):''}
+    h+='<div class="gcat'+(onN?' on':'')+(locked?' locked':'')+(pk.lv==null&&!pk.ex?' mine':'')+'" onclick="togglePack(\''+pk.id+'\')">'+
+      '<div class="gc-h"><span class="ge">'+pk.emoji+'</span><div class="gn">'+escHTML(pk.en)+'<small>'+escHTML(pk.jp||'')+'</small></div><span class="gtick">'+(onN?'✓':'')+'</span></div>'+
+      '<div class="gex">'+frameHTML(escHTML(ex),'full')+'</div>'+(exj?'<div class="gexj">'+escHTML(exj)+'</div>':'')+
+      '<button class="gq" onclick="event.stopPropagation();openPackQs(\''+pk.id+'\')">📋 Questions <b>'+(onN?onN+' / ':'')+as.length+'</b></button></div>';
   });
-  $('packList').innerHTML=h;
+  $('packList').innerHTML=h;renderPackQs();
   var n=enabledAttrs().length;
   var need=squaresNeeded();
   var sp=selectedPacks(),nq=enabledAttrs().length,needQ=squaresNeeded();
-  $('gramBadge').textContent=sp.length+'/3 · '+nq+'Q';
+  $('gramBadge').textContent=sp.length+'/'+MAX_PACKS+' · '+nq+'Q';
   $('gramSummary').innerHTML='📚 <span style="color:'+(nq>=needQ&&sp.length?'var(--green)':'var(--red)')+'">'+nq+' questions</span> from '+(sp.length?sp.map(function(x){var pk=PACKS.filter(function(y){return y.id===x})[0];return (pk&&pk.emoji||'')+' '+escHTML(packName(x))}).join(', '):'no grammar yet')+
     ' <span class="note">— tap to change · タップして変更</span>';
   if($('tab-rules').classList.contains('on'))renderRulesPage();
-  $('attrCount').innerHTML='<div style="margin-bottom:4px"><b style="font-size:16px;color:'+(sp.length?'var(--green)':'var(--red)')+'">'+sp.length+' / '+MAX_PACKS+'</b> grammar points · 文法 '+(sp.length?'— '+sp.map(function(x){return escHTML(packName(x))}).join(', '):'— pick up to 3')+'</div><b style="font-size:16px;color:'+(n>=need?'var(--green)':'var(--red)')+'">'+n+' / '+need+'</b> questions selected · 選択中 — '+(n>=need?(n>need?'each card gets a random '+need+' of them':'one question per square'):'need '+(need-n)+' more (one per square)');
+  $('attrCount').innerHTML='<div style="margin-bottom:4px"><b style="font-size:16px;color:'+(sp.length?'var(--green)':'var(--red)')+'">'+sp.length+' / '+MAX_PACKS+'</b> grammar points · 文法 '+(sp.length?'— '+sp.map(function(x){return escHTML(packName(x))}).join(', '):'— pick up to '+MAX_PACKS)+'</div><b style="font-size:16px;color:'+(n>=need?'var(--green)':'var(--red)')+'">'+n+' / '+need+'</b> questions selected · 選択中 — '+(n>=need?(n>need?'each card gets a random '+need+' of them':'one question per square'):'need '+(need-n)+' more (one per square)');
   $('sizeBtns').innerHTML=[3,4,5].map(function(s){return '<button class="opt'+(settings.size===s?' on':'')+'" onclick="setOpt(\'size\','+s+')">'+s+' × '+s+'</button>'}).join('');
   $('winBtns').innerHTML=[['first','🏁 First BINGO wins','最初のビンゴで勝ち'],['most','🎯 Most BINGOs','ライン数で勝負']].map(function(o){
     return '<button class="opt'+(settings.win===o[0]?' on':'')+'" onclick="setOpt(\'win\',\''+o[0]+'\')">'+o[1]+'<small>'+o[2]+'</small></button>'}).join('');
   $('ansBtns').innerHTML=[['full','Full answer','「Yes, I did.」'],['blank','Fill the blanks','「Yes, I ＿＿.」'],['facts','Facts only','✓ YES · 2 brothers']].map(function(o){
     return '<button class="opt'+((settings.ansHelp||'full')===o[0]?' on':'')+'" onclick="setOpt(\'ansHelp\',\''+o[0]+'\')">'+o[1]+'<small>'+o[2]+'</small></button>'}).join('');
+  var JPOPT=[['full','Visible','全部見える'],['gram','Grammar blanked','文法だけ空欄'],['all','All blanked','全部空欄']];
+  ['qJp','aJp'].forEach(function(k){$(k+'Btns').innerHTML=JPOPT.map(function(o){return '<button class="opt'+((settings[k]||'full')===o[0]?' on':'')+'" onclick="setOpt(\''+k+'\',\''+o[0]+'\')">'+o[1]+'<small>'+o[2]+'</small></button>'}).join('')});
   $('helpBtns').innerHTML=[['full','Full question','質問を全部表示'],['blank','Fill the blanks','穴埋め'],['none','No help','ヒントなし']].map(function(o){
     return '<button class="opt'+(settings.help===o[0]?' on':'')+'" onclick="setOpt(\'help\',\''+o[0]+'\')">'+o[1]+'<small>'+o[2]+'</small></button>'}).join('');
   $('timerBox').innerHTML='<div class="toggle'+(settings.timerOn?' on':'')+'" onclick="setOpt(\'timerOn\','+(!settings.timerOn)+')"><span class="sw"></span></div>'+
@@ -2242,12 +2987,11 @@ function renderSetup(){
   renderLobby();
 }
 function tog(k,t,s){return '<div class="toggle'+(settings[k]?' on':'')+'" onclick="setOpt(\''+k+'\','+(!settings[k])+')"><span class="sw"></span><span>'+t+'<small>'+s+'</small></span></div>'}
-function togglePack(id){
+function togglePack(id,forceOn){
   var as=ATTRS.filter(function(a){return a.pack===id}).map(function(a){return a.id});
-  var all=as.every(function(x){return settings.attrs.indexOf(x)>=0});
-  if(!all&&!packRoom(id)){packFullMsg();return}
-  settings.attrs=settings.attrs.filter(function(x){return as.indexOf(x)<0});
-  if(!all)settings.attrs=settings.attrs.concat(as);
+  var any=as.some(function(x){return settings.attrs.indexOf(x)>=0});
+  if(forceOn||!any){if(!packRoom(id)){packFullMsg();return}settings.attrs=settings.attrs.filter(function(x){return as.indexOf(x)<0}).concat(as)}
+  else settings.attrs=settings.attrs.filter(function(x){return as.indexOf(x)<0});
   saveSettings();renderSetup();
 }
 function toggleAttr(id){
@@ -2332,6 +3076,8 @@ function renderCtrl(){
     '<button class="cbtn" onclick="toggleTabSfx()">'+(settings.tabSfx!==false?'🔔 Tablets':'🔕 Tablets')+'</button>'+
     '<button class="cbtn" onclick="cycleHelp()">💡 Question: '+{full:'Full',blank:'Blanks',none:'None'}[settings.help]+'</button>'+
     '<button class="cbtn" onclick="cycleAnsHelp()">💬 Answer: '+{full:'Full',blank:'Blanks',facts:'Facts'}[settings.ansHelp||'full']+'</button>'+
+    '<button class="cbtn" onclick="cycleJp(\'qJp\')">🇯🇵 Q: '+JPLAB[settings.qJp||'full']+'</button>'+
+    '<button class="cbtn" onclick="cycleJp(\'aJp\')">🇯🇵 A: '+JPLAB[settings.aJp||'full']+'</button>'+
     '<button class="cbtn" onclick="toggleMusic()">'+(_musicOn?'🔊':'🔇')+' Music</button>'+
     '<button class="cbtn main" onclick="if(confirm(\'End the game now?\'))endGame(\'teacher\')">🏁 END</button>';
   else if(phase==='end')h=(results&&_revealed?'<button class="cbtn" onclick="toggleCredits()">'+(_credits?'🏆 Podium':'🎬 Credits')+'</button>':'')+'<button class="cbtn" onclick="toggleMusic()">'+(_musicOn?'🔊':'🔇')+' Music</button><button class="cbtn main" onclick="backToSetup()">↺ PLAY AGAIN</button>';
@@ -2339,6 +3085,8 @@ function renderCtrl(){
 }
 function toggleTabSfx(){settings.tabSfx=settings.tabSfx===false;saveSettings();renderCtrl();broadcastState(true)}
 function toggleBoard(){settings.board=!settings.board;_askAt=Date.now();saveSettings();renderStage();renderCtrl()}
+var JPLAB={full:'Show',gram:'Gram＿',all:'All＿'};
+function cycleJp(k){settings[k]={full:'gram',gram:'all',all:'full'}[settings[k]||'full'];saveSettings();renderCtrl();playerList().forEach(function(p){sendYou(p)})}
 function cycleAnsHelp(){settings.ansHelp={full:'blank',blank:'facts',facts:'full'}[settings.ansHelp||'full'];saveSettings();renderCtrl();playerList().forEach(function(p){sendYou(p)})}
 function cycleHelp(){settings.help={full:'blank',blank:'none',none:'full'}[settings.help];saveSettings();renderCtrl();broadcastState(true);playerList().forEach(function(p){sendYou(p)})}
 document.addEventListener('keydown',function(e){
@@ -2367,9 +3115,9 @@ function rulesHTML(){
   var h='<div class="rules"><div class="steps">'+steps.map(function(s,i){return '<div class="step"><div class="n">'+(i+1)+'</div><div><div class="en">'+s[0]+'</div><div class="jp">'+s[1]+'</div></div></div>'}).join('')+'</div>';
   var cards=enabledAttrs().map(function(a){
     var it=exampleItem(a),q=a.q(it),ans;
-    if(a.type==='setNum'){ans=(a.yes?a.yes+' ':'')+a.me(it,2);q=a.single?a.q(it)+' → '+a.q2(it):q+' → '+a.q2(it)}
-    else if(a.type==='set')ans=a.yes+' / '+a.no;
-    else ans=a.me(it)+(a.yes?' / '+a.no:'');
+    if(a.type==='setNum'){ans=(a.yes?ynv(a,'yes',it)+' ':'')+a.me(it,2);q=a.single?a.q(it)+' → '+a.q2(it):q+' → '+a.q2(it)}
+    else if(a.type==='set')ans=ynv(a,'yes',it)+' / '+ynv(a,'no',it);
+    else ans=a.me(it)+(a.yes?' / '+ynv(a,'no',it):'');
     return '<div class="qcard"><div class="e">'+a.emoji+'</div><div><div class="q">'+frameHTML(q,'full')+'</div><div class="a">'+escHTML(framePlain(ans))+'</div></div></div>';
   });
   cards.push('<div class="qcard ask-num"><div class="e">🔢</div><div><div class="q"><b class="gr">Are you</b> number 12?</div><div class="a">Yes, I am! / No, I\'m number 17.</div></div></div>');
@@ -2382,7 +3130,7 @@ var RULE_PAGE=12,_rulePage=0;
 function rulePages(){return Math.ceil((enabledAttrs().length+1)/RULE_PAGE)}
 function turnRules(d){var n=rulePages();_rulePage=(_rulePage+d+n)%n;renderStage();renderCtrl()}
 // board hidden → one SET example question per grammar point in this game (always the full sentence)
-var PACK_EXAMPLE={basic:['like',1],past:['weekend',1],future:['plan',0],perfect:['been',0],comp:['c_taller',0],asas:['a_tall',1],super:['s_subject',0],passive:['p_made',0],inf:['i_try',1],gerund:['g_good',0],must:['m_every',0],rel:['r_friend',0],ppc:['pc_play',0],indq:['k_how',0],let:['l_parents',0],'if':['f_teacher',0],wish:['w_youcould',0],used:['u_like',1],pastperf:['pp_seen',1]};
+var PACK_EXAMPLE={part:['pt_keep',0],conj:['cj_if',0],neg:['n_think',0],ques:['q_tag',0],excl:['e_lets',0],it:['it_fun',0],prep:['pr_tired',0],chat:['ch_help',0],idiom:['id_putup',0],basic:['like',1],past:['weekend',1],future:['plan',0],perfect:['been',0],comp:['c_taller',0],asas:['a_tall',1],super:['s_subject',0],passive:['p_made',0],inf:['i_try',1],gerund:['g_good',0],must:['m_every',0],rel:['r_friend',0],ppc:['pc_play',0],indq:['k_how',0],let:['l_parents',0],'if':['f_teacher',0],wish:['w_youcould',0],used:['u_like',1],pastperf:['pp_seen',1]};
 function packExample(pk){
   var on=enabledAttrs().filter(function(a){return a.pack===pk}),ex=PACK_EXAMPLE[pk],a=null,i=0;
   if(ex)a=on.filter(function(x){return x.id===ex[0]})[0];
@@ -2521,7 +3269,7 @@ var DEMO_MS=7000;
 function demoData(){
   var pk=selectedPacks()[0]||'past',on=enabledAttrs(),ex=PACK_EXAMPLE[pk],a=null,i=0;
   if(ex)a=on.filter(function(x){return x.id===ex[0]})[0];if(a)i=ex[1];else{a=on.filter(function(x){return x.pack===pk})[0]||on[0]||ATTR_BY_ID.weekend;i=0}
-  var it=a.items[i]||a.items[0],yes=a.yes?a.yes:a.me(it);
+  var it=a.items[i]||a.items[0],yes=a.yes?ynv(a,'yes',it):a.me(it);
   var sq=on.filter(function(x){return x!==a}).slice(0,8).map(function(x){var y=x.items[0];return {e:y[2]||x.emoji,c:x.cond(y)}});
   while(sq.length<8)sq.push({e:'⭐',c:'…'});
   sq.splice(4,0,{e:it[2]||a.emoji,c:a.cond(it),me:1});
@@ -2790,6 +3538,25 @@ function mgrRemove(did){
   removePlayer(did);
 }
 
+// ── GRAMMAR: one category's questions (opened with 📋 on a category card) ──
+var _pqPack=null;
+function openPackQs(id){_pqPack=id;$('pq').classList.add('on');renderPackQs()}
+function closePackQs(){_pqPack=null;$('pq').classList.remove('on')}
+function renderPackQs(){
+  if(!_pqPack||!$('pq').classList.contains('on'))return;
+  var pk=PACKS.filter(function(x){return x.id===_pqPack})[0];if(!pk){closePackQs();return}
+  var as=ATTRS.filter(function(a){return a.pack===pk.id}),onN=as.filter(function(a){return settings.attrs.indexOf(a.id)>=0}).length;
+  var h='<h2>'+pk.emoji+' '+escHTML(pk.en)+' <small class="jp" style="font-size:15px">'+escHTML(pk.jp||'')+'</small><button class="x" onclick="closePackQs()">✕</button></h2>';
+  if(pk.ex)h+='<div class="pq-ex"><div>'+frameHTML(escHTML(pk.ex),'full')+'</div><div class="jp">'+escHTML(pk.exj||'')+'</div></div>';
+  h+='<div class="mrow" style="justify-content:space-between"><span class="note">Tap a question to turn it on / off · 質問をタップしてON/OFF</span><span class="row" style="gap:8px"><button class="opt'+(onN===as.length?' on':'')+'" onclick="togglePack(\''+pk.id+'\',true)">✓ All</button><button class="opt" onclick="packNone(\''+pk.id+'\')">Off</button></span></div>';
+  h+='<div class="pq-list">'+as.map(function(a){
+    var it=a.items[0],on=settings.attrs.indexOf(a.id)>=0;
+    return '<button class="pq-item'+(on?' on':'')+(a.custom?' mine':'')+'" onclick="toggleAttr(\''+a.id+'\')"><span class="e">'+a.emoji+'</span><span class="t"><b>'+frameHTML(escHTML(a.q(it)),'full')+'</b>'+(a.qj?'<small>'+escHTML(framePlain(a.qj(it)))+'</small>':'')+'<i>'+(isPick(a)?'👂 listen & pick':(a.type==='setNum'?'✓ / ✗ + 🔢 number':'✓ / ✗'))+' · '+a.items.length+' answers</i></span>'+
+      (a.custom?'<span class="ed" title="Edit" onclick="event.stopPropagation();closePackQs();openEditor(\''+a.id+'\')">✎</span>':'')+'<span class="tk">'+(on?'✓':'')+'</span></button>';
+  }).join('')+'</div>';
+  $('pqBox').innerHTML=h;
+}
+function packNone(id){var as=ATTRS.filter(function(a){return a.pack===id}).map(function(a){return a.id});settings.attrs=settings.attrs.filter(function(x){return as.indexOf(x)<0});saveSettings();renderSetup()}
 // ── MY QUESTIONS: editor, export, import ──
 var edDraft=null,edNewPack='';
 // the answer type decides where the mochis' answers come from
@@ -2889,13 +3656,18 @@ function renderEditor(){
     var lab=d.pool==='list'?'④ Answers — one per line':'④ Items — one per line';
     h+='<div class="fld" id="edItems" style="'+(hide?'display:none':'')+'"><label>'+lab+' <small>English | 日本語 card text (optional) | emoji (optional)</small></label><textarea oninput="edSet(\'_itemsText\',this.value)" placeholder="'+(d.pool==='list'?'apples | りんごが一番好き | 🍎&#10;bananas | バナナが一番好き | 🍌&#10;grapes':'swim | 泳げる | 🏊&#10;cook | 料理ができる | 🍳&#10;ski')+'">'+escHTML(d._itemsText||'')+'</textarea></div>';
   }
+  h+='<div class="fld" style="border-top:2px dashed var(--line);padding-top:10px"><label>🇯🇵 日本語 (optional) <small>shown on the tablets · ___ = the item\'s 日本語 from the list · [brackets] = the grammar part (blanked when you choose "Grammar blanked")</small></label></div>';
+  h+=edField('qJp','日本語 question','optional','___は[好き]？');
+  if(d.kind==='setNum')h+=edField('q2Jp','日本語 follow-up','optional','[何回]行ったことある？');
+  if(d.kind!=='set')h+=edField('meJp',"日本語 mochi's answer",d.kind==='setNum'?'{n} = number':'optional','___が[好き]。');
+  if(d.kind!=='one'||hasBlank(d.q))h+='<div class="fld"><div class="two"><div><label>日本語 Yes answer</label><input value="'+escHTML(d.yesJp||'')+'" placeholder="うん、[好き]。" oninput="edSet(\'yesJp\',this.value)"></div><div><label>日本語 No answer</label><input value="'+escHTML(d.noJp||'')+'" placeholder="ううん、[好きじゃない]。" oninput="edSet(\'noJp\',this.value)"></div></div></div>';
   h+='</div><div><div class="prev-box" id="edPrev"></div></div>';
   h+='<div class="mrow">'+(d.id?'<button class="danger" onclick="deleteCustom(\''+d.id+'\')">🗑 Delete</button><span class="spacer"></span>':'')+'<button class="cbtn" onclick="closeEditor()">Cancel</button><button class="big-btn g" id="edSave" style="font-size:22px;padding:8px 22px" onclick="saveEditor()">✓ SAVE</button></div>';
   $('qedBox').innerHTML=h;renderEdPreview();
 }
 function edClean(){
   var d=JSON.parse(JSON.stringify(edDraft));delete d._itemsText;
-  ['q','q2','open','card','me','yes','no','unit','emoji','title','cardJp'].forEach(function(k){if(typeof d[k]==='string')d[k]=d[k].trim();if(d[k]==='')delete d[k]});
+  ['q','q2','open','card','me','yes','no','unit','emoji','title','cardJp','qJp','q2Jp','meJp','yesJp','noJp'].forEach(function(k){if(typeof d[k]==='string')d[k]=d[k].trim();if(d[k]==='')delete d[k]});
   if(d.kind!=='setNum'){delete d.q2;delete d.unit;delete d.min;delete d.max;delete d.numPool}
   if(d.kind==='one'){
     if(d.pool!=='list'){delete d.items}else{d.items=parseItems(edDraft._itemsText);delete d.poolOn;delete d.cardJp}
