@@ -400,7 +400,8 @@ var sheetSq=null,entryNum='',entryAns=null,sheetMsg='',sheetBad=false,_claimWait
 var _ch=null,_ablyReady=false,_lastHello=0;
 
 function $(id){return document.getElementById(id)}
-function pub(n,d){if(_ablyReady&&_ch)try{_ch.publish(n,d)}catch(e){}}
+var _upCh=null,_msgOut=0;
+function pub(n,d){if(_ablyReady&&_upCh)try{_msgOut++;_upCh.publish(n,d)}catch(e){}}
 function hello(force){if(!joined)return;if(!force&&Date.now()-_lastHello<2000)return;_lastHello=Date.now();pub('hello',{did:did,want:myNum()})}
 // remember my number in this tab, so a browser reload of a hidden tab (or a reloaded big screen) gives the SAME mochi back
 function myNum(){if(me)return me.n;try{return +sessionStorage.getItem('mb_num')||null}catch(e){return null}}
@@ -412,21 +413,27 @@ document.addEventListener('visibilitychange',function(){try{if(document.hidden){
 
 function initAbly(){
   try{
-    var ably=new Ably.Realtime({key:ABLY_KEY,clientId:did});
-    _ch=ably.channels.get(ABLY_CHANNEL);
+    // big screen → everyone on ABLY_CHANNEL, → only me on ABLY_CHANNEL-d-<did>; I talk to the big screen on ABLY_CHANNEL-up (publish-only)
+    // clientId = one id per device (kept in localStorage) so Ably counts each Chromebook once a month, not once per tab
+    var dev=null;try{dev=localStorage.getItem('mb_dev');if(!dev){dev='dev'+Math.random().toString(36).slice(2,10);localStorage.setItem('mb_dev',dev)}}catch(e){dev=did}
+    var ably=new Ably.Realtime({key:ABLY_KEY,clientId:dev,echoMessages:false});
+    _ch=ably.channels.get(ABLY_CHANNEL,{modes:['SUBSCRIBE']});
+    var _me=ably.channels.get(ABLY_CHANNEL+'-d-'+did,{modes:['SUBSCRIBE']});
+    _upCh=ably.channels.get(ABLY_CHANNEL+'-up',{modes:['PUBLISH']});
     ably.connection.on('connected',function(){_ablyReady=true;if(!_probed){_probed=true;probeWait=true;pub('probe',{did:did,keep:_autoReload?myNum():null});setTimeout(function(){if(probeWait){probeWait=false;render()}},2500)}else hello(true);render()});
     ably.connection.on('disconnected',function(){_ablyReady=false;render()});
     _ch.subscribe('state',function(m){onState(m.data)});
-    _ch.subscribe('you',function(m){if(m.data.did===did){joined=true;probeWait=false;onYou(m.data)}});
-    _ch.subscribe('probe-reply',function(m){if(m.data.did===did){try{sessionStorage.removeItem('mb_num')}catch(e){}probe=m.data;probeWait=false;if(m.data.lost){joined=false;me=null}render()}});
-    _ch.subscribe('claim-result',function(m){if(m.data.did===did)onClaimResult(m.data)});
-    _ch.subscribe('no-result',function(m){if(m.data.did===did)onNoResult(m.data)});
-    _ch.subscribe('kick',function(m){if(m.data.did===did){try{sessionStorage.removeItem('mb_num')}catch(e){}joined=false;me=null;probe=null;closeSheet();render()}});
-    _ch.subscribe('notice',function(m){if(m.data.did==='*'&&m.data.kind==='reuse-all'&&me){me.reuse=true;render();notice('🔓','Teacher: everyone can ask classmates again!','先生より：同じ人にもう一度聞いてもOK！')}
+    (_me).subscribe('you',function(m){if(m.data.did===did){joined=true;probeWait=false;onYou(m.data)}});
+    (_me).subscribe('probe-reply',function(m){if(m.data.did===did){try{sessionStorage.removeItem('mb_num')}catch(e){}probe=m.data;probeWait=false;if(m.data.lost){joined=false;me=null}render()}});
+    (_me).subscribe('claim-result',function(m){if(m.data.did===did)onClaimResult(m.data)});
+    (_me).subscribe('no-result',function(m){if(m.data.did===did)onNoResult(m.data)});
+    (_me).subscribe('kick',function(m){if(m.data.did===did){try{sessionStorage.removeItem('mb_num')}catch(e){}joined=false;me=null;probe=null;closeSheet();render()}});
+    var onNotice=function(m){if(m.data.did==='*'&&m.data.kind==='reuse-all'&&me){me.reuse=true;render();notice('🔓','Teacher: everyone can ask classmates again!','先生より：同じ人にもう一度聞いてもOK！')}
       if(m.data.did===did&&m.data.kind==='reuse'){if(me)me.reuse=true;render();notice('🔓','You can meet your classmates one more time!','同じ人ともう1回会えるよ！ビンゴを目指そう')}
       if(m.data.did===did&&m.data.kind==='left'){closeSheet();notice('🚪','#'+m.data.with+' left the game.','#'+m.data.with+'はいなくなりました · Finding you a new mochi… 新しい相手を探しています')}
       if(m.data.did===did&&m.data.kind==='rematch'){closeSheet();notice('🔄','The teacher found you a new partner!','先生が新しい相手を探しています · Wait a moment… 少し待ってね')}
-      if(m.data.did===did&&m.data.kind==='repair'){if(sheetSq!=null&&m.data.squares.indexOf(sheetSq)>=0)closeSheet();notice('🔄','A square on your card changed — a mochi left the game.','カードのマスが変わりました（もちが一人抜けました）')}});
+      if(m.data.did===did&&m.data.kind==='repair'){if(sheetSq!=null&&m.data.squares.indexOf(sheetSq)>=0)closeSheet();notice('🔄','A square on your card changed — a mochi left the game.','カードのマスが変わりました（もちが一人抜けました）')}};
+    _ch.subscribe('notice',onNotice);_me.subscribe('notice',onNotice);
     _ch.subscribe('countdown',function(m){if(me&&m.data.gameId===me.gameId)countdown()});
   }catch(e){console.warn('Ably',e)}
 }

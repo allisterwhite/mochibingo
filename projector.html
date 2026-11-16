@@ -2658,24 +2658,45 @@ function removePlayer(did){
 }
 
 // ── ABLY ──
-function pub(name,data){if(_ablyReady&&_ch)try{_ch.publish(name,data)}catch(e){}}
+// Message plan (Nov 2026 — a 25-student class hit Ably's free-plan rate limit):
+//   tablets → big screen : ABLY_CHANNEL+'-up'      (only the big screen listens; tablets attach it PUBLISH-only)
+//   big screen → everyone: ABLY_CHANNEL            (state, countdown, "everyone ask again")
+//   big screen → 1 tablet: ABLY_CHANNEL+'-d-'+did  (you, claim-result, no-result, probe-reply, kick, notices)
+// Ably counts every delivery, so private channels stop one tablet's update being delivered to all 26 screens.
+// echoMessages:false = no copy of our own messages. Outgoing messages are paced (Ably free: 50 publishes/s per
+// connection) and a newer 'you' / 'state' replaces one still waiting in the queue.
+var PERSONAL={you:1,'claim-result':1,'no-result':1,'probe-reply':1,kick:1,notice:1};
+var _ably=null,_mainCh=null,_upCh=null,_devCh={},_pq=[],_pqT=null,_pqSent=[],PUB_PER_SEC=40;
+var _msgOut=0; // messages sent (devtools / tests)
+function devCh(did){return _devCh[did]||(_devCh[did]=_ably.channels.get(ABLY_CHANNEL+'-d-'+did,{modes:['PUBLISH']}))}
+function pub(name,data){
+  if(!_ablyReady||!_mainCh)return;
+  var key=name==='you'?'you:'+data.did:(name==='state'?'state':null);
+  if(key)for(var i=0;i<_pq.length;i++)if(_pq[i].k===key){_pq[i].d=data;return}
+  _pq.push({n:name,d:data,k:key});flushPub();
+}
+function flushPub(){
+  var now=Date.now();_pqSent=_pqSent.filter(function(t){return now-t<1000});
+  while(_pq.length&&_pqSent.length<PUB_PER_SEC){var m=_pq.shift();_pqSent.push(now);sendNow(m.n,m.d)}
+  if(_pq.length&&!_pqT)_pqT=setTimeout(function(){_pqT=null;flushPub()},30);
+}
+function sendNow(name,data){
+  try{_msgOut++;
+    if(PERSONAL[name]&&data&&data.did&&data.did!=='*')devCh(data.did).publish(name,data);
+    else _mainCh.publish(name,data);
+  }catch(e){}
+}
 function initAbly(){
   try{
-    var ably=new Ably.Realtime({key:ABLY_KEY,clientId:'projector'});
-    _ch=ably.channels.get(ABLY_CHANNEL);
-    ably.connection.on('connected',function(){_ablyReady=true;broadcastState(true)});
-    ably.connection.on('disconnected',function(){_ablyReady=false});
-    _ch.subscribe('hello',function(m){onHello(m.data)});
-    _ch.subscribe('probe',function(m){onProbe(m.data)});
-    _ch.subscribe('reclaim',function(m){onReclaim(m.data)});
-    _ch.subscribe('ping',function(m){onPing(m.data)});
-    _ch.subscribe('claim',function(m){onClaim(m.data)});
-    _ch.subscribe('no',function(m){onNo(m.data)});
-    _ch.subscribe('found',function(m){onFound(m.data)});
-    _ch.subscribe('lost',function(m){onLost(m.data)});
-    _ch.subscribe('next',function(m){onNext(m.data)});
-    _ch.subscribe('asking',function(m){onAsking(m.data)});
-    _ch.subscribe('leave',function(m){var p=players[m.data.did];if(p){p.on=false;renderAll();broadcastState()}});
+    _ably=new Ably.Realtime({key:ABLY_KEY,clientId:'projector',echoMessages:false});
+    _mainCh=_ably.channels.get(ABLY_CHANNEL,{modes:['PUBLISH']});
+    _upCh=_ably.channels.get(ABLY_CHANNEL+'-up',{modes:['SUBSCRIBE']});
+    _ably.connection.on('connected',function(){_ablyReady=true;broadcastState(true)});
+    _ably.connection.on('disconnected',function(){_ablyReady=false});
+    var on=function(n,f){_upCh.subscribe(n,function(m){f(m.data)})};
+    on('hello',onHello);on('probe',onProbe);on('reclaim',onReclaim);on('ping',onPing);on('claim',onClaim);on('no',onNo);
+    on('found',onFound);on('lost',onLost);on('next',onNext);on('asking',onAsking);
+    on('leave',function(d){var p=players[d.did];if(p){p.on=false;renderAll();broadcastState()}});
   }catch(e){console.warn('Ably',e)}
 }
 function onHello(d){
