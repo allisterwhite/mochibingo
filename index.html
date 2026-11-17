@@ -276,6 +276,18 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
 .gotsq em{font-style:normal;font-weight:800;color:var(--yellow);font-size:clamp(18px,3.4vw,26px)}
 .gotsq small{color:var(--dim);font-size:clamp(14px,2.6vw,18px)}
 #ov.got{background:rgba(8,34,26,.97)}
+.namebox{display:flex;flex-direction:column;gap:6px;width:min(440px,90vw)}
+.namebox label{font-weight:800;color:var(--dim);font-size:16px}
+.namebox input{font-family:var(--disp);font-weight:800;font-size:clamp(26px,5vw,36px);text-align:center;background:var(--panel);border:3px solid var(--line);border-radius:16px;color:var(--text);padding:10px 14px}
+.namebox input:focus{outline:none;border-color:var(--yellow)}
+.hdr .num .mynm{font-family:var(--body);font-size:.55em;color:var(--dim);margin-left:8px;font-weight:800}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;width:min(100%,1000px);max-height:62vh;overflow-y:auto;padding:4px}
+.rn{font-family:var(--disp);font-weight:800;font-size:clamp(18px,2.6vw,24px);background:var(--panel);border:3px solid var(--line);border-radius:14px;padding:12px 8px;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:2px}
+.rn:active{transform:scale(.97)}
+.rn.me{border-color:var(--yellow)}
+.rn.ab{opacity:.75;border-style:dashed}
+.rn.taken{opacity:.3}
+.rn small{font-family:var(--body);font-size:12px;color:var(--dim)}
 </style>
 </head>
 <body>
@@ -352,6 +364,9 @@ function jpFrame(s,lvl){
   return s.replace(/\[([^\]]+)\]/g,'<b class="gr">$1</b>');
 }
 function jpBox(s,lvl,cls){return s?'<div class="'+(cls||'jpq')+'"><span class="jtag">日本語</span>'+jpFrame(s,lvl)+'</div>':''}
+// names: everyone else is shown by NAME (the number stays on the mochi's body); my own screen keeps "MOCHI #12"
+var _names={};
+function NM(n){var nm=(me&&me.mm&&me.mm.p===n&&me.mm.pn)||_names[n];return escHTML(nm||('#'+n))}
 function framePlain(q){return (q||'').replace(/\[|\]/g,'')}
 function escHTML(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 
@@ -401,8 +416,9 @@ var _ch=null,_ablyReady=false,_lastHello=0;
 
 function $(id){return document.getElementById(id)}
 var _upCh=null,_msgOut=0;
+var myName=(function(){try{return localStorage.getItem('mb_name')||''}catch(e){return ''}})(),nameErr='';
 function pub(n,d){if(_ablyReady&&_upCh)try{_msgOut++;_upCh.publish(n,d)}catch(e){}}
-function hello(force){if(!joined)return;if(!force&&Date.now()-_lastHello<2000)return;_lastHello=Date.now();pub('hello',{did:did,want:myNum()})}
+function hello(force){if(!joined)return;if(!force&&Date.now()-_lastHello<2000)return;_lastHello=Date.now();pub('hello',{did:did,want:myNum(),name:myName})}
 // remember my number in this tab, so a browser reload of a hidden tab (or a reloaded big screen) gives the SAME mochi back
 function myNum(){if(me)return me.n;try{return +sessionStorage.getItem('mb_num')||null}catch(e){return null}}
 function saveNum(n){try{sessionStorage.setItem('mb_num',n)}catch(e){}}
@@ -420,9 +436,10 @@ function initAbly(){
     _ch=ably.channels.get(ABLY_CHANNEL,{modes:['SUBSCRIBE']});
     var _me=ably.channels.get(ABLY_CHANNEL+'-d-'+did,{modes:['SUBSCRIBE']});
     _upCh=ably.channels.get(ABLY_CHANNEL+'-up',{modes:['PUBLISH']});
-    ably.connection.on('connected',function(){_ablyReady=true;if(!_probed){_probed=true;probeWait=true;pub('probe',{did:did,keep:_autoReload?myNum():null});setTimeout(function(){if(probeWait){probeWait=false;render()}},2500)}else hello(true);render()});
+    ably.connection.on('connected',function(){_ablyReady=true;if(!_probed){_probed=true;probeWait=true;pub('probe',{did:did,keep:_autoReload?myNum():null,name:myName});setTimeout(function(){if(probeWait){probeWait=false;render()}},2500)}else hello(true);render()});
     ably.connection.on('disconnected',function(){_ablyReady=false;render()});
     _ch.subscribe('state',function(m){onState(m.data)});
+    _me.subscribe('name-taken',function(m){if(m.data.did!==did)return;joined=false;me=null;nameErr=m.data.empty?'Type your name first. 名前を入れてね。':'Someone already has "'+escHTML(m.data.name)+'" — add your family name or an initial.<br>その名前はもう使われています。名字やイニシャルを足してね。';render();setTimeout(function(){var i=$('nameIn');if(i){i.focus();i.select()}},50)});
     (_me).subscribe('you',function(m){if(m.data.did===did){joined=true;probeWait=false;onYou(m.data)}});
     (_me).subscribe('probe-reply',function(m){if(m.data.did===did){try{sessionStorage.removeItem('mb_num')}catch(e){}probe=m.data;probeWait=false;if(m.data.lost){joined=false;me=null}render()}});
     (_me).subscribe('claim-result',function(m){if(m.data.did===did)onClaimResult(m.data)});
@@ -430,18 +447,20 @@ function initAbly(){
     (_me).subscribe('kick',function(m){if(m.data.did===did){try{sessionStorage.removeItem('mb_num')}catch(e){}joined=false;me=null;probe=null;closeSheet();render()}});
     var onNotice=function(m){if(m.data.did==='*'&&m.data.kind==='reuse-all'&&me){me.reuse=true;render();notice('🔓','Teacher: everyone can ask classmates again!','先生より：同じ人にもう一度聞いてもOK！')}
       if(m.data.did===did&&m.data.kind==='reuse'){if(me)me.reuse=true;render();notice('🔓','You can meet your classmates one more time!','同じ人ともう1回会えるよ！ビンゴを目指そう')}
-      if(m.data.did===did&&m.data.kind==='left'){closeSheet();notice('🚪','#'+m.data.with+' left the game.','#'+m.data.with+'はいなくなりました · Finding you a new mochi… 新しい相手を探しています')}
+      if(m.data.did===did&&m.data.kind==='left'){closeSheet();notice('🚪',''+NM(m.data.with)+' left the game.',''+NM(m.data.with)+'はいなくなりました · Finding you a new mochi… 新しい相手を探しています')}
       if(m.data.did===did&&m.data.kind==='rematch'){closeSheet();notice('🔄','The teacher found you a new partner!','先生が新しい相手を探しています · Wait a moment… 少し待ってね')}
       if(m.data.did===did&&m.data.kind==='repair'){if(sheetSq!=null&&m.data.squares.indexOf(sheetSq)>=0)closeSheet();notice('🔄','A square on your card changed — a mochi left the game.','カードのマスが変わりました（もちが一人抜けました）')}};
     _ch.subscribe('notice',onNotice);_me.subscribe('notice',onNotice);
     _ch.subscribe('countdown',function(m){if(me&&m.data.gameId===me.gameId)countdown()});
   }catch(e){console.warn('Ably',e)}
 }
-function ping(){if(joined&&_ablyReady)pub('ping',{did:did,gameId:me?me.gameId:null,want:myNum()})}
+function ping(){if(joined&&_ablyReady)pub('ping',{did:did,gameId:me?me.gameId:null,want:myNum(),name:myName})}
 setInterval(ping,8000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden){hello(true);ping()}});
 
 function onState(d){
+  var _rj=!joined&&d&&JSON.stringify(d.roster||null)!==JSON.stringify((st&&st.roster)||null);
+  if(d&&d.players)d.players.forEach(function(x){if(x.nm)_names[x.n]=x.nm});
   _soundOn=d.tabSfx!==false; // the teacher can mute every tablet from the big screen
   var prevPhase=st&&st.phase;st=d;
   if(d.left!=null&&!d.paused)deadline=Date.now()+d.left;else deadline=null;
@@ -460,7 +479,7 @@ setInterval(function(){
   if(sheetSq!=null&&canAsk()&&m.asking!==sheetSq&&Date.now()-_askSent.at>1500)sendAsking(sheetSq);
 },2000);
 function onYou(d){
-  saveNum(d.n);
+  saveNum(d.n);if(d.nm){myName=d.nm;try{localStorage.setItem('mb_name',d.nm)}catch(e){}}if(d.mm&&d.mm.p!=null&&d.mm.pn)_names[d.mm.p]=d.mm.pn;
   // keep what I already tapped until the big screen catches up (no flicker back to the FOUND button)
   _srvFound=!!(d.mm&&d.mm.found);
   if(_pend.found&&d.mm&&d.mm.s==='match'&&d.mm.at===_pend.found.at&&!d.mm.found)d.mm.found=true;
@@ -488,8 +507,8 @@ function mmOverlay(kind,n,tries){
   if(kind==='match'&&!(me.mm.s==='match'&&me.mm.p===n))return;
   if(kind==='talk'&&!(me.mm.s==='talk'&&me.mm.p===n))return;
   ov.dataset.t='1';
-  ov.innerHTML=kind==='match'?'<div style="width:clamp(110px,24vh,170px);height:clamp(126px,27vh,195px)">'+mascotSVG(n)+'</div><div style="font-family:var(--disp);font-weight:800;font-size:clamp(30px,7vw,52px);color:var(--yellow)">🔍 Find #'+n+'!</div><div class="msg">'+n+'番を探そう！ #'+n+' is looking for you too!</div>'
-    :'<div style="font-size:70px">🤝</div><div style="font-family:var(--disp);font-weight:800;font-size:clamp(30px,7vw,52px);color:var(--green)">Talk with #'+n+'!</div><div class="msg">'+(me.mm.turn===me.n?'🗣️ You ask first! あなたから質問':'👂 #'+n+' asks first — listen! #'+n+'から質問')+'</div>';
+  ov.innerHTML=kind==='match'?'<div style="width:clamp(110px,24vh,170px);height:clamp(126px,27vh,195px)">'+mascotSVG(n)+'</div><div style="font-family:var(--disp);font-weight:800;font-size:clamp(30px,7vw,52px);color:var(--yellow)">🔍 Find '+NM(n)+'!</div><div class="msg">'+NM(n)+'を探そう！ '+NM(n)+' is looking for you too!</div>'
+    :'<div style="font-size:70px">🤝</div><div style="font-family:var(--disp);font-weight:800;font-size:clamp(30px,7vw,52px);color:var(--green)">Talk with '+NM(n)+'!</div><div class="msg">'+(me.mm.turn===me.n?'🗣️ You ask first! あなたから質問':'👂 '+NM(n)+' asks first — listen! '+NM(n)+'から質問')+'</div>';
   ov.classList.add('on');ov.onclick=function(){ov.classList.remove('on')};clearTimeout(_toastT);_toastT=setTimeout(function(){ov.classList.remove('on')},kind==='match'?1800:1300);if(kind==='match')tSfxMatch();else tSfxTalk();
 }
 function onClaimResult(d){
@@ -503,13 +522,13 @@ function onClaimResult(d){
     if(d.newLine)setTimeout(function(){showBingo(d.place)},1700);
     else if(d.unlocked&&!wasReuse)notice('🔓','You can ask classmates again!','もう一度同じ人に聞いてもOK！ビンゴを目指そう');
   }else{
-    var why={checkpick:['🔁 Check again! Listen to #'+mmv().p+' one more time.','もう一度よく聞こう！'],notmatch:['✗ Not a match — #'+mmv().p+' said: '+(d.heard||''),'ちがいました（'+(d.heard||'')+'）'],wrongnum:['🔁 Check again! Ask the number one more time.','もう一度確認しよう！数字をもう一度聞こう'],checkagain:['🔁 Check again! Did they say YES?','もう一度確認しよう！本当に「はい」？'],nomatch:['✗ Not a match! Check and ask again.','違うみたい。もう一度聞こう！'],used:['You already used #'+entryNum+' for a square!','その人はもう使った。'],
+    var why={checkpick:['🔁 Check again! Listen to '+NM(mmv().p)+' one more time.','もう一度よく聞こう！'],notmatch:['✗ Not a match — '+NM(mmv().p)+' said: '+(d.heard||''),'ちがいました（'+(d.heard||'')+'）'],wrongnum:['🔁 Check again! Ask the number one more time.','もう一度確認しよう！数字をもう一度聞こう'],checkagain:['🔁 Check again! Did they say YES?','もう一度確認しよう！本当に「はい」？'],nomatch:['✗ Not a match! Check and ask again.','違うみたい。もう一度聞こう！'],used:['You already used #'+entryNum+' for a square!','その人はもう使った。'],
       self:["That's you! Find a classmate.",'それは自分の番号！'],nobody:['There is no #'+entryNum+' in this game.',entryNum+'番はいません。'],
-      locked:['Wait a moment…','少し待って…'],notturn:['Wait — it\'s #'+(mmv().p)+'\'s turn to ask.','相手の番です。'],done:['Already done!','もう完了！'],closed:['The game is not running.','ゲーム中ではありません。']}[d.reason]||['Try again','もう一度'];
+      locked:['Wait a moment…','少し待って…'],notturn:['Wait — it\'s '+NM((mmv().p))+'\'s turn to ask.','相手の番です。'],done:['Already done!','もう完了！'],closed:['The game is not running.','ゲーム中ではありません。']}[d.reason]||['Try again','もう一度'];
     sheetMsg=why[0]+'<br><span class="jp" style="font-weight:500">'+why[1]+'</span>';sheetBad=true;
     if(d.reason==='checkpick'){tSfxNo();_pick=null;entryAns=null;renderSheet();checkAgain(why)}
     else if(d.reason==='wrongnum'||d.reason==='checkagain'){tSfxNo();if(d.reason==='wrongnum')entryAns=null;renderSheet();checkAgain(why)}
-    else if(d.reason==='notmatch'){tSfxNo();closeSheet();render();notice('✗','Not a match — #'+mmv().p+' said: '+escHTML(d.heard||''),'ちがいました · 今回はマスなし<br>'+(mmv().pdone?'🗣️ Ask another square · 別のマスを聞こう':'👂 Next: #'+mmv().p+' asks you · 次は相手の番'))}
+    else if(d.reason==='notmatch'){tSfxNo();closeSheet();render();notice('✗','Not a match — '+NM(mmv().p)+' said: '+escHTML(d.heard||''),'ちがいました · 今回はマスなし<br>'+(function(m){return m.pdone?((m.tries||0)+1<(m.max||1)?'🗣️ Ask another square · 別のマスを聞こう':'👋 Next partner! · 次の人へ'):'👂 Next: '+NM(m.p)+' asks you · 次は相手の番'})(mmv()))}
     else if(d.reason==='nomatch'){tSfxNo();closeSheet();render();toast(sheetMsg)}else{tSfxNo();renderSheet();var s=$('sh');s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake')}
   }
 }
@@ -531,7 +550,9 @@ function phaseNow(){return st?st.phase:(me?me.phase:'setup')}
 function render(){
   var app=$('app');
   var fab='<button class="rulesfab" onclick="openRules()">📖 RULES · ルール</button>';
-  if(!joined){app.innerHTML=joinHTML()+fab;return}
+  if(!joined){ // keep what the student is typing if the screen redraws (state messages arrive while they type)
+    var ni=$('nameIn'),kv=ni?ni.value:null,kf=ni&&document.activeElement===ni,ks=ni?ni.selectionStart:0;
+    app.innerHTML=joinHTML()+fab;var n2=$('nameIn');if(n2&&kv!=null){n2.value=kv;if(kf){n2.focus();try{n2.setSelectionRange(ks,ks)}catch(e){}}}return}
   if(!me){app.innerHTML=fab+'<div class="center"><div class="logo"><span class="m">MOCHI</span><br><span class="b">BINGO!</span></div><div class="msg">Connecting… 接続中 <span class="dot'+(_ablyReady?' on':'')+'"></span><br>Is the big screen open? 大画面は開いていますか？</div></div>';return}
   var ph=phaseNow();
   if(ph==='setup'){app.innerHTML=lobbyHTML()+fab;return}
@@ -555,30 +576,48 @@ function joinHTML(){
   if(probe&&probe.inGame&&probe.offline&&probe.offline.length){
     return '<div class="center"><div class="logo" style="font-size:clamp(34px,8vw,56px)"><span class="m">MOCHI</span> <span class="b">BINGO!</span></div>'+
       '<div class="msg"><b style="color:var(--text)">A game is running. Were you already playing?</b><br><b style="color:var(--text)">ゲーム中です。もう参加していましたか？</b><br>Tap YOUR mochi to get it back · 自分のもちをタップして戻ろう</div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:720px">'+probe.offline.map(function(n){return '<button onclick="reclaim('+n+')" style="background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:6px 8px;width:96px"><div style="width:70px;height:80px;margin:0 auto">'+mascotSVG(n)+'</div></button>'}).join('')+'</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:720px">'+probe.offline.map(function(n){if(probe.offNames&&probe.offNames[n])_names[n]=probe.offNames[n];return '<button onclick="reclaim('+n+')" style="background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:6px 8px;width:96px"><div style="width:70px;height:80px;margin:0 auto">'+mascotSVG(n)+'</div><div style="font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+NM(n)+'</div></button>'}).join('')+'</div>'+
       (probe.taken?'<div class="msg" style="color:var(--red)">That mochi is back online — pick yours again.<br>そのもちは使用中です。もう一度選んでね。</div>':'')+
       '<button class="big-btn" style="font-size:20px" onclick="doJoin()">I\'M NEW — GET A MOCHI</button><div class="msg">はじめての人はこちら・新しいもちをもらう</div></div>';
   }
-  return '<div class="center" onclick="doJoin()" style="cursor:pointer"><div class="logo"><span class="m">MOCHI</span><br><span class="b">BINGO!</span></div>'+
-    '<div style="display:flex;gap:8px;height:90px">'+[4,19,11,27].map(function(n){return '<div style="width:76px">'+mascotSVG(n,{num:false})+'</div>'}).join('')+'</div>'+
-    '<button class="big-btn">TAP TO GET YOUR MOCHI</button><div class="msg">タップしてもちをもらおう！</div></div>';
+  var R=(st&&st.roster)||(probe&&probe.roster)||null;
+  if(R&&R.length&&!_typeName){ // class roster: tap your name
+    var mine=nameKeyT(myName);
+    var btn=function(x){var me1=mine&&nameKeyT(x.l)===mine;return '<button class="rn'+(x.t?' taken':'')+(x.a?' ab':'')+(me1?' me':'')+'"'+(x.t?' disabled':'')+' onclick="pickName(this.dataset.n)" data-n="'+escHTML(x.l)+'">'+escHTML(x.l)+(x.t?'<small>✓ joined</small>':'')+'</button>'};
+    var here=R.filter(function(x){return !x.a}),ab=R.filter(function(x){return x.a});
+    return '<div class="center" style="justify-content:flex-start;padding-top:14px"><div class="logo" style="font-size:clamp(30px,6vw,46px)"><span class="m">MOCHI</span> <span class="b">BINGO!</span></div>'+
+      '<div class="msg" style="margin:0"><b style="color:var(--text);font-size:1.2em">Tap your name · 自分の名前をタップ</b></div>'+
+      (nameErr?'<div class="msg" style="color:var(--red);font-weight:800">'+nameErr+'</div>':'')+
+      '<div class="rgrid">'+here.map(btn).join('')+ab.map(btn).join('')+'</div>'+
+      '<button class="lostbtn" style="margin-top:4px" onclick="_typeName=true;render()">Not on the list? Type your name<small>リストにない → 名前を入力</small></button></div>';
+  }
+  return '<div class="center"><div class="logo"><span class="m">MOCHI</span><br><span class="b">BINGO!</span></div>'+
+    '<div style="display:flex;gap:8px;height:80px">'+[4,19,11,27].map(function(n){return '<div style="width:68px">'+mascotSVG(n,{num:false})+'</div>'}).join('')+'</div>'+
+    '<div class="namebox"><label for="nameIn">Your name · 名前</label><input id="nameIn" maxlength="12" autocomplete="off" value="'+escHTML(myName)+'" placeholder="Taro / たろう" onkeydown="if(event.key===\'Enter\')doJoin()"></div>'+
+    (nameErr?'<div class="msg" style="color:var(--red);font-weight:800">'+nameErr+'</div>':'')+
+    '<button class="big-btn" onclick="doJoin()">GET MY MOCHI ▶</button>'+(((st&&st.roster)||(probe&&probe.roster))?'<button class="lostbtn" onclick="_typeName=false;render()">◀ Back to the class list<small>名前リストに戻る</small></button>':'')+'<div class="msg">名前を入れて、もちをもらおう！ · Classmates will see your name.</div></div>';
 }
-function doJoin(){audio();joined=true;probe=null;hello(true);render()}
+var _typeName=false;
+function nameKeyT(v){try{v=String(v||'').normalize('NFKC')}catch(e){}return String(v||'').replace(/\s+/g,'').toLowerCase()}
+function pickName(v){myName=String(v||'');try{localStorage.setItem('mb_name',myName)}catch(e){}nameErr='';audio();joined=true;probe=null;hello(true);render()}
+function doJoin(){var i=$('nameIn'),v=i?i.value:myName;v=String(v||'').replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim();v=Array.from(v).slice(0,12).join('');
+  if(!v){nameErr='Type your name first. 名前を入れてね。';render();return}
+  myName=v;try{localStorage.setItem('mb_name',v)}catch(e){}nameErr='';audio();joined=true;probe=null;hello(true);render()}
 function reclaim(n){audio();joined=true;probe=null;pub('reclaim',{did:did,n:n});render()}
 function lobbyHTML(){
   return '<div class="center" style="justify-content:flex-start;padding-top:22px"><div class="lobtop"><div class="hero">'+mascotSVG(me.n)+'</div><div><div class="msg">You are… あなたは…</div>'+
-    '<div class="youare">MOCHI <b>'+me.n+'</b>!</div><div class="msg"><b>'+me.n+'番</b>のもちです。<br>Wait for the teacher · 先生を待とう</div>'+
-    '<div class="msg" style="font-size:13px">Remember your number! 自分の番号を覚えよう <span class="dot'+(_ablyReady?' on':'')+'"></span></div></div></div>'+rulesMiniHTML()+'</div>';
+    '<div class="youare">MOCHI <b>'+me.n+'</b>!</div><div class="msg">Classmates will look for <b style="color:var(--yellow);font-size:1.2em">'+escHTML(me.nm||myName)+'</b><br>みんなには「'+escHTML(me.nm||myName)+'」と表示されます</div>'+
+    '<div class="msg">Wait for the teacher · 先生を待とう <span class="dot'+(_ablyReady?' on':'')+'"></span></div></div></div>'+rulesMiniHTML()+'</div>';
 }
 function ruleSteps(){
-  var uq=st?st.unique!==false:true;
+  var uq=st?st.unique!==false:true,pt=st&&st.perTalk===3?3:1;
   return [
-    ['🍡','Get your mochi','Your <b>number</b> is your name in this game.','番号がこのゲームでの名前。'],
-    ['🔍','Find your partner','Your tablet says <b>"Find #12!"</b> — #12 is looking for you too. <b>"Are you number 12?"</b> Found them? You <b>both</b> tap <b>🤝 FOUND</b>.','「#12を探せ！」相手もあなたを探している。見つけたら2人とも「🤝 FOUND」を押す。'],
-    ['💬','Take turns','<b>🗣️ Asker:</b> tap a square and ask the question on your screen. <b>👂 Answerer:</b> your screen shows your answer — say it! YES → tap <b>✓ YES</b>, NO → tap <b>✗ NO</b>. What / Where / When questions: tap <b>what you heard</b>. Then switch. Up to <b>3 questions each</b> — a YES ends your asking.','聞く人：マスを押して画面の質問をする。答える人：画面に出る答えを言う。はい→「✓ YES」、いいえ→「✗ NO」。What/Where/Whenの質問は聞いた答えを選ぶ。そして交代。1人3問まで。'],
+    ['🍡','Get your mochi','Type your <b>name</b> — classmates see your name.','名前を入れてもちをもらう。みんなには名前が見える。'],
+    ['🔍','Find your partner','Your tablet says <b>"Find Ken!"</b> — Ken is looking for you too. <b>"Are you Ken?"</b> Found them? You <b>both</b> tap <b>🤝 FOUND</b>.','「Kenを探せ！」相手もあなたを探している。見つけたら2人とも「🤝 FOUND」を押す。'],
+    ['💬','Take turns','<b>🗣️ Asker:</b> tap a square and ask the question on your screen. <b>👂 Answerer:</b> your screen shows your answer — say it! YES → tap <b>✓ YES</b>, NO → tap <b>✗ NO</b>. What / Where / When questions: tap <b>what you heard</b>. Then switch. '+(pt===1?'<b>One question each</b>, then a new partner.':'Up to <b>3 questions each</b> — a YES ends your asking.'),'聞く人：マスを押して画面の質問をする。答える人：画面に出る答えを言う。はい→「✓ YES」、いいえ→「✗ NO」。What/Where/Whenの質問は聞いた答えを選ぶ。そして交代。'+(pt===1?'1人1問ずつ。終わったら次の人へ。':'1人3問まで。')],
     ['⏭️','Next partner','When you are both done, tap <b>👍 NEXT</b>. Your tablet finds your next partner. <b>"Looking for a mochi…"</b> = wait a moment.','2人とも終わったら「👍 NEXT」を押す。次の相手が出る。「Looking…」は少し待とう。'],
-    uq?['👥','One classmate per square','Use a <b>different</b> person for every square. You meet each classmate <b>once</b> — later your tablet may let you meet again.','1マスに1人ずつ。同じ人とは1回だけ（あとでまた会えるかも）。']
-      :['👥','Meet everyone','You meet each classmate <b>once</b> — later your tablet may let you meet again.','同じ人とは1回だけ（あとでまた会えるかも）。'],
+    uq?['👥','One classmate per square','Use a <b>different</b> person for every square. Your partner can <b>always</b> give you a square — find the right question!','1マスに1人ずつ。相手は必ずどれかのマスをくれる。正しい質問を見つけよう！']
+      :['🔁','Meet again','You can meet the same classmate again. Your partner can <b>always</b> give you a square — find the right question!','同じ人とまた会えるよ。相手は必ずどれかのマスをくれる。正しい質問を見つけよう！'],
     (st&&st.win==='most')?['🎯','Most BINGOs!','Make as many lines as you can before time runs out!','時間内にできるだけたくさんラインを作ろう！']
       :['🏁','First BINGO wins!','The first to make a line — a row, a column or a diagonal — wins!','縦・横・ななめで最初に一列そろえた人の勝ち！'],
     ['🙈','Play fair','English only, and don\'t show your screen.','英語だけ。画面を見せない。']
@@ -591,32 +630,32 @@ function rulesMiniHTML(){
 function openRules(){var ov=$('ov');ov.dataset.t='rules';ov.innerHTML='<div style="width:min(900px,94vw);max-height:90vh;overflow-y:auto">'+rulesMiniHTML()+'<div class="msg" style="margin-top:8px">Tap to close · タップで閉じる</div></div>';ov.classList.add('on');ov.onclick=function(){ov.classList.remove('on')};clearTimeout(_toastT)}
 function headerHTML(ph,busy){
   var lines=(me.lines||[]).length;
-  if(busy)return '<div class="hdr"><div class="mw">'+mascotSVG(me.n)+'</div><div class="num">#'+me.n+'</div>'+
+  if(busy)return '<div class="hdr"><div class="mw">'+mascotSVG(me.n)+'</div><div class="num">#'+me.n+'<small class="mynm">'+escHTML(me.nm||'')+'</small></div>'+
     '<div class="stat">✓ '+filled()+'/'+total()+'</div>'+(lines?'<div class="stat y">⭐ '+lines+' BINGO</div>':'')+
     '<div class="sp"></div><div id="tmr"></div><button class="tab" onclick="openRules()" title="Rules">📖 RULES</button></div>';
-  return '<div class="hdr"><div class="mw">'+mascotSVG(me.n)+'</div><div class="num">#'+me.n+'</div>'+
+  return '<div class="hdr"><div class="mw">'+mascotSVG(me.n)+'</div><div class="num">#'+me.n+'<small class="mynm">'+escHTML(me.nm||'')+'</small></div>'+
     '<div class="stat">✓ '+filled()+'/'+total()+'</div>'+(lines?'<div class="stat y">⭐ '+lines+' BINGO</div>':'')+
     '<div class="sp"></div><div id="tmr"></div><button class="tab" onclick="openRules()" title="Rules">📖 RULES</button></div>';
 }
 function setTab(t){tab=t;render()}
 function mmv(){return (me&&me.mm)||{s:'look'}}
-function triesHTML(m){var h='<div class="tries">';for(var k=0;k<(m.max||3);k++)h+='<span class="'+(k<m.tries?'x':'')+'"></span>';return h+'</div>'}
+function triesHTML(m){if((m.max||1)<=1)return '';var h='<div class="tries">';for(var k=0;k<(m.max||3);k++)h+='<span class="'+(k<m.tries?'x':'')+'"></span>';return h+'</div>'}
 function mmBannerHTML(){
   var m=mmv();
   if(m.s==='talk'){
     var n=m.p;
-    return '<div class="mmb talk"><div class="fm">'+mascotSVG(n)+'</div><div class="ft"><div class="f1">🗣️ Your turn — ask <b>#'+n+'</b>!</div><div class="f2">Tap a square and ask in English · マスを押して質問しよう · question '+(m.tries+1)+' of '+(m.max||3)+(m.pdone?' · #'+n+' is done asking — keep going!':'')+'</div></div>'+triesHTML(m)+'</div>';
+    return '<div class="mmb talk"><div class="fm">'+mascotSVG(n)+'</div><div class="ft"><div class="f1">🗣️ Your turn — ask <b>'+NM(n)+'</b>!</div><div class="f2">Tap a square and ask in English · マスを押して質問しよう'+((m.max||1)>1?' · question '+(m.tries+1)+' of '+m.max+(m.pdone?' · '+NM(n)+' is done asking — keep going!':''):' · 1 question · 1問だけ')+'</div></div>'+triesHTML(m)+'</div>';
   }
   return '<div class="mmb look"><div class="fm" style="opacity:.6">'+mascotSVG(me.n)+'</div><div class="ft"><div class="f1">⏳ Looking for a mochi<span class="dots"><i>.</i><i>.</i><i>.</i></span></div><div class="f2">Everyone is talking — wait a moment! みんな話し中。少し待ってね · Read your card!</div></div></div>';
 }
 function answerHTML(){
   var m=mmv(),n=m.p,q=m.q,help=me.help||'full';
-  if(!q)return '<div class="matchv"><div class="big">'+mascotSVG(n)+'</div><div class="t1" style="font-size:clamp(28px,6vw,48px)">👂 <b>#'+n+'</b> is choosing a question<span class="dots"><i>.</i><i>.</i><i>.</i></span></div>'+
-    '<div class="t2">'+n+'番が質問を選んでいます。よく聞こう！ · Listen!</div>'+(m.done?'<div class="t2">✓ You\'re done asking — just answer. 答えるだけ</div>':'<div class="t2">Then it\'s your turn to ask · 次はあなたの番</div>')+'</div>';
-  var A=q.ans,h='<div class="ansv"><div class="ans-who"><div class="mw">'+mascotSVG(n)+'</div><div>👂 <b>#'+n+'</b> asks you: · '+n+'番の質問</div></div>';
+  if(!q)return '<div class="matchv"><div class="big">'+mascotSVG(n)+'</div><div class="t1" style="font-size:clamp(28px,6vw,48px)">👂 <b>'+NM(n)+'</b> is choosing a question<span class="dots"><i>.</i><i>.</i><i>.</i></span></div>'+
+    '<div class="t2">'+NM(n)+'が質問を選んでいます。よく聞こう！ · Listen!</div>'+(m.done?(!m.tries&&!m.got?'<div class="t2" style="font-weight:800">🙂 This time you just answer — '+NM(n)+' has no square for you. 今回は答えるだけ</div>':'<div class="t2">✓ You\'re done asking — just answer. 答えるだけ</div>'):'<div class="t2">Then it\'s your turn to ask · 次はあなたの番</div>')+'</div>';
+  var A=q.ans,h='<div class="ansv"><div class="ans-who"><div class="mw">'+mascotSVG(n)+'</div><div>👂 <b>'+NM(n)+'</b> asks you: · '+NM(n)+'の質問</div></div>';
   var qL=me.qJp||'full',aL=me.aJp||'full';
   h+='<div class="ans-q"><div class="e">'+q.e+'</div><div><div class="qq">'+frameHTML(q.q,'full')+'</div>'+jpBox(q.qj,qL)+'</div></div>';
-  if(help!=='full')h+='<div class="t2" style="font-weight:800">🤝 Stuck? Help #'+n+' make the question! 困っていたら手伝ってあげよう</div>';
+  if(help!=='full')h+='<div class="t2" style="font-weight:800">🤝 Stuck? Help '+NM(n)+' make the question! 困っていたら手伝ってあげよう</div>';
   var ah=me.ansHelp||'full',fmt=function(x){return frameHTML(x,ah==='blank'?'blank':'full')};
   if(ah==='facts'){ // only the facts — the student makes the sentence
     h+='<div class="ans-a '+(A.yes?'yes':'no')+'"><div class="l">💬 YOUR ANSWER · 答えを作ろう</div>'+
@@ -632,7 +671,7 @@ function byeHTML(){
   var m=mmv(),n=m.p;
   var got=function(i){var q=me.card[i];return q?'<div class="say" style="border-color:var(--green)">'+q.e+' '+escHTML(q.cond)+'</div>':''};
   return '<div class="matchv"><div class="big" style="height:clamp(100px,24vh,180px);width:clamp(88px,21vh,160px)">'+mascotSVG(n)+'</div>'+
-    '<div class="t1" style="font-size:clamp(30px,6.5vw,52px)">👋 Done with <b>#'+n+'</b>!</div>'+
+    '<div class="t1" style="font-size:clamp(30px,6.5vw,52px)">👋 Done with <b>'+NM(n)+'</b>!</div>'+
     '<div class="t2">Next partner! 次の人へ！</div>'+
     '<div class="say">🗣️ "Thank you!"</div>'+
     '<button class="foundbtn" onclick="doNext()">👍 NEXT<small>次の相手へ</small></button></div>';
@@ -640,12 +679,12 @@ function byeHTML(){
 function doNext(){if(!me)return;audio();_pend.next={since:me.mm.since};pub('next',{did:did,gameId:me.gameId});me.mm={s:'look',since:Date.now()};render()}
 function matchHTML(){
   var m=mmv(),n=m.p,canLost=Date.now()-(m.at||0)>=(m.lostMs||30000);
-  var h='<div class="matchv"><div class="big">'+mascotSVG(n)+'</div><div class="t1">🔍 FIND <b>#'+n+'</b>!</div><div class="t2">#'+n+' is looking for you too! · '+n+'番もあなたを探しています</div>'+
-    '<div class="say">🗣️ "Are you number '+n+'?"</div>';
-  if(!m.found)h+='<button class="foundbtn" onclick="doFound()">🤝 FOUND #'+n+'!<small>見つけた！</small></button>';
-  else h+='<div class="waitf">✓ Waiting for #'+n+' to tap FOUND<span class="dots"><i>.</i><i>.</i><i>.</i></span><div class="t2">#'+n+'も「FOUND」を押すまで待ってね</div></div>';
+  var h='<div class="matchv"><div class="big">'+mascotSVG(n)+'</div><div class="t1">🔍 FIND <b>'+NM(n)+'</b>!</div><div class="t2">'+NM(n)+' is looking for you too! · '+NM(n)+'もあなたを探しています</div>'+
+    '<div class="say">🗣️ "Are you '+NM(n)+'?"</div>';
+  if(!m.found)h+='<button class="foundbtn" onclick="doFound()">🤝 FOUND '+NM(n)+'!<small>見つけた！</small></button>';
+  else h+='<div class="waitf">✓ Waiting for '+NM(n)+' to tap FOUND<span class="dots"><i>.</i><i>.</i><i>.</i></span><div class="t2">'+NM(n)+'も「FOUND」を押すまで待ってね</div></div>';
   if(m.lost)h+='<div class="lostmsg">📣 The teacher knows. Keep looking! 先生に知らせたよ。探し続けよう！</div>';
-  else h+='<button class="lostbtn" id="lostbtn" '+(canLost?'':'style="visibility:hidden"')+' onclick="doLost()">😵 Can\'t find #'+n+'?<small>見つからない → 先生に知らせる</small></button>';
+  else h+='<button class="lostbtn" id="lostbtn" '+(canLost?'':'style="visibility:hidden"')+' onclick="doLost()">😵 Can\'t find '+NM(n)+'?<small>見つからない → 先生に知らせる</small></button>';
   return h+'</div>';
 }
 var _pend={},_srvFound=false; // taps the big screen hasn't confirmed yet → sent again every 2 s
@@ -661,8 +700,8 @@ function cardHTML(preview){
     var m=me.marks[i],lk=me.locks&&me.locks[i]&&me.locks[i]>Date.now();
     if(q.free){h+='<div class="sq free"><div class="e">⭐</div><div class="c">FREE</div></div>';return}
     var cls='sq'+(m?' done':'')+(lc[i]?' line':'')+(lk?' lock':'')+(!m&&asked[i]?' asked':'');
-    h+='<div class="'+cls+'" onclick="openSheet('+i+')"><div class="e">'+q.e+'</div><div class="c">'+escHTML(q.cond)+'</div>'+(me.cardJp&&q.condJp?'<div class="cj">'+escHTML(q.condJp)+'</div>':'')+(q.info?'<span class="info">🔢</span>':'')+(!m&&asked[i]&&!lk?'<span class="nob">✗ #'+mmv().p+'</span>':'');
-    if(m)h+='<div class="stamp"><div class="mw">'+mascotSVG(m.t)+'</div><b>#'+m.t+'</b>'+(m.a!=null?'<small>'+m.a+' '+escHTML(q.unit)+'</small>':'')+'</div>';
+    h+='<div class="'+cls+'" onclick="openSheet('+i+')"><div class="e">'+q.e+'</div><div class="c">'+escHTML(q.cond)+'</div>'+(me.cardJp&&q.condJp?'<div class="cj">'+escHTML(q.condJp)+'</div>':'')+(q.info?'<span class="info">🔢</span>':'')+(!m&&asked[i]&&!lk?'<span class="nob">✗ '+NM(mmv().p)+'</span>':'');
+    if(m)h+='<div class="stamp"><div class="mw">'+mascotSVG(m.t)+'</div><b>'+NM(m.t)+'</b>'+(m.a!=null?'<small>'+m.a+' '+escHTML(q.unit)+'</small>':'')+'</div>';
     else if(lk)h+='<div class="lk" data-lock="'+me.locks[i]+'">'+Math.ceil((me.locks[i]-Date.now())/1000)+'</div>';
     h+='</div>';
   });
@@ -762,9 +801,9 @@ function renderSheet(){
   var q=me.card[sheetSq],help=me.help||'full',m=mmv(),live=canAsk(),qL=me.qJp||'full',aL=me.aJp||'full';
   entryNum=live?String(m.p):'';
   // top bar: who you ask + the square
-  var h='<div class="sh-top full">'+(live?'<div class="sh-mw">'+mascotSVG(m.p)+'</div>':'')+'<div class="e">'+q.e+'</div><div class="sh-tt"><div class="f">'+(live?'🗣️ ASK #'+m.p+' · '+m.p+'番に聞こう':'YOUR SQUARE · マス')+'</div>'+
+  var h='<div class="sh-top full">'+(live?'<div class="sh-mw">'+mascotSVG(m.p)+'</div>':'')+'<div class="e">'+q.e+'</div><div class="sh-tt"><div class="f">'+(live?'🗣️ ASK '+NM(m.p)+' · '+NM(m.p)+'に聞こう':'YOUR SQUARE · マス')+'</div>'+
     (me.cardJp&&q.condJp?'<div class="sqline">'+escHTML(q.condJp)+'</div>':'')+'</div>'+
-    (live?'<div class="lock1">🔒 Ask this one!<small>このマスを聞こう · try '+(m.tries+1)+' / '+(m.max||3)+'</small></div>':'<button class="x" onclick="userClose()">✕</button>')+'</div>';
+    (live?'<div class="lock1">🔒 Ask this one!<small>このマスを聞こう'+((m.max||1)>1?' · try '+(m.tries+1)+' / '+m.max:'')+'</small></div>':'<button class="x" onclick="userClose()">✕</button>')+'</div>';
   // left: the question (English + 日本語)
   h+='<div class="sh-q"><div class="askbox"><div class="l">① ASK · 質問しよう</div>';
   if(help==='none')h+='<div class="q" style="color:var(--dim)">Make the question yourself!<br><span style="font-size:.7em">自分で質問を作ろう！</span></div>';
@@ -774,10 +813,10 @@ function renderSheet(){
   h+='</div><div class="sh-a">';
   if(!live)h+='<div class="partner" style="border-color:var(--line)"><div>'+(m.s==='talk'?'✓ Your turn is done. 自分の番は終わり':'👀 Find your partner and tap <b style="font-size:inherit">FOUND</b> first!<br><span class="lbl2">まず相手を見つけて「FOUND」を押そう</span>')+'</div></div>';
   if(q.pick&&live){ // listen & pick: tap what you heard, it glows, then CONFIRM
-    h+='<div class="lbl2">👂 What did #'+m.p+' say? · 相手の答えは？</div>';
+    h+='<div class="lbl2">👂 What did '+NM(m.p)+' say? · 相手の答えは？</div>';
     if(!m.choices)h+='<div class="lbl2">…</div>';
     else h+='<div class="picks">'+m.choices.map(function(c){return '<button class="pk'+(_pick===c.i?' on':'')+'" onclick="choosePick('+c.i+')"><span>'+c.e+'</span><em>'+escHTML(c.label)+(c.j&&aL!=='all'?'<small>'+escHTML(c.j)+'</small>':'')+'</em></button>'}).join('')+'</div>';
-  }else if(live)h+='<div class="lbl2">👂 Listen to #'+m.p+'! · よく聞こう！</div><div class="ynhint">YES → <b class="gy">✓ YES</b>　NO → <b class="gn">✗ NO</b></div>';
+  }else if(live)h+='<div class="lbl2">👂 Listen to '+NM(m.p)+'! · よく聞こう！</div><div class="ynhint">YES → <b class="gy">✓ YES</b>　NO → <b class="gn">✗ NO</b></div>';
   if(q.info&&live&&(!q.pick||_pick===q.target)){
     h+='<div class="lbl2" style="margin-top:10px">'+(q.pick?'② ':'')+'Their answer · 相手の答え ('+escHTML(q.unit)+')</div><div class="ans">';
     for(var v=q.min;v<=q.max;v++)h+='<button class="'+(entryAns===v?'on':'')+'" onclick="pickAns('+v+')">'+v+'</button>';
@@ -812,7 +851,7 @@ var _noT=null;
 function onNoResult(d){
   if(!me||sheetSq==null||d.sq!==sheetSq)return;
   _claimWait=false;_pend.no=null;clearTimeout(_noT);
-  if(d.ok){var m=mmv();m.tries=(m.tries||0)+1;m.asked=(m.asked||[]).concat([d.sq]);m.turn=m.p;closeSheet();tSfxNo();render();noSquare(m.p,m.pdone?(m.tries>=(m.max||3)?'👋 Next partner! · 次の人へ':'🗣️ Ask #'+m.p+' about another square! · 別のマスを聞こう'):'👂 Next: #'+m.p+' asks you · 次は相手の番');return}
+  if(d.ok){var m=mmv();m.tries=(m.tries||0)+1;m.asked=(m.asked||[]).concat([d.sq]);m.turn=m.p;closeSheet();tSfxNo();render();noSquare(m.p,m.pdone?(m.tries>=(m.max||1)?'👋 Next partner! · 次の人へ':'🗣️ Ask '+NM(m.p)+' about another square! · 別のマスを聞こう'):'👂 Next: '+NM(m.p)+' asks you · 次は相手の番');return}
   tSfxNo();renderSheet();checkAgain(['🔁 Check again! Did they really say NO?','もう一度確認しよう！本当に「いいえ」？']);
 }
 function doClaim(){
@@ -824,9 +863,9 @@ function doClaim(){
 // the asker's square was right: big green "MATCH!" with the square, before the partner's turn (tap to close)
 function gotSquare(q,n,mk,pdone){
   if(!q)return;var ov=$('ov');ov.dataset.t='';
-  ov.innerHTML='<div class="gotbox"><div class="gotm">'+mascotSVG(n)+'</div><div class="gott">✓ MATCH!</div><div class="msg" style="font-size:clamp(18px,3.4vw,24px);margin:0">マスをゲット！ #'+n+' is on your card</div>'+
+  ov.innerHTML='<div class="gotbox"><div class="gotm">'+mascotSVG(n)+'</div><div class="gott">✓ MATCH!</div><div class="msg" style="font-size:clamp(18px,3.4vw,24px);margin:0">マスをゲット！ '+NM(n)+' is on your card</div>'+
     '<div class="gotsq"><span>'+q.e+'</span><b>'+escHTML(q.cond)+'</b>'+(mk&&mk.a!=null?'<em>'+mk.a+' '+escHTML(q.unit||'')+'</em>':'')+(me.cardJp&&q.condJp?'<small>'+escHTML(q.condJp)+'</small>':'')+'</div>'+
-    '<div class="msg" style="margin:0">'+(pdone?'👋 Next partner! · 次の人へ':'👂 Next: #'+n+' asks you · 次は相手の番')+'</div></div>';
+    '<div class="msg" style="margin:0">'+(pdone?'👋 Next partner! · 次の人へ':'👂 Next: '+NM(n)+' asks you · 次は相手の番')+'</div></div>';
   ov.classList.add('on','got');ov.onclick=function(){ov.classList.remove('on','got')};clearTimeout(_toastT);_toastT=setTimeout(function(){ov.classList.remove('on','got')},2600);
 }
 // the asker's NO: short "no square" moment so it's clear nothing was stamped

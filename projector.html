@@ -131,7 +131,17 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
 .sw:after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
 .toggle.on .sw{background:var(--green)}.toggle.on .sw:after{left:23px}
 .toggle small{display:block;font-weight:500;color:var(--dim);font-size:12px}
-#lobbyGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.rosterbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.rosterbar select{background:var(--bg);color:var(--text);border:2px solid var(--line);border-radius:10px;font-weight:800;font-size:16px;padding:6px 10px;min-width:180px}
+.lob.ghost{opacity:.3;animation:none}
+.lob.ghost .mw{display:none}
+#lobbyGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.lob .lname{font-weight:800;font-size:14px;line-height:1.15;padding:2px 4px;border-radius:8px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lob .lname:hover{background:rgba(255,255,255,.08)}
+.mcard .ms .pnm{display:block;font-family:var(--disp);font-size:16px;cursor:pointer}
+.tile .tmw{display:flex;flex-direction:column;align-items:center;min-width:0;max-width:48%}
+.tile .tmw .mw{width:calc(var(--mw,48px)*.8);height:calc(var(--mw,48px)*.92)}
+.tile .tnm{font-weight:800;font-size:clamp(11px,calc(var(--mw,48px)*.24),30px);line-height:1.1;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
 .lob{position:relative;background:var(--panel2);border-radius:14px;padding:6px 4px 4px;text-align:center;animation:popIn .35s cubic-bezier(.3,1.6,.5,1)}
 .lob .mw{width:56px;height:62px;margin:0 auto}
 .lob.off{opacity:.38}
@@ -424,6 +434,7 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
         <div class="row" style="margin-bottom:10px"><span class="lbl">Answer help<br><small class="jp">答えのヒント</small></span><span id="ansBtns" class="row"></span></div>
         <div class="row" style="margin-bottom:10px"><span class="lbl">Question 日本語<br><small class="jp">質問の和訳</small></span><span id="qJpBtns" class="row"></span></div>
         <div class="row" style="margin-bottom:10px"><span class="lbl">Answer 日本語<br><small class="jp">答えの和訳</small></span><span id="aJpBtns" class="row"></span></div>
+        <div class="row" style="margin-bottom:10px"><span class="lbl">Questions per partner<br><small class="jp">1人の相手に質問</small></span><span id="ptBtns" class="row"></span></div>
         <div class="row" style="margin-bottom:10px"><span class="lbl">How to win<br><small class="jp">勝ち方</small></span><span id="winBtns" class="row"></span></div>
         <div class="row" style="margin-bottom:6px"><span class="lbl">Timer<br><small class="jp">タイマー</small></span><span id="timerBox" class="row"></span></div>
         <div id="toggles"></div>
@@ -433,7 +444,9 @@ button{font-family:inherit;cursor:pointer;border:none;color:inherit}
     <div class="col">
       <div class="card" style="flex:1;display:flex;flex-direction:column">
         <h3>🍡 Mochis <small id="lobbyCount">0 joined · 参加中</small></h3>
-        <div class="note" style="margin-bottom:10px">Students open <b>mochi_bingo_terminal.html</b> on their tablets and tap to get a mochi. Numbers are random — not class numbers.<br>生徒はタブレットで端末ページを開いてキャラクターをもらいます。</div>
+        <div class="rosterbar"><span class="lbl">Class<br><small class="jp">クラス</small></span><select id="clsSel" onchange="setClass(this.value)"></select>
+          <label class="opt" style="cursor:pointer">⬆ Upload roster<input type="file" accept=".json,application/json" style="display:none" onchange="uploadRoster(this)"></label><span class="note" id="rosterMsg"></span></div>
+        <div class="note" style="margin-bottom:10px" id="joinNote"></div>
         <div id="lobbyGrid"></div>
         <div style="flex:1"></div>
         <div class="row" style="justify-content:space-between;margin-top:12px">
@@ -2210,7 +2223,7 @@ loadCustom();rebuildAttrs();
 
 // ── STATE (var = inspectable from devtools/tests) ──
 var MAX_PACKS=5; // grammar points per game (was 3 until Nov 2026)
-var DEFAULT_SETTINGS={ver:2,qJp:'full',aJp:'full',tabSfx:true,ansHelp:'full',win:'first',attrs:['like','can','height','birthday','from','sport','pets','color','family','club','commute','yesterday','weekend','breakfast','getup','bedtime','lastsummer','bought','watched','vacation','where7'],size:4,free:false,cardJp:false,timerOn:true,help:'full',timerMin:10,unique:true,board:true};
+var DEFAULT_SETTINGS={ver:2,cls:'',perTalk:1,qJp:'full',aJp:'full',tabSfx:true,ansHelp:'full',win:'first',attrs:['like','can','height','birthday','from','sport','pets','color','family','club','commute','yesterday','weekend','breakfast','getup','bedtime','lastsummer','bought','watched','vacation','where7'],size:4,free:false,cardJp:false,timerOn:true,help:'full',timerMin:10,unique:true,board:true};
 var settings=loadSettings();
 var players={};        // did -> player
 var phase='setup';     // setup | rules | play | end
@@ -2222,7 +2235,8 @@ var results=null;
 var _ch=null,_ablyReady=false,_musicOn=true;
 var LOCK_MS=12000;
 var _pausedAt=0,_autoEndT=null,AUTO_END_MS=3200;
-var NO_UNLOCK=3,TRIES_PER_TALK=3; // NOs needed on a dead square before "ask again" (or everyone they have left)
+var NO_UNLOCK=3; function tpt(){return settings.perTalk===3?3:1} // questions each per meeting (setting; 1 since 17 Nov play-test)
+ // NOs needed on a dead square before "ask again" (or everyone they have left)
 var allReuse=false;
 var STALE_MS=45000,BREAK_MS=60000; // offline after 45 s without a ping; a pair is split after 60 s
 
@@ -2235,6 +2249,7 @@ function loadSettings(){
   // older saved settings may have more grammar points on than allowed — keep the first MAX_PACKS
   var keep=[];o.attrs=o.attrs.filter(function(id){var pk=ATTR_BY_ID[id].pack;if(keep.indexOf(pk)<0){if(keep.length>=MAX_PACKS)return false;keep.push(pk)}return true});
   if(o.cardJp==null)o.cardJp=false;
+  if(o.perTalk!==3)o.perTalk=1;
   if(['full','gram','all'].indexOf(o.qJp)<0)o.qJp='full';if(['full','gram','all'].indexOf(o.aJp)<0)o.aJp='full';
   if(['first','most'].indexOf(o.win)<0)o.win='first';if(['slow','normal','fast'].indexOf(o.pace)<0)o.pace='normal';
   if(s&&!(s.ver>=2)){o.ver=2;o.size=4;o.free=false} // 5 Oct: 4×4 became the default
@@ -2406,7 +2421,7 @@ function buildCard(me){
   var all=qids.map(function(id){return shuffle(groups[id].slice())[0]});shuffle(all);
   var card2=[];for(var c2=0;c2<N;c2++)card2.push(c2===freeIdx||!all.length?{free:true}:all.pop());
   return {card:card2,unique:false,short:true};
-  function score(x){var r=x.c/Math.max(1,others.length);return Math.abs(r-0.18)+Math.random()*0.15}
+  function score(x){var r=x.c/Math.max(1,others.length);return Math.abs(r-HOLD_TARGET)+Math.random()*0.15}
 }
 // one question from each grammar point first (so every grammar point is on every card), the rest at random
 function pickQuestions(qids,need){
@@ -2466,8 +2481,8 @@ function needUnlock(){
 // ── MATCHMAKING (like online match-making in a video game) ──
 // Free mochis wait in "Looking for a mochi…". The projector pairs two free mochis: both tablets say "Find #X!".
 // Both tap 🤝 FOUND → they talk. Each student's turn ends after 1 YES or 3 tries (NO / wrong claim).
-// When both turns are done, both go back to looking. You never meet the same classmate twice
-// until "ask again" is on for one of you (teacher button, dead-square rule, or you've met everyone).
+// When both turns are done, both go back to looking. (17 Nov) You can meet the same classmate again and again,
+// but a pair is only made when at least one of them can still get a square from the other (both, if possible).
 var LOST_AFTER_MS=30000;
 var lostAlerts=[]; // [{a:n,b:n,t:ms}] — "can't find each other"
 function mmOf(p){if(!p.mm)p.mm={s:'look',since:Date.now()};return p.mm}
@@ -2478,11 +2493,22 @@ function canMeet(a,b){
   if(a===b||!playing(b))return false;
   if(isApart(a,b))return false;                              // teacher keeps these two apart
   if(a.avoid===b.n||b.avoid===a.n)return false;              // just failed to find each other
-  var c=metCount(a,b);
-  if(c<Math.min(a.round||1,b.round||1))return true; // BOTH must be cleared to meet again (one more meeting per clearance)
-  return false;
+  // (17 Nov) meet anyone any number of times — only when BOTH of you can still get a square from the other.
+  // Safety valve (small classes / one-classmate-per-square late in the game): after waiting ONEWAY_AFTER_MS,
+  // a student may be paired one-way (the side with nothing to win just answers) so nobody is stuck waiting forever.
+  if(canHelp(b,a)&&canHelp(a,b))return true;
+  if(!canHelp(b,a)&&!canHelp(a,b))return false;
+  var now=Date.now(),wa=a.mm&&a.mm.s==='look'?now-a.mm.since:0,wb=b.mm&&b.mm.s==='look'?now-b.mm.since:0;
+  return Math.max(wa,wb)>=ONEWAY_AFTER_MS;
 }
-function canHelp(o,p){var nf=p.noFrom||{};return p.card.some(function(sq,i){return !sq.free&&!p.marks[i]&&matches(o.stats,sq.a,sq.i)&&!((nf[i]||[]).indexOf(o.n)>=0)})}
+var ONEWAY_AFTER_MS=40000;
+var HOLD_TARGET=0.30; // buildCard: aim each square at about this share of classmates (0.18 until 17 Nov; sim: more BINGOs, sooner)
+// o can still give p a green square: o really has the answer to one of p's open squares, p hasn't already heard
+// "no" for that square from o, and (one classmate per square) o isn't already on p's card
+function canHelp(o,p){
+  if(!p.card||!o.stats||isApart(p,o))return false;
+  if(p.unique&&!p.reuse){for(var k in p.marks)if(p.marks[k]&&p.marks[k].t===o.n)return false}
+  var nf=p.noFrom||{};return p.card.some(function(sq,i){return !sq.free&&!p.marks[i]&&matches(o.stats,sq.a,sq.i)&&!((nf[i]||[]).indexOf(o.n)>=0)})}
 function metCount(a,b){return (a.met&&a.met[b.n])||0}
 // a new "clearance": one more meeting allowed with every classmate (+ may use a classmate for another square)
 function grantRound(p,quiet){p.round=(p.round||1)+1;p.reuse=true;if(!quiet)pub('notice',{did:p.did,kind:'reuse'})}
@@ -2494,7 +2520,8 @@ function matchmake(){
     if(taken[a.did])return;
     var best=null,bs=1e18;
     free.forEach(function(b){if(b===a||taken[b.did]||!canMeet(a,b))return;
-      var sc=metCount(a,b)*1e13+(a.last===b.n||b.last===a.n?1e12:0)+b.mm.since;if(sc<bs){bs=sc;best=b}}); // new classmates first, then whoever waited longest
+      var both=canHelp(a,b)&&canHelp(b,a);
+      var sc=(both?0:1e14)+metCount(a,b)*1e13+(a.last===b.n||b.last===a.n?1e12:0)+b.mm.since;if(sc<bs){bs=sc;best=b}}); // both can give each other a square first, then people met less, then whoever waited longest
     if(!best)return;
     taken[a.did]=taken[best.did]=1;a.avoid=best.avoid=null;
     a.mm={s:'match',p:best.n,at:now,found:false,lost:false};best.mm={s:'match',p:a.n,at:now,found:false,lost:false};
@@ -2513,13 +2540,14 @@ function onFound(d){
   renderMM();saveGame();
 }
 function askable(p){var m=p.mm||{};return p.card.some(function(s,i){return !s.free&&!p.marks[i]&&!(m.asked&&m.asked[i])})}
-function checkTurn(p){var m=p.mm;if(m&&m.s==='talk'&&!m.done&&(m.tries>=TRIES_PER_TALK||!askable(p)))m.done=true}
+function checkTurn(p){var m=p.mm;if(m&&m.s==='talk'&&!m.done&&(m.tries>=tpt()||!askable(p)))m.done=true}
 // a asks first; then they take turns, one question each (one side keeps asking if the other is done)
 function startTalk(a,b){
   var now=Date.now();
   [[a,b],[b,a]].forEach(function(x){x[0].met=x[0].met||{};x[0].met[x[1].n]=metCount(x[0],x[1])+1;x[0].last=x[1].n;
     var asked={},nf=x[0].noFrom||{};Object.keys(nf).forEach(function(i){if(nf[i].indexOf(x[1].n)>=0&&!x[0].marks[i])asked[i]=1}); // NOs from an earlier meeting stay NO
     x[0].mm={s:'talk',p:x[1].n,at:now,tries:0,asked:asked,done:false,got:null}});
+  if(!canHelp(b,a))a.mm.done=true;if(!canHelp(a,b))b.mm.done=true; // nothing to win from this partner → just answer
   clearLost(a.n,b.n);checkTurn(a);checkTurn(b);
   if(a.mm.done&&b.mm.done){endTalk(a,b);return}
   setTurn(a,b,a.mm.done?b.n:a.n);
@@ -2586,7 +2614,7 @@ function renderMM(){
   var al=$('alerts');if(al){
     lostAlerts=lostAlerts.filter(function(x){var a=byNum(x.a);return a&&a.mm&&a.mm.s==='match'&&a.mm.p===x.b});
     al.innerHTML=phase==='play'?lostAlerts.map(function(x){
-      return '<div class="alert"><div class="am">'+mascotSVG(x.a)+'</div><div class="am">'+mascotSVG(x.b)+'</div><div class="at"><b>#'+x.a+' & #'+x.b+'</b> can\'t find each other<small>お互いを見つけられない</small></div><button class="cbtn" onclick="rematch('+x.a+')">🔄 Rematch</button></div>'}).join(''):'';
+      return '<div class="alert"><div class="am">'+mascotSVG(x.a)+'</div><div class="am">'+mascotSVG(x.b)+'</div><div class="at"><b>'+pnameH(x.a)+' & '+pnameH(x.b)+'</b> can\'t find each other<small>お互いを見つけられない</small></div><button class="cbtn" onclick="rematch('+x.a+')">🔄 Rematch</button></div>'}).join(''):'';
   }
   var mc=$('mmCount');if(mc){if(phase==='play'){var c=mmCounts();mc.innerHTML='💬 '+(c.talk/2|0)+' talking · 🔍 '+(c.match/2|0)+' finding · ⏳ '+c.look+' waiting'}else mc.innerHTML=''}
   if($('mgr').classList.contains('on'))renderMgr();
@@ -2665,7 +2693,7 @@ function removePlayer(did){
 // Ably counts every delivery, so private channels stop one tablet's update being delivered to all 26 screens.
 // echoMessages:false = no copy of our own messages. Outgoing messages are paced (Ably free: 50 publishes/s per
 // connection) and a newer 'you' / 'state' replaces one still waiting in the queue.
-var PERSONAL={you:1,'claim-result':1,'no-result':1,'probe-reply':1,kick:1,notice:1};
+var PERSONAL={'name-taken':1,you:1,'claim-result':1,'no-result':1,'probe-reply':1,kick:1,notice:1};
 var _ably=null,_mainCh=null,_upCh=null,_devCh={},_pq=[],_pqT=null,_pqSent=[],PUB_PER_SEC=40;
 var _msgOut=0; // messages sent (devtools / tests)
 function devCh(did){return _devCh[did]||(_devCh[did]=_ably.channels.get(ABLY_CHANNEL+'-d-'+did,{modes:['PUBLISH']}))}
@@ -2702,34 +2730,72 @@ function initAbly(){
 function onHello(d){
   if(!d||!d.did)return;
   var p=players[d.did];
+  var nm=cleanName(d.name);
   if(!p){
     if(phase==='end'){pub('state',stateMsg());return}
+    if(!nm){pub('name-taken',{did:d.did,name:'',empty:true});return}
+    if(nameTaken(nm,d.did)){pub('name-taken',{did:d.did,name:nm});return}
     p=addPlayer(d.did,d.want); // the tablet asks for the number it had (e.g. the big screen was reloaded)
-  }
+    setName(p,nm);
+  }else if(!p.name&&nm&&!nameTaken(nm,d.did))setName(p,nm);
   p.on=true;p.lastSeen=Date.now();
   sendYou(p);renderAll();broadcastState();saveGame();matchmake();
 }
 function inGame(){return phase==='rules'||phase==='play'}
+// ── CLASS ROSTERS (Group Maker export: {version:1, classes:{'1-2':{roster:[{num,name}], absent:[index…]}}}) ──
+var rosters=(function(){try{return JSON.parse(localStorage.getItem('mb_rosters')||'null')||{}}catch(e){return {}}})();
+function saveRosters(){try{localStorage.setItem('mb_rosters',JSON.stringify(rosters))}catch(e){}}
+function classIds(){return Object.keys(rosters).filter(function(k){return rosters[k]&&rosters[k].roster&&rosters[k].roster.length}).sort(function(a,b){return a.localeCompare(b,'ja',{numeric:true})})}
+// the names students can tap: same name twice in a class → "YUME 13" / "YUME 14"
+function rosterNames(){
+  var c=settings.cls&&rosters[settings.cls];if(!c||!c.roster)return [];
+  var cnt={};c.roster.forEach(function(r){var k=nameKey(r.name);cnt[k]=(cnt[k]||0)+1});
+  var ab=(c.absent||[]).filter(function(x){return typeof x==='number'});
+  return c.roster.map(function(r,i){var nm=cleanName(String(r.name||'').trim());if(cnt[nameKey(r.name)]>1)nm=cleanName(nm+' '+r.num);return {l:nm,num:r.num,ab:ab.indexOf(i)>=0}}).filter(function(x){return x.l});
+}
+function rosterForTablets(){var L=rosterNames();if(!L.length)return null;var used={};playerList().forEach(function(p){if(p.name)used[nameKey(p.name)]=1});
+  return L.map(function(x){return {l:x.l,t:used[nameKey(x.l)]?1:0,a:x.ab?1:0}})}
+function setClass(v){settings.cls=v||'';saveSettings();renderSetup();broadcastState(true)}
+function uploadRoster(inp){
+  var f=inp.files&&inp.files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){var msg;try{var j=JSON.parse(rd.result),cl=j&&j.classes?j.classes:j,n=0,add={};
+      Object.keys(cl||{}).forEach(function(k){var c=cl[k];if(c&&Array.isArray(c.roster)){add[k]={roster:c.roster.filter(function(r){return r&&r.name}).map(function(r){return {num:String(r.num==null?'':r.num),name:String(r.name)}}),absent:(c.absent||[]).filter(function(x){return typeof x==='number'})};n++}});
+      if(!n)throw new Error('no classes');
+      rosters=add;saveRosters();if(!rosters[settings.cls])settings.cls='';saveSettings();
+      msg='✓ '+n+' classes loaded · '+n+'クラス読み込み';
+    }catch(e){msg='<span style="color:var(--red)">Not a roster file (Group Maker → export)</span>'}
+    inp.value='';renderSetup();broadcastState(true);$('rosterMsg').innerHTML=msg};
+  rd.readAsText(f);
+}
+// ── NAMES (Nov 2026): students type a name; the number stays on the mochi's body, everyone else sees the name ──
+var _names={}; // number → name (kept after a mochi leaves, for results / credits)
+function cleanName(s){s=String(s==null?'':s).replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim();var a=Array.from(s);return a.slice(0,12).join('')}
+function nameKey(s){try{s=String(s).normalize('NFKC')}catch(e){}return String(s).replace(/\s+/g,'').toLowerCase()}
+function nameTaken(name,did){var k=nameKey(name);return playerList().some(function(o){return o.did!==did&&o.name&&nameKey(o.name)===k})}
+function setName(p,name){p.name=name;if(name)_names[p.n]=name}
+function pname(n){var p=byNum(n);return (p&&p.name)||_names[n]||('#'+n)}
+function pnameH(n){return escHTML(pname(n))}
 function offlineNums(){return inGame()?playerList().filter(function(o){return !o.on}).map(function(o){return o.n}).sort(function(a,b){return a-b}):[]}
+function offlineNames(){var o={};offlineNums().forEach(function(n){o[n]=pname(n)});return o}
 // a tablet page just loaded: during a game it gets its mochi back; otherwise its old mochi is released (re-roll)
 function onProbe(d){
   if(!d||!d.did)return;var p=players[d.did];
   if(p&&(inGame()||d.keep)){p.on=true;p.lastSeen=Date.now();sendYou(p);renderAll();broadcastState();saveGame();return}
-  if(!p&&d.keep&&phase==='setup'){onHello({did:d.did,want:d.keep});return} // browser reloaded the tab by itself → same mochi
+  if(!p&&d.keep&&phase==='setup'){onHello({did:d.did,want:d.keep,name:d.name});return} // browser reloaded the tab by itself → same mochi
   if(p){_prevNum[d.did]=p.n;delete players[d.did];renderAll();broadcastState(true);saveGame()}
-  pub('probe-reply',{did:d.did,inGame:inGame(),offline:offlineNums()});
+  pub('probe-reply',{did:d.did,roster:rosterForTablets(),inGame:inGame(),offline:offlineNums(),offNames:offlineNames()});
 }
 // a NEW tablet/tab during a game takes over an offline mochi (e.g. the student's tablet crashed)
 function onReclaim(d){
   if(!d||!d.did||!inGame())return;
   var p=byNum(+d.n);
-  if(!p||p.on||players[d.did]){pub('probe-reply',{did:d.did,inGame:inGame(),offline:offlineNums(),taken:true});return}
+  if(!p||p.on||players[d.did]){pub('probe-reply',{did:d.did,roster:rosterForTablets(),inGame:inGame(),offline:offlineNums(),offNames:offlineNames(),taken:true});return}
   delete players[p.did];p.did=d.did;players[d.did]=p;p.on=true;p.lastSeen=Date.now();
   sendYou(p);renderAll();if($('mgr').classList.contains('on'))renderMgr();broadcastState(true);saveGame();
 }
 function onPing(d){
   var p=d&&players[d.did];
-  if(!p){if(d&&d.did&&phase==='setup'){onHello(d)}else if(d&&d.did)pub('probe-reply',{did:d.did,inGame:inGame(),offline:offlineNums(),lost:true});return}
+  if(!p){if(d&&d.did&&phase==='setup'){onHello(d)}else if(d&&d.did)pub('probe-reply',{did:d.did,roster:rosterForTablets(),inGame:inGame(),offline:offlineNums(),offNames:offlineNames(),lost:true});return}
   var was=p.on;p.lastSeen=Date.now();p.on=true;
   if(d.gameId!==gameId)sendYou(p);
   if(!was){renderAll();broadcastState();matchmake()}
@@ -2744,14 +2810,14 @@ setInterval(function(){
 },5000);
 function minPlayers(){return settings.unique?settings.size+1:3} // one-per-classmate: a full line needs this many DIFFERENT classmates, plus you
 function youMsg(p){
-  return {did:p.did,n:p.n,gameId:gameId,phase:phase,size:settings.size,help:settings.help,ansHelp:settings.ansHelp||'full',qJp:settings.qJp||'full',aJp:settings.aJp||'full',mm:mmView(p),win:settings.win,unique:!!p.unique,reuse:!!p.reuse,cardJp:!!settings.cardJp,
+  return {did:p.did,n:p.n,nm:p.name||'',gameId:gameId,phase:phase,size:settings.size,help:settings.help,ansHelp:settings.ansHelp||'full',qJp:settings.qJp||'full',aJp:settings.aJp||'full',mm:mmView(p),win:settings.win,unique:!!p.unique,reuse:!!p.reuse,cardJp:!!settings.cardJp,
     card:p.card.map(squareView),marks:p.marks,locks:p.locks,lines:p.lines,bingoAt:p.bingoAt};
 }
 function mmView(p){
   var m=mmOf(p),q=partnerOf(p),v={s:m.s,since:m.since||0};
-  if(m.s==='bye'){v.p=m.p;v.got=m.got;v.pgot=m.pgot;return v}
-  if(m.s!=='look'&&q){v.p=q.n;v.at=m.at;v.lostMs=LOST_AFTER_MS;v.found=!!m.found;v.pfound=!!q.mm.found;v.lost=!!m.lost||!!q.mm.lost;
-    if(m.s==='talk'){v.tries=m.tries;v.max=TRIES_PER_TALK;v.asked=Object.keys(m.asked).map(Number);v.done=!!m.done;v.pdone=!!q.mm.done;v.turn=m.turn;v.turnAt=m.turnAt||0;v.ptries=q.mm.tries;v.asking=m.asking==null?null:m.asking;
+  if(m.s==='bye'){v.p=m.p;v.pn=pname(m.p);v.got=m.got;v.pgot=m.pgot;return v}
+  if(m.s!=='look'&&q){v.p=q.n;v.pn=pname(q.n);v.at=m.at;v.lostMs=LOST_AFTER_MS;v.found=!!m.found;v.pfound=!!q.mm.found;v.lost=!!m.lost||!!q.mm.lost;
+    if(m.s==='talk'){v.tries=m.tries;v.max=tpt();v.asked=Object.keys(m.asked).map(Number);v.done=!!m.done;v.pdone=!!q.mm.done;v.turn=m.turn;v.turnAt=m.turnAt||0;v.ptries=q.mm.tries;v.asking=m.asking==null?null:m.asking;
       if(m.turn===p.n&&m.asking!=null&&p.card[m.asking]&&isPick(ATTR_BY_ID[p.card[m.asking].a]))v.choices=pickChoices(p,m.asking,q);
       // answerer: the square the asker is asking right now + what to say
       if(m.turn===q.n&&q.mm.asking!=null){var sq=q.card[q.mm.asking];if(sq){var sv=squareView(sq);sv.ans=answerFor(p.stats,sq);v.q=sv}}}}
@@ -2760,8 +2826,9 @@ function mmView(p){
 }
 function sendYou(p){pub('you',youMsg(p))}
 function stateMsg(){
-  var list=playerList().map(function(p){return {n:p.n,f:p.card.length?filledOf(p):0,l:p.lines.length,b:p.bingoAt,on:p.on}});
-  return {gameId:gameId,phase:phase,win:settings.win,cardJp:!!settings.cardJp,unique:!!settings.unique,timerOn:!!settings.timerOn,timerMin:settings.timerMin,left:timeLeft(),paused:pausedLeft!=null,help:settings.help,size:settings.size,
+  var _ro=rosterForTablets();
+  var list=playerList().map(function(p){return {nm:p.name||'',n:p.n,f:p.card.length?filledOf(p):0,l:p.lines.length,b:p.bingoAt,on:p.on}});
+  return {gameId:gameId,phase:phase,win:settings.win,cardJp:!!settings.cardJp,unique:!!settings.unique,perTalk:tpt(),roster:_ro,cls:settings.cls||'',timerOn:!!settings.timerOn,timerMin:settings.timerMin,left:timeLeft(),paused:pausedLeft!=null,help:settings.help,size:settings.size,
     count:list.length,players:list,bingos:bingoOrder.length,results:phase==='end'&&_revealed?results:null,tabSfx:settings.tabSfx!==false};
 }
 var _stT=null,_stLast=0;
@@ -2828,7 +2895,7 @@ function startGame(){if(_autoEndT){clearTimeout(_autoEndT);_autoEndT=null}
   if(enabledAttrs().length<squaresNeeded()||selectedPacks().length>MAX_PACKS){renderSetup();return}
   // fail-safe: an offline mochi can't be asked, so it must not be the only holder of a stat
   var off=ps.filter(function(p){return !p.on});
-  if(off.length&&ps.length-off.length>=minPlayers()&&window.confirm(off.length+' mochi'+(off.length>1?'s are':' is')+' offline (#'+off.map(function(p){return p.n}).join(', #')+').\nOK = remove '+(off.length>1?'them':'it')+' from this game (recommended — nobody can ask '+(off.length>1?'them':'it')+')\nCancel = keep '+(off.length>1?'them':'it'))){
+  if(off.length&&ps.length-off.length>=minPlayers()&&window.confirm(off.length+' mochi'+(off.length>1?'s are':' is')+' offline ('+off.map(function(p){return pname(p.n)}).join(', ')+').\nOK = remove '+(off.length>1?'them':'it')+' from this game (recommended — nobody can ask '+(off.length>1?'them':'it')+')\nCancel = keep '+(off.length>1?'them':'it'))){
     off.forEach(function(p){pub('kick',{did:p.did});delete players[p.did]});ps=playerList();
   }
   gameId=Date.now();bingoOrder=[];foundCount={};results=null;pausedLeft=null;endsAt=0;
@@ -2933,7 +3000,7 @@ function saveGame(){
   _svT=setTimeout(function(){_svT=null;
     try{
       if(phase==='setup'||phase==='end'){localStorage.removeItem('mb_save');return}
-      localStorage.setItem('mb_save',JSON.stringify({t:Date.now(),players:players,phase:phase,gameId:gameId,left:timeLeft(),paused:pausedLeft!=null,bingoOrder:bingoOrder,foundCount:foundCount,settings:settings,customQs:customQs,customPacks:customPacks,allReuse:allReuse,apart:apart}));
+      localStorage.setItem('mb_save',JSON.stringify({t:Date.now(),players:players,phase:phase,gameId:gameId,left:timeLeft(),paused:pausedLeft!=null,bingoOrder:bingoOrder,foundCount:foundCount,settings:settings,customQs:customQs,customPacks:customPacks,allReuse:allReuse,apart:apart,names:_names}));
     }catch(e){}
   },400);
 }
@@ -2946,7 +3013,7 @@ function resumeGame(){
   (s.customQs||[]).forEach(function(d){if(!customQs.some(function(x){return x.id===d.id}))customQs.push(d)});
   (s.customPacks||[]).forEach(function(d){if(!customPacks.some(function(x){return x.id===d.id}))customPacks.push(d)});
   rebuildAttrs();
-  players=s.players;settings=s.settings;gameId=s.gameId;allReuse=!!s.allReuse;if(s.apart)apart=s.apart;saveApart();bingoOrder=s.bingoOrder||[];foundCount=s.foundCount||{};
+  players=s.players;settings=s.settings;gameId=s.gameId;allReuse=!!s.allReuse;if(s.apart)apart=s.apart;if(s.names)_names=s.names;saveApart();bingoOrder=s.bingoOrder||[];foundCount=s.foundCount||{};
   phase=s.phase;if(phase==='rules'){phase='rules';setTimeout(startPlay,500)}
   if(phase==='play'){if(s.left==null){endsAt=0;pausedLeft=null}else{pausedLeft=s.left;endsAt=0}} // resume paused
   playerList().forEach(function(p){p.on=false;p.lastSeen=0;setLook(p)});lostAlerts=[];
@@ -2987,6 +3054,7 @@ function renderSetup(){
   if($('tab-rules').classList.contains('on'))renderRulesPage();
   $('attrCount').innerHTML='<div style="margin-bottom:4px"><b style="font-size:16px;color:'+(sp.length?'var(--green)':'var(--red)')+'">'+sp.length+' / '+MAX_PACKS+'</b> grammar points · 文法 '+(sp.length?'— '+sp.map(function(x){return escHTML(packName(x))}).join(', '):'— pick up to '+MAX_PACKS)+'</div><b style="font-size:16px;color:'+(n>=need?'var(--green)':'var(--red)')+'">'+n+' / '+need+'</b> questions selected · 選択中 — '+(n>=need?(n>need?'each card gets a random '+need+' of them':'one question per square'):'need '+(need-n)+' more (one per square)');
   $('sizeBtns').innerHTML=[3,4,5].map(function(s){return '<button class="opt'+(settings.size===s?' on':'')+'" onclick="setOpt(\'size\','+s+')">'+s+' × '+s+'</button>'}).join('');
+  $('ptBtns').innerHTML=[[1,'1 each','1問ずつ → 次の人へ'],[3,'Up to 3 each','3問まで']].map(function(o){return '<button class="opt'+(tpt()===o[0]?' on':'')+'" onclick="setOpt(\'perTalk\','+o[0]+')">'+o[1]+'<small>'+o[2]+'</small></button>'}).join('');
   $('winBtns').innerHTML=[['first','🏁 First BINGO wins','最初のビンゴで勝ち'],['most','🎯 Most BINGOs','ライン数で勝負']].map(function(o){
     return '<button class="opt'+(settings.win===o[0]?' on':'')+'" onclick="setOpt(\'win\',\''+o[0]+'\')">'+o[1]+'<small>'+o[2]+'</small></button>'}).join('');
   $('ansBtns').innerHTML=[['full','Full answer','「Yes, I did.」'],['blank','Fill the blanks','「Yes, I ＿＿.」'],['facts','Facts only','✓ YES · 2 brothers']].map(function(o){
@@ -3028,12 +3096,12 @@ function setupTab(t){
 }
 function ruleSteps(){
   return [
-    ['🍡','Get your mochi','Tap your tablet. Your <b>number</b> is your name in this game.','タブレットをタップしてもちをもらう。番号がこのゲームでの名前。'],
-    ['🔍','Find your partner','Your tablet says <b>"Find #12!"</b> — #12 is looking for you too. <b>"Are you number 12?"</b> Found them? You <b>both</b> tap <b>🤝 FOUND</b>.','「#12を探せ！」相手もあなたを探している。見つけたら2人とも「🤝 FOUND」を押す。'],
-    ['💬','Take turns','<b>🗣️ Asker:</b> tap a square and ask the question on your screen. <b>👂 Answerer:</b> your screen shows your answer — say it! YES → tap <b>✓ YES</b>, NO → tap <b>✗ NO</b>. What / Where / When questions: tap <b>what you heard</b>. Then switch. Up to <b>3 questions each</b> — a YES ends your asking.','聞く人：マスを押して画面の質問をする。答える人：画面に出る答えを言う。はい→「✓ YES」、いいえ→「✗ NO」。What/Where/Whenの質問は聞いた答えを選ぶ。そして交代。1人3問まで。'],
+    ['🍡','Get your mochi','Type your <b>name</b> on your tablet and get a mochi.','タブレットに名前を入れて、もちをもらう。'],
+    ['🔍','Find your partner','Your tablet says <b>"Find Ken!"</b> — Ken is looking for you too. <b>"Are you Ken?"</b> Found them? You <b>both</b> tap <b>🤝 FOUND</b>.','「Kenを探せ！」相手もあなたを探している。見つけたら2人とも「🤝 FOUND」を押す。'],
+    ['💬','Take turns','<b>🗣️ Asker:</b> tap a square and ask the question on your screen. <b>👂 Answerer:</b> your screen shows your answer — say it! YES → tap <b>✓ YES</b>, NO → tap <b>✗ NO</b>. What / Where / When questions: tap <b>what you heard</b>. Then switch. '+(tpt()===1?'<b>One question each</b>, then a new partner.':'Up to <b>3 questions each</b> — a YES ends your asking.'),'聞く人：マスを押して画面の質問をする。答える人：画面に出る答えを言う。はい→「✓ YES」、いいえ→「✗ NO」。What/Where/Whenの質問は聞いた答えを選ぶ。そして交代。'+(tpt()===1?'1人1問ずつ。終わったら次の人へ。':'1人3問まで。')],
     ['⏭️','Next partner','When you are both done, tap <b>👍 NEXT</b>. Your tablet finds your next partner. <b>"Looking for a mochi…"</b> = wait a moment.','2人とも終わったら「👍 NEXT」を押す。次の相手が出る。「Looking…」は少し待とう。'],
-    settings.unique?['👥','One classmate per square','Use a <b>different</b> person for every square. You meet each classmate <b>once</b> — later your tablet may let you meet again.','1マスに1人ずつ。同じ人とは1回だけ（あとでまた会えるかも）。']
-                   :['👥','Meet everyone','You meet each classmate <b>once</b> — later your tablet may let you meet again.','同じ人とは1回だけ（あとでまた会えるかも）。'],
+    settings.unique?['👥','One classmate per square','Use a <b>different</b> person for every square. Your partner can <b>always</b> give you a square — find the right question!','1マスに1人ずつ。相手は必ずどれかのマスをくれる。正しい質問を見つけよう！']
+                   :['🔁','Meet again','You can meet the same classmate again. Your partner can <b>always</b> give you a square — find the right question!','同じ人とまた会えるよ。相手は必ずどれかのマスをくれる。正しい質問を見つけよう！'],
     settings.win==='first'?['🏁','First BINGO wins!','The first to make a line — a row, a column or a diagonal — wins!','縦・横・ななめで最初に一列そろえた人の勝ち！']
                           :['🎯','Most BINGOs!','Make as many lines as you can before time runs out!','時間内にできるだけたくさんラインを作ろう！']
   ];
@@ -3046,10 +3114,14 @@ function renderRulesPage(){
 }
 function setOpt(k,v){settings[k]=v;if(k==='size'&&v%2===0)settings.free=false;saveSettings();renderSetup();broadcastState()}
 function renderLobby(){
+  var ids=classIds(),sel=$('clsSel');
+  if(sel){if(settings.cls&&ids.indexOf(settings.cls)<0)settings.cls='';
+    sel.innerHTML='<option value="">— no roster: students type names —</option>'+ids.map(function(k){return '<option value="'+escHTML(k)+'"'+(settings.cls===k?' selected':'')+'>'+escHTML(k)+' · '+rosters[k].roster.length+' students</option>'}).join('');
+    $('joinNote').innerHTML=settings.cls?'Students open <b>mochi_bingo_terminal.html</b> and <b>tap their name</b> from class '+escHTML(settings.cls)+'. Greyed names haven\'t joined yet. Tap a joined name to rename it.<br>生徒は名前リストから自分の名前をタップ。':'Students open <b>mochi_bingo_terminal.html</b> on their tablets and type their name to get a mochi. Tap a name to rename it.<br>生徒はタブレットで名前を入れてもちをもらいます。名前をタップで変更。'}
   var ps=playerList().sort(function(a,b){return a.n-b.n});
   $('lobbyGrid').innerHTML=ps.map(function(p){
-    return '<div class="lob'+(p.on?'':' off')+(_apartMode&&_apartSel===p.did?' apsel':'')+'"'+(_apartMode?' onclick="apartTap(\''+p.did+'\')" style="cursor:pointer"':'')+'><div class="mw">'+mascotSVG(p.n)+'</div><button class="x" title="Remove" onclick="removePlayer(\''+p.did+'\')">✕</button></div>';
-  }).join('')||'<div class="note" style="grid-column:1/-1;text-align:center;padding:30px">Waiting for tablets… 待機中</div>';
+    return '<div class="lob'+(p.on?'':' off')+(_apartMode&&_apartSel===p.did?' apsel':'')+'"'+(_apartMode?' onclick="apartTap(\''+p.did+'\')" style="cursor:pointer"':'')+'><div class="lname" title="Rename" onclick="event.stopPropagation();renamePlayer(\''+p.did+'\')">'+escHTML(p.name||'#'+p.n)+'</div><div class="mw">'+mascotSVG(p.n)+'</div><button class="x" title="Remove" onclick="removePlayer(\''+p.did+'\')">✕</button></div>';
+  }).join('')+(function(){var R=rosterForTablets();if(!R)return '';return R.filter(function(x){return !x.t}).map(function(x){return '<div class="lob ghost"><div class="lname">'+escHTML(x.l)+'</div></div>'}).join('')})()||'<div class="note" style="grid-column:1/-1;text-align:center;padding:30px">Waiting for tablets… 待機中</div>';
   $('lobbyCount').innerHTML=ps.length+' joined · 参加中'+apartBtn()+apartBar();
   var need=squaresNeeded(),have=enabledAttrs().length;
   var mp=minPlayers(),ok=ps.length>=mp&&have>=need;
@@ -3128,8 +3200,8 @@ function exampleItem(a){return a.items[(a.id.length*3)%a.items.length]}
 function rulesHTML(){
   var steps=[
     ['Read your mochi on the <b>ME</b> tab.','タブレットの「ME」で自分のもちを確認。'],
-    ['Your tablet says <b>"Find #12!"</b> Find them — you <b>both</b> tap <b>🤝 FOUND</b>.','タブレットの番号の人を探して、2人とも「FOUND」を押す。'],
-    ['<b>Take turns:</b> one question each, in English. YES → ✓ YES, NO → ✗ NO, then switch. Up to 3 each.','交代で1問ずつ質問！1人3問まで。'],
+    ['Your tablet says <b>"Find Ken!"</b> Find them — you <b>both</b> tap <b>🤝 FOUND</b>.','タブレットに出た名前の人を探して、2人とも「FOUND」を押す。'],
+    ['<b>Take turns:</b> one question each, in English. YES → ✓ YES, NO → ✗ NO, then switch.'+(tpt()===1?' One each, then a new partner.':' Up to 3 each.'),'交代で1問ずつ質問！'+(tpt()===1?'終わったら次の人へ。':'1人3問まで。')],
     settings.win==='first'?['First to make a line → <b>BINGO</b> wins!'+(settings.unique?' One classmate per square.':''),'最初に一列そろえた人の勝ち！'+(settings.unique?' 同じ人は1マスだけ。':'')]
                           :['Make as many lines as you can → <b>most BINGOs</b> wins!'+(settings.unique?' One classmate per square.':''),'ラインをたくさん作ろう！'+(settings.unique?' 同じ人は1マスだけ。':'')]
   ];
@@ -3141,7 +3213,7 @@ function rulesHTML(){
     else ans=a.me(it)+(a.yes?' / '+ynv(a,'no',it):'');
     return '<div class="qcard"><div class="e">'+a.emoji+'</div><div><div class="q">'+frameHTML(q,'full')+'</div><div class="a">'+escHTML(framePlain(ans))+'</div></div></div>';
   });
-  cards.push('<div class="qcard ask-num"><div class="e">🔢</div><div><div class="q"><b class="gr">Are you</b> number 12?</div><div class="a">Yes, I am! / No, I\'m number 17.</div></div></div>');
+  cards.push('<div class="qcard ask-num"><div class="e">🔢</div><div><div class="q"><b class="gr">Are you</b> Ken?</div><div class="a">Yes, I am! / No, I\'m Yui.</div></div></div>');
   var pages=Math.ceil(cards.length/RULE_PAGE);if(_rulePage>=pages)_rulePage=0;
   h+='<div class="qhead">Ask like this!<span class="jp">こう質問しよう</span>'+(pages>1?'<span class="jp" style="margin-left:14px">('+(_rulePage+1)+' / '+pages+')</span>':'')+'</div><div class="qgrid" id="qgrid">';
   h+=cards.slice(_rulePage*RULE_PAGE,(_rulePage+1)*RULE_PAGE).join('');
@@ -3187,7 +3259,7 @@ function boardHTML(){
     mini+='</div>';
     var cls='tile'+(p.lines.length&&i<3?' rank'+(i+1):'')+(p.on?'':' off')+(p.lines.length?' bingo':'')+(!p.lines.length&&oneToGo(p)?' hot':'');
     var tag=p.lines.length?'BINGO'+(p.lines.length>1?' ×'+p.lines.length:''):(oneToGo(p)?'1 TO GO!':'');
-    return '<div class="'+cls+'" id="tile'+p.n+'">'+(tag?'<span class="tag">'+tag+'</span>':'')+'<div class="mw">'+mascotSVG(p.n)+'</div><div class="info">'+mini+'</div></div>';
+    return '<div class="'+cls+'" id="tile'+p.n+'">'+(tag?'<span class="tag">'+tag+'</span>':'')+'<div class="tmw"><div class="mw">'+mascotSVG(p.n)+'</div><div class="tnm">'+pnameH(p.n)+'</div></div><div class="info">'+mini+'</div></div>';
   }).join('')+'</div>';
 }
 function flashTile(n){if(settings.win==='first'&&bingoOrder.length)return;var t=$('tile'+n);if(t){t.classList.remove('flash');void t.offsetWidth;t.classList.add('flash')}}
@@ -3214,7 +3286,7 @@ function creditAwards(){
 function creditCardHTML(){
   var A=creditAwards();if(!A.length)return '<div id="credCard"></div>';var x=A[_credIdx%A.length];
   return '<div id="credCard" class="credcard">'+(x.n!=null?'<div class="mw">'+mascotSVG(x.n)+'</div>':'<div class="e">'+x.e+'</div>')+
-    '<div><div class="t">'+x.e+' '+escHTML(x.t)+'<small>'+escHTML(x.j)+'</small></div><div class="v">'+(x.n!=null?'#'+x.n+' · ':'')+escHTML(x.v)+'</div></div></div>';
+    '<div><div class="t">'+x.e+' '+escHTML(x.t)+'<small>'+escHTML(x.j)+'</small></div><div class="v">'+(x.n!=null?pnameH(x.n)+' · ':'')+escHTML(x.v)+'</div></div></div>';
 }
 function creditsHTML(){
   var r=results;if(!r)return '';
@@ -3238,20 +3310,20 @@ function resultsHTML(){
     order.forEach(function(i){var x=shown[i],delay=[2.1,1.2,0.4][i];
       h+='<div class="pod p'+(i+1)+'" style="--d:'+delay+'s">'+(i===0?'<div class="rays"></div>':'')+
         '<div class="mw">'+(i===0?'<div class="crown">👑</div>':'')+mascotSVG(x.n)+'</div>'+
-        '<div class="ped"><div class="r">'+['🥇','🥈','🥉'][i]+'</div><div class="pn">#'+x.n+'</div><div class="s">'+(r.mode==='most'?x.l+' line'+(x.l>1?'s':''):r.mode==='first'?'BINGO!':ordinal(i+1)+' BINGO'+(x.l>1?' · '+x.l+' lines':''))+'</div></div></div>';
+        '<div class="ped"><div class="r">'+['🥇','🥈','🥉'][i]+'</div><div class="pn">'+pnameH(x.n)+'</div><div class="s">'+(r.mode==='most'?x.l+' line'+(x.l>1?'s':''):r.mode==='first'?'BINGO!':ordinal(i+1)+' BINGO'+(x.l>1?' · '+x.l+' lines':''))+'</div></div></div>';
     });
     h+='</div>';
   }else{
     h+='<div class="vhead">NO BINGO THIS TIME! <span>今回はビンゴなし</span></div><div class="closest">'+r.rank.slice(0,3).map(function(x){
-      return '<div class="cl"><div class="mw">'+mascotSVG(x.n)+'</div><b>#'+x.n+'</b><span>'+x.f+' ✓ squares</span></div>'}).join('')+'</div><div class="note" style="font-size:16px">So close! あと少し！</div>';
+      return '<div class="cl"><div class="mw">'+mascotSVG(x.n)+'</div><b>'+pnameH(x.n)+'</b><span>'+x.f+' ✓ squares</span></div>'}).join('')+'</div><div class="note" style="font-size:16px">So close! あと少し！</div>';
   }
   h+='<div class="awards" style="--d:2.8s">';
-  if(r.mostLines)h+='<div class="award"><div class="mw">'+mascotSVG(r.mostLines.n)+'</div><div><div class="t">⭐ Most lines</div><div class="d">#'+r.mostLines.n+' · '+r.mostLines.l+' lines · 一番多いライン</div></div></div>';
-  if(r.wanted)h+='<div class="award"><div class="mw">'+mascotSVG(r.wanted.n)+'</div><div><div class="t">🔍 Most Wanted</div><div class="d">#'+r.wanted.n+' was found '+r.wanted.c+' times · 一番見つけられた</div></div></div>';
+  if(r.mostLines)h+='<div class="award"><div class="mw">'+mascotSVG(r.mostLines.n)+'</div><div><div class="t">⭐ Most lines</div><div class="d">'+pnameH(r.mostLines.n)+' · '+r.mostLines.l+' lines · 一番多いライン</div></div></div>';
+  if(r.wanted)h+='<div class="award"><div class="mw">'+mascotSVG(r.wanted.n)+'</div><div><div class="t">🔍 Most Wanted</div><div class="d">'+pnameH(r.wanted.n)+' was found '+r.wanted.c+' times · 一番見つけられた</div></div></div>';
   h+='</div>';
   var more=champs.slice(3),still=r.rank.filter(function(x){return !x.b});
-  if(more.length)h+='<div class="rest" style="--d:3s"><b>Also BINGO · ビンゴ</b>'+more.map(function(x){return '<span class="bg">'+ordinal(x.b)+' #'+x.n+(r.mode==='most'?' · '+x.l+'L':'')+'</span>'}).join('')+'</div>';
-  if(still.length&&champs.length)h+='<div class="rest" style="--d:3.2s"><b>'+(r.mode==='first'?'Closest · おしい！':'Keep practicing · あと少し')+'</b>'+still.map(function(x){return '<span>#'+x.n+' · '+x.f+'✓</span>'}).join('')+'</div>';
+  if(more.length)h+='<div class="rest" style="--d:3s"><b>Also BINGO · ビンゴ</b>'+more.map(function(x){return '<span class="bg">'+ordinal(x.b)+' '+pnameH(x.n)+(r.mode==='most'?' · '+x.l+'L':'')+'</span>'}).join('')+'</div>';
+  if(still.length&&champs.length)h+='<div class="rest" style="--d:3.2s"><b>'+(r.mode==='first'?'Closest · おしい！':'Keep practicing · あと少し')+'</b>'+still.map(function(x){return '<span>'+pnameH(x.n)+' · '+x.f+'✓</span>'}).join('')+'</div>';
   return h+'</div>';
 }
 function fitStage(){
@@ -3297,43 +3369,44 @@ function demoData(){
   return {q:a.q(it),ans:grammarMark(yes),sq:sq};
 }
 var DEMO_STEPS=[
-  ['Every tablet is a <b>mochi</b>. Your number is your name!','タブレット＝あなたのもち。番号がこのゲームでの名前！'],
-  ['Your tablet finds you a partner: <b>"Find #12!"</b>','タブレットが相手を決める：「#12を探せ！」'],
-  ['Walk and ask: <b>"Are you number 12?"</b>','歩いて探そう：「Are you number 12?」'],
+  ['Type your <b>name</b> — your tablet gives you a <b>mochi</b>!','名前を入れると、タブレットがもちをくれる！'],
+  ['Your tablet finds you a partner: <b>"Find Ken!"</b>','タブレットが相手を決める：「Kenを探せ！」'],
+  ['Walk and ask: <b>"Are you Ken?"</b>','歩いて探そう：「Are you Ken?」'],
   ['Found them? <b>Both</b> tap <b>🤝 FOUND</b>.','見つけたら2人とも「🤝 FOUND」を押す'],
   ['🗣️ The asker taps a <b>square</b>…','聞く人：マスを1つ選ぶ…'],
   ['…and asks the <b>question</b> in English.','…英語で質問する'],
   ['👂 The answerer\'s screen shows the <b>answer</b>. Say it!','答える人：画面の答えを言おう'],
   ['YES → tap <b>✓ YES</b>. NO → tap <b>✗ NO</b>. Then <b>switch</b>!','はい→「✓ YES」、いいえ→「✗ NO」。そして交代！'],
-  ['Up to <b>3 questions each</b>. Then <b>👍 NEXT</b> → a new partner!','1人3問まで。終わったら「👍 NEXT」→次の相手へ！'],
+  ['<b>One question each</b>. Then <b>👍 NEXT</b> → a new partner!','1人1問ずつ。終わったら「👍 NEXT」→次の相手へ！'],
   [null,null] // BINGO — text depends on the win mode
 ];
 function demoHTML(st){
-  var D=demoData(),A=4,B=12,cap=DEMO_STEPS[st];
+  var D=demoData(),A=4,B=12,cap=DEMO_STEPS[st],DN={4:'Yui',12:'Ken'};
+  if(st===8&&tpt()===3)cap=['Up to <b>3 questions each</b>. Then <b>👍 NEXT</b> → a new partner!','1人3問まで。終わったら「👍 NEXT」→次の相手へ！'];
   if(st===9)cap=settings.win==='first'?['Make a line → <b>BINGO!</b> The first BINGO wins!','縦・横・ななめで一列そろえたらビンゴ！最初の人の勝ち！']:['Make lines → <b>BINGO!</b> Most BINGOs wins!','一列そろえたらビンゴ！たくさん作った人の勝ち！'];
   var h='<div class="cap" key="'+st+'"><div class="en">'+cap[0]+'</div><div class="jp">'+cap[1]+'</div></div><div class="stage2">';
   var grid=function(pick,got,line){return '<div class="mini3">'+D.sq.map(function(x,k){var cls=(k===4&&pick?'pick':'')+(k===4&&got?' got':'')+(line&&line.indexOf(k)>=0?' ln':'');
-      return '<div class="'+cls+'"><span class="e">'+x.e+'</span>'+escHTML(x.c)+(k===4&&got?'<span class="st">#12 ✓</span>':'')+'</div>'}).join('')+'</div>'};
+      return '<div class="'+cls+'"><span class="e">'+x.e+'</span>'+escHTML(x.c)+(k===4&&got?'<span class="st">Ken ✓</span>':'')+'</div>'}).join('')+'</div>'};
   var screen,L,R,move=0,bubL='',bubR='',hand='';
   if(st===9){
     return h+'<div style="display:flex;flex-direction:column;align-items:center;gap:16px"><div class="tab2" style="width:clamp(340px,34vw,520px);height:clamp(250px,25vw,380px)">'+grid(false,true,[3,4,5])+'</div><div class="bigline"><span style="color:var(--pink)">B</span><span style="color:var(--yellow)">I</span><span style="color:var(--green)">N</span><span style="color:var(--blue)">G</span><span style="color:var(--orange)">O</span><span style="color:var(--pink)">!</span></div></div></div>';
   }
-  var findScr=function(me,p,pressed,wait){return '<div class="mm">'+mascotSVG(p)+'</div><div class="t1">🔍 FIND <b>#'+p+'</b>!</div><div class="t2">#'+p+' is looking for you too!</div>'+(wait?'<div class="t2" style="color:var(--green);font-weight:800">✓ Waiting for #'+p+'…</div>':'<div class="fb2'+(pressed?' press':'')+'">🤝 FOUND #'+p+'!</div>')};
-  if(st===0){L='<div class="mm">'+mascotSVG(A)+'</div><div class="t1">You are <b>MOCHI '+A+'</b>!</div>';R='<div class="mm">'+mascotSVG(B)+'</div><div class="t1">You are <b>MOCHI '+B+'</b>!</div>'}
+  var findScr=function(me,p,pressed,wait){return '<div class="mm">'+mascotSVG(p)+'</div><div class="t1">🔍 FIND <b>'+DN[p]+'</b>!</div><div class="t2">'+DN[p]+' is looking for you too!</div>'+(wait?'<div class="t2" style="color:var(--green);font-weight:800">✓ Waiting for #'+p+'…</div>':'<div class="fb2'+(pressed?' press':'')+'">🤝 FOUND #'+p+'!</div>')};
+  if(st===0){L='<div class="mm">'+mascotSVG(A)+'</div><div class="t1">You are <b>MOCHI '+A+'</b>!</div><div class="t2">Yui</div>';R='<div class="mm">'+mascotSVG(B)+'</div><div class="t1">You are <b>MOCHI '+B+'</b>!</div><div class="t2">Ken</div>'}
   else if(st===1){L=findScr(A,B);R=findScr(B,A)}
-  else if(st===2){L=findScr(A,B);R=findScr(B,A);move=1;bubL='"Are you number <b>12</b>?"';bubR='"Yes! 🙋"'}
+  else if(st===2){L=findScr(A,B);R=findScr(B,A);move=1;bubL='"Are you <b>Ken</b>?"';bubR='"Yes! 🙋"'}
   else if(st===3){L=findScr(A,B,true);R=findScr(B,A,true);move=1;hand='both'}
-  else if(st===4){L='<div class="t2" style="font-weight:800;color:var(--yellow)">🗣️ Your turn — ask #'+B+'!</div>'+grid(true);R='<div class="mm">'+mascotSVG(A)+'</div><div class="t1" style="font-size:clamp(17px,1.8vw,26px)">👂 #'+A+' is choosing a question…</div>';move=1;hand='sq'}
+  else if(st===4){L='<div class="t2" style="font-weight:800;color:var(--yellow)">🗣️ Your turn — ask '+DN[B]+'!</div>'+grid(true);R='<div class="mm">'+mascotSVG(A)+'</div><div class="t1" style="font-size:clamp(17px,1.8vw,26px)">👂 '+DN[A]+' is choosing a question…</div>';move=1;hand='sq'}
   else if(st===5||st===6||st===7){
-    L='<div class="t2" style="font-weight:800;color:var(--yellow)">🗣️ ASK #'+B+'</div><div class="qbox">'+frameHTML(D.q,'full')+'</div><div class="yn"><div>✗ NO</div><div class="y'+(st===7?' press':'')+'">✓ YES</div></div>';
-    R='<div class="t2">👂 #'+A+' asks you:</div><div class="qbox">'+frameHTML(D.q,'full')+'</div><div class="abox"><div class="l">💬 YOUR ANSWER</div><div class="s">'+frameHTML(D.ans,'full')+'</div></div>';
+    L='<div class="t2" style="font-weight:800;color:var(--yellow)">🗣️ ASK '+DN[B]+'</div><div class="qbox">'+frameHTML(D.q,'full')+'</div><div class="yn"><div>✗ NO</div><div class="y'+(st===7?' press':'')+'">✓ YES</div></div>';
+    R='<div class="t2">👂 '+DN[A]+' asks you:</div><div class="qbox">'+frameHTML(D.q,'full')+'</div><div class="abox"><div class="l">💬 YOUR ANSWER</div><div class="s">'+frameHTML(D.ans,'full')+'</div></div>';
     move=1;if(st===5)bubL='"'+framePlain(D.q)+'"';if(st===6)bubR='"'+framePlain(D.ans)+'"';if(st===7)hand='yes';
   }
-  else if(st===8){L='<div class="t2" style="font-weight:800;color:var(--yellow)">✓ You got a square!</div>'+grid(false,true);R='<div class="mm">'+mascotSVG(A)+'</div><div class="t1">👋 Done with <b>#'+A+'</b>!</div><div class="fb2">👍 NEXT</div>';move=1}
+  else if(st===8){L='<div class="t2" style="font-weight:800;color:var(--yellow)">✓ You got a square!</div>'+grid(false,true);R='<div class="mm">'+mascotSVG(A)+'</div><div class="t1">👋 Done with <b>'+DN[A]+'</b>!</div><div class="fb2">👍 NEXT</div>';move=1}
   var side=function(n,scr,bub,dir,lab){return '<div class="dm" style="transform:translateX('+(move?dir*-2:0)+'vw)">'+(bub?'<div class="bub">'+bub+'</div>':'')+'<div class="who">'+mascotSVG(n)+'</div><div class="lbl">'+lab+'</div><div class="tab2">'+scr+
     ((hand==='both')||(hand==='sq'&&n===A)||(hand==='yes'&&n===A)?'<div class="hand" style="'+(hand==='sq'?'left:56%;top:60%':hand==='yes'?'right:14%;bottom:6%':'left:58%;bottom:4%')+'">👆</div>':'')+'</div></div>'};
   var role=st>=4&&st<=7;
-  h+=side(A,L,bubL,-1,role?'🗣️ ASKER · 聞く人':'#'+A)+side(B,R,bubR,1,role?'👂 ANSWERER · 答える人':'#'+B);
+  h+=side(A,L,bubL,-1,role?'🗣️ ASKER · 聞く人':DN[A])+side(B,R,bubR,1,role?'👂 ANSWERER · 答える人':DN[B]);
   return h+'</div>';
 }
 function renderDemo(){
@@ -3508,7 +3581,7 @@ var apart=[],_apartMode=false,_apartSel=null;
 function saveApart(){try{localStorage.setItem('mb_apart',JSON.stringify({t:Date.now(),pairs:apart}))}catch(e){}}
 function isApart(a,b){if(!a||!b||!apart.length)return false;for(var i=0;i<apart.length;i++){var x=apart[i];if((x[0]===a.did&&x[1]===b.did)||(x[0]===b.did&&x[1]===a.did))return true}return false}
 function apartBtn(){return '<button class="apbtn'+(_apartMode?' on':'')+'" title="Keep two mochis apart" onclick="event.stopPropagation();toggleApart()">✕'+(apart.length?'<sup>'+apart.length+'</sup>':'')+'</button>'}
-function apartNum(did){var p=players[did];return p?'#'+p.n:'—'}
+function apartNum(did){var p=players[did];return p?escHTML(p.name||'#'+p.n):'—'}
 function apartBar(){
   if(!_apartMode)return '';
   return '<div class="apbar">'+(_apartSel?'+ ? ':'tap 2 · ')+apart.map(function(x,i){return '<span>'+apartNum(x[0])+'·'+apartNum(x[1])+'<b onclick="event.stopPropagation();removeApart('+i+')">✕</b></span>'}).join('')+'</div>';
@@ -3537,10 +3610,10 @@ function mgrStatus(p){
   if(!p.on)return ['📴 Offline','オフライン'];
   if(phase!=='play')return [filledOf(p)+' squares','']
   var m=mmOf(p),q=partnerOf(p),mins=function(t){var s=Math.round((Date.now()-t)/1000);return s<60?s+'s':Math.floor(s/60)+'m '+(s%60)+'s'};
-  if(m.s==='talk'&&q)return ['💬 Talking with #'+q.n,mins(m.at)+(m.done?' · turn done':' · '+m.tries+'/'+TRIES_PER_TALK+' tries')];
-  if(m.s==='bye')return ['👋 Done with #'+m.p,mins(m.since)+' · tapping next'];
-  if(m.s==='talk'&&q&&m.turn!=null)return [(m.turn===p.n?'🗣️ Asking #':'👂 Answering #')+q.n,mins(m.at)+' · '+m.tries+'/'+TRIES_PER_TALK+' tries'+(m.done?' · done':'')];
-  if(m.s==='match'&&q)return ['🔍 Finding #'+q.n+(m.lost||q.mm.lost?' ⚠️':''),mins(m.at)+(m.found?' · tapped FOUND':'')];
+  if(m.s==='talk'&&q)return ['💬 Talking with '+pnameH(q.n),mins(m.at)+(m.done?' · turn done':' · '+m.tries+'/'+tpt()+' tries')];
+  if(m.s==='bye')return ['👋 Done with '+pnameH(m.p),mins(m.since)+' · tapping next'];
+  if(m.s==='talk'&&q&&m.turn!=null)return [(m.turn===p.n?'🗣️ Asking ':'👂 Answering ')+pnameH(q.n),mins(m.at)+' · '+m.tries+'/'+tpt()+' tries'+(m.done?' · done':'')];
+  if(m.s==='match'&&q)return ['🔍 Finding '+pnameH(q.n)+(m.lost||q.mm.lost?' ⚠️':''),mins(m.at)+(m.found?' · tapped FOUND':'')];
   return ['⏳ Waiting',mins(m.since)];
 }
 function renderMgr(){
@@ -3548,14 +3621,21 @@ function renderMgr(){
   $('mgrBox').innerHTML='<h2>👥 Mochis <small class="jp" style="font-size:14px">'+ps.length+' in the game'+(play?' · '+(function(c){return '💬 '+(c.talk/2|0)+' talking · 🔍 '+(c.match/2|0)+' finding · ⏳ '+c.look+' waiting'})(mmCounts()):'')+'</small>'+apartBtn()+'<button class="x" onclick="closeMgr()">✕</button></h2>'+apartBar()+
     '<div class="note" style="grid-column:1/-1">🔄 Rematch = send a mochi (and its partner) back to look for someone new. ✕ = remove a mochi whose student has left — squares only that mochi could answer are swapped automatically.<br>🔄 再マッチ：相手を変える。✕：いなくなった生徒のもちを外す（そのもちしか答えられないマスは自動で入れ替わります）。</div>'+
     '<div class="mrow">'+ps.map(function(p){var st=mgrStatus(p),busy=play&&p.on&&p.mm&&p.mm.s!=='look',al=play&&p.mm&&p.mm.s==='match'&&(p.mm.lost||(partnerOf(p)&&partnerOf(p).mm.lost));
-      return '<div class="mcard'+(p.on?'':' off')+(al?' alertc':'')+(_apartMode&&_apartSel===p.did?' apsel':'')+'"'+(_apartMode?' onclick="apartTap(\''+p.did+'\')" style="cursor:pointer"':'')+'><div class="mw">'+mascotSVG(p.n)+'</div><div class="ms">'+st[0]+'<small>'+st[1]+'</small></div>'+
+      return '<div class="mcard'+(p.on?'':' off')+(al?' alertc':'')+(_apartMode&&_apartSel===p.did?' apsel':'')+'"'+(_apartMode?' onclick="apartTap(\''+p.did+'\')" style="cursor:pointer"':'')+'><div class="mw">'+mascotSVG(p.n)+'</div><div class="ms"><span class="pnm" title="Rename" onclick="event.stopPropagation();renamePlayer(\''+p.did+'\')">'+escHTML(p.name||'#'+p.n)+' ✎</span>'+st[0]+'<small>'+st[1]+'</small></div>'+
         (busy?'<button title="Rematch" onclick="rematch('+p.n+')">🔄</button>':'')+'<button title="Remove" onclick="mgrRemove(\''+p.did+'\')">✕</button></div>'}).join('')+'</div>';
 }
 setInterval(function(){if(phase==='play'&&$('mgr').classList.contains('on'))renderMgr()},2000);
+function renamePlayer(did){
+  var p=players[did];if(!p)return;
+  var v=window.prompt('Rename mochi #'+p.n+' · 名前を変更',p.name||'');if(v==null)return;
+  v=cleanName(v);if(!v)return;
+  if(nameTaken(v,did)){alert('"'+v+'" is already used by another student.');return}
+  setName(p,v);sendYou(p);renderAll();if($('mgr').classList.contains('on'))renderMgr();broadcastState(true);saveGame();
+}
 function mgrRemove(did){
   var p=players[did];if(!p)return;
   if(playerList().length<=2){alert('At least 2 mochis are needed.');return}
-  if(phase==='play'&&!window.confirm('Remove mochi #'+p.n+' from this game?'))return;
+  if(phase==='play'&&!window.confirm('Remove '+pname(p.n)+' (#'+p.n+') from this game?'))return;
   removePlayer(did);
 }
 
